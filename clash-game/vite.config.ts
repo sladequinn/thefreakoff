@@ -5,6 +5,7 @@ export default defineConfig({
     host: '0.0.0.0',
     port: 47321,
     strictPort: false,
+    allowedHosts: ['.loca.lt', '.trycloudflare.com'],
   },
   preview: {
     port: 47322,
