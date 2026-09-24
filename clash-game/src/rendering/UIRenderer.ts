@@ -329,34 +329,67 @@ export class UIRenderer {
     ctx.save();
     ctx.translate(x, y);
     ctx.scale(scale, scale);
-    const g = ctx.createLinearGradient(0, -80, 0, 10);
-    g.addColorStop(0, '#ffffff');
-    g.addColorStop(0.45, '#c7ccd6');
-    g.addColorStop(0.5, '#6a7080');
-    g.addColorStop(1, '#e8ecf4');
+    const title = 'FREAKOFF';
+    const size = 104;
+
     ctx.save();
-    ctx.shadowColor = 'rgba(138,77,255,0.9)';
-    ctx.shadowBlur = 30 + 10 * Math.sin(time * 0.05);
-    this.text(ctx, 'CLASH', 0, 0, 120, g, { stroke: '#120a1c', strokeWidth: 10 });
+    ctx.transform(1, 0, -0.16, 1, 0, 0);
+    for (let d = 9; d >= 1; d--) {
+      this.text(ctx, title, d * 0.9, d * 1.1, size, d > 6 ? '#1a0306' : '#7a0d12', { stroke: '#1a0306', strokeWidth: 10 });
+    }
+    const g = ctx.createLinearGradient(0, -74, 0, 6);
+    g.addColorStop(0, '#ffffff');
+    g.addColorStop(0.42, '#cfd5e2');
+    g.addColorStop(0.5, '#5c6272');
+    g.addColorStop(0.56, '#8a90a2');
+    g.addColorStop(1, '#f2f5fb');
+    ctx.save();
+    ctx.shadowColor = 'rgba(255,40,40,0.65)';
+    ctx.shadowBlur = 22 + 8 * Math.sin(time * 0.05);
+    this.text(ctx, title, 0, 0, size, g, { stroke: '#0c0408', strokeWidth: 8 });
     ctx.restore();
-    const sweep = ((time * 4) % 900) - 450;
+    const sweep = ((time * 4) % 1000) - 500;
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
     const sg = ctx.createLinearGradient(sweep - 60, 0, sweep + 60, 0);
     sg.addColorStop(0, 'rgba(255,255,255,0)');
-    sg.addColorStop(0.5, 'rgba(255,255,255,0.35)');
+    sg.addColorStop(0.5, 'rgba(255,255,255,0.4)');
     sg.addColorStop(1, 'rgba(255,255,255,0)');
-    this.text(ctx, 'CLASH', 0, 0, 120, sg);
+    this.text(ctx, title, 0, 0, size, sg);
     ctx.restore();
-    const a = ctx.createLinearGradient(-200, 0, 0, 0);
-    a.addColorStop(0, '#6a1dff');
-    a.addColorStop(1, '#d6b8ff');
-    const i = ctx.createLinearGradient(0, 0, 200, 0);
-    i.addColorStop(0, '#ffd08a');
-    i.addColorStop(1, '#ff4a1a');
-    this.text(ctx, 'ARCANE', -26, 44, 34, a, { align: 'right', stroke: '#000', strokeWidth: 5 });
-    this.text(ctx, '&', 0, 44, 30, '#ffffff', { stroke: '#000', strokeWidth: 5 });
-    this.text(ctx, 'IRON', 26, 44, 34, i, { align: 'left', stroke: '#000', strokeWidth: 5 });
+    this.text(ctx, 'THE', -262, -70, 24, '#ffd21f', { align: 'left', stroke: '#000', strokeWidth: 6 });
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(0, 46);
+    const bw = 300;
+    const bh = 42;
+    const slant = 16;
+    ctx.beginPath();
+    ctx.moveTo(-bw / 2 + slant, -bh / 2);
+    ctx.lineTo(bw / 2 + slant, -bh / 2);
+    ctx.lineTo(bw / 2 - slant, bh / 2);
+    ctx.lineTo(-bw / 2 - slant, bh / 2);
+    ctx.closePath();
+    const bg = ctx.createLinearGradient(0, -bh / 2, 0, bh / 2);
+    bg.addColorStop(0, '#ff3b2a');
+    bg.addColorStop(0.5, '#c0101a');
+    bg.addColorStop(1, '#5a0510');
+    ctx.fillStyle = bg;
+    ctx.fill();
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = '#ffd21f';
+    ctx.stroke();
+    ctx.fillStyle = '#8a4dff';
+    ctx.fillRect(-bw / 2 - slant - 40, -3, 30, 6);
+    ctx.fillStyle = '#ff6a2a';
+    ctx.fillRect(bw / 2 + slant + 10, -3, 30, 6);
+    const tg = ctx.createLinearGradient(0, -14, 0, 12);
+    tg.addColorStop(0, '#ffffff');
+    tg.addColorStop(1, '#ffe07a');
+    this.text(ctx, 'SHADOW WARS', 0, 12, 30, tg, { stroke: '#2a0206', strokeWidth: 6 });
+    ctx.restore();
+
     ctx.restore();
   }
 

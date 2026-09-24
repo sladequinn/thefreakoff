@@ -799,7 +799,7 @@ export class Renderer {
       ctx.shadowColor = on ? '#ff3dbb' : '#39f3ff';
       ctx.shadowBlur = 18;
       ctx.fillStyle = on ? '#ff8ad8' : '#9ffbff';
-      ctx.fillText(on ? 'CLASH' : 'ARCANE & IRON', 470, 150);
+      ctx.fillText(on ? 'FREAKOFF' : 'SHADOW WARS', 470, 150);
       ctx.restore();
     } else if (theme === 'harbor') {
       const wy = 262;

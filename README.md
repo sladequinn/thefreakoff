@@ -1,4 +1,4 @@
-# CLASH: ARCANE & IRON
+# THE FREAKOFF: SHADOW WARS
 
 A 2.5D arcade beat 'em up with a 1v1 versus mode, written in TypeScript with Vite. All graphics and audio are procedural.
 

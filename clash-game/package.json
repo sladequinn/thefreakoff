@@ -1,8 +1,8 @@
 {
-  "name": "clash-arcane-and-iron",
+  "name": "the-freakoff-shadow-wars",
   "private": true,
   "version": "1.0.0",
-  "description": "CLASH: ARCANE & IRON — a 2.5D belt-scrolling beat 'em up with a 1v1 versus mode, built with zero external assets.",
+  "description": "THE FREAKOFF: SHADOW WARS — a 2.5D belt-scrolling beat 'em up with a 1v1 versus mode, built with zero external assets.",
   "type": "module",
   "scripts": {
     "dev": "vite",

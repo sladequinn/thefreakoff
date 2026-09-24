@@ -1,4 +1,6 @@
-# CLASH: ARCANE & IRON
+# THE FREAKOFF: SHADOW WARS
+
+Frecklebot and Ninjabot armies flood the streets while the two real figureheads tear the city apart to settle who actually runs it.
 
 A 2.5D arcade beat 'em up and 1v1 versus fighter built in TypeScript on a plain Canvas 2D renderer. Every sprite, background, sound effect, voice grunt and music track is generated procedurally at runtime; there are no image or audio assets.
 
@@ -43,7 +45,7 @@ Click or press any key once to enable sound (browsers block audio until then).
 
 ### Phones and tablets
 
-On touch devices an on-screen pad appears automatically. A floating joystick follows your thumb on the left half of the screen. Push it fully sideways to run. The ATK, JMP and SPL buttons sit on the right, and pause, mute and fullscreen buttons are in the corner. Landscape gives the biggest view. In portrait the game sits above the controls. Local 1P vs 2P needs a keyboard or gamepad for Player 2. To test on a phone from a remote dev box, expose port 47321 with a tunnel such as `cloudflared tunnel --url http://127.0.0.1:47321` (the `.trycloudflare.com` and `.loca.lt` hosts are already allowed in `vite.config.ts`).
+On touch devices an on-screen pad appears automatically. A floating joystick follows your thumb on the left half of the screen. Push it fully sideways to run. The ATK, JMP and SPL buttons sit on the right, and pause, mute and fullscreen buttons are in the corner. Landscape gives the biggest view. In portrait the game sits above the controls. Local 1P vs 2P needs a keyboard or gamepad for Player 2. To test on a phone from a remote dev box, serve the production build and tunnel it: `npm run build && npx vite preview` (port 47322), then `cloudflared tunnel --protocol http2 --url http://127.0.0.1:47322`. The bundled build loads in a handful of requests, which holds up far better over a tunnel than the dev server's per-module requests. The `.trycloudflare.com` and `.loca.lt` hosts are already allowed in `vite.config.ts`.
 
 Contextual moves: attack while running for a dash attack (Shadow Step / Bull Charge), attack in the air for an air attack (Tengu Dive / Comet Hammer). Specials cost 8% of your current HP.
 

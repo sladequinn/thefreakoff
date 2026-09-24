@@ -35,12 +35,12 @@ export class TitleScene extends Scene {
     this.items = [
       {
         label: 'STORY MODE',
-        hint: 'Six stages: robot hordes, two Warden mid-bosses, and your rival.',
+        hint: 'Carve through six stages of Frecklebots and Ninjabots to reach your rival.',
         go: () => this.game.scenes.go('select', { mode: 'story', cpu: false }),
       },
       {
         label: 'VERSUS: 1P vs 2P',
-        hint: 'Local head-to-head. Best of three rounds, 99 seconds each.',
+        hint: 'Settle it face to face. Best of three rounds, 99 seconds each.',
         go: () => this.game.scenes.go('select', { mode: 'versus', cpu: false }),
       },
       {
@@ -164,7 +164,7 @@ export class TitleScene extends Scene {
     if (!this.pressedStart) {
       const a = 0.45 + 0.55 * Math.abs(Math.sin(time * 0.05));
       g.ui.text(ctx, touch ? 'TAP TO START' : 'PRESS ANY KEY', CANVAS_WIDTH / 2, 380, 24, '#ffffff', { stroke: '#000', strokeWidth: 5, alpha: a });
-      g.ui.text(ctx, 'A 2.5D arcade brawler  ·  Story Mode  ·  1v1 Versus', CANVAS_WIDTH / 2, 412, 13, 'rgba(255,255,255,0.7)', {
+      g.ui.text(ctx, 'The bots own the streets. Two legends fight to own the city.', CANVAS_WIDTH / 2, 412, 13, 'rgba(255,255,255,0.7)', {
         template: FONT_UI,
       });
     } else if (this.showControls) {
@@ -190,7 +190,7 @@ export class TitleScene extends Scene {
       pads > 0 ? `${pads} GAMEPAD${pads > 1 ? 'S' : ''} CONNECTED` : 'Gamepads supported',
     ].join('   ·   ');
     g.ui.text(ctx, status, CANVAS_WIDTH / 2, CANVAS_HEIGHT - 16, 11, 'rgba(255,255,255,0.45)', { template: FONT_UI });
-    g.ui.text(ctx, 'v1.1', CANVAS_WIDTH - 14, CANVAS_HEIGHT - 16, 11, 'rgba(255,255,255,0.3)', { template: FONT_UI, align: 'right' });
+    g.ui.text(ctx, 'v2.0', CANVAS_WIDTH - 14, CANVAS_HEIGHT - 16, 11, 'rgba(255,255,255,0.3)', { template: FONT_UI, align: 'right' });
   }
 
   private drawClashLight(ctx: CanvasRenderingContext2D, time: number): void {
