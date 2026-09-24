@@ -1,0 +1,217 @@
+import { DEFAULT_Z_RANGE } from '../config/constants';
+import type { CharacterDef, MoveData } from '../physics/Types';
+
+const Z = DEFAULT_Z_RANGE;
+
+const moves: Record<string, MoveData> = {
+  s_combo1: {
+    id: 's_combo1',
+    name: 'Ninjato Flurry I — Horizontal Slash',
+    kind: 'combo',
+    pose: 'slade_slash',
+    duration: 18,
+    cancelFrom: 6,
+    hits: [
+      {
+        start: 3,
+        end: 5,
+        group: 1,
+        boxes: [{ offsetX: 36, offsetY: 54, width: 60, height: 30, zRange: Z, damage: 6, knockbackX: 1.6, knockbackY: 0, hitstun: 8, hitstop: 4, spark: 'slash', sfx: 'slash' }],
+      },
+    ],
+    motion: [{ from: 1, to: 4, vx: 2.4 }],
+    events: [{ frame: 2, fx: 'slash' }],
+  },
+  s_combo2: {
+    id: 's_combo2',
+    name: 'Ninjato Flurry II — Arcane Palm',
+    kind: 'combo',
+    pose: 'slade_palm',
+    duration: 20,
+    cancelFrom: 8,
+    hits: [
+      {
+        start: 4,
+        end: 6,
+        group: 1,
+        boxes: [{ offsetX: 34, offsetY: 56, width: 46, height: 34, zRange: Z, damage: 8, knockbackX: 2.2, knockbackY: 0, hitstun: 12, hitstop: 5, spark: 'arcane', sfx: 'magic' }],
+      },
+    ],
+    motion: [{ from: 2, to: 5, vx: 2.8 }],
+    events: [
+      { frame: 3, fx: 'seal' },
+      { frame: 3, fx: 'voice_hah' },
+    ],
+  },
+  s_combo3: {
+    id: 's_combo3',
+    name: 'Ninjato Flurry III — Void Crescent',
+    kind: 'combo',
+    pose: 'slade_crescent',
+    duration: 30,
+    hits: [
+      {
+        start: 5,
+        end: 8,
+        group: 1,
+        boxes: [
+          {
+            offsetX: 30,
+            offsetY: 62,
+            width: 62,
+            height: 76,
+            zRange: Z,
+            damage: 14,
+            knockbackX: 5,
+            knockbackY: 7,
+            hitstun: 30,
+            hitstop: 6,
+            effect: 'launch',
+            spark: 'void',
+            sfx: 'slash',
+          },
+        ],
+      },
+    ],
+    motion: [
+      { from: 3, to: 6, vx: 2 },
+      { from: 5, to: 5, vy: 2.6 },
+    ],
+    events: [
+      { frame: 4, fx: 'crescent' },
+      { frame: 4, fx: 'voice_hyah' },
+    ],
+  },
+  s_dash: {
+    id: 's_dash',
+    name: 'Shadow Step',
+    kind: 'dash',
+    pose: 'slade_sweep',
+    duration: 32,
+    hidden: [1, 8],
+    invuln: [0, 8],
+    teleport: { frame: 8, dx: 50 },
+    hits: [
+      {
+        start: 9,
+        end: 13,
+        group: 1,
+        boxes: [{ offsetX: 30, offsetY: 12, width: 74, height: 26, zRange: Z, damage: 12, knockbackX: 3, knockbackY: 3, hitstun: 30, hitstop: 5, effect: 'trip', spark: 'slash', sfx: 'slash' }],
+      },
+    ],
+    motion: [
+      { from: 0, to: 8, vx: 3.2 },
+      { from: 9, to: 12, vx: 2 },
+    ],
+    events: [
+      { frame: 0, fx: 'smoke_out' },
+      { frame: 8, fx: 'smoke_in' },
+      { frame: 9, fx: 'slash' },
+    ],
+  },
+  s_air: {
+    id: 's_air',
+    name: 'Tengu Dive',
+    kind: 'air',
+    pose: 'slade_dive',
+    duration: 70,
+    airborne: true,
+    endsOnLand: true,
+    landingLag: 12,
+    onHitBounce: { vx: -2.2, vy: 6 },
+    hits: [
+      {
+        start: 5,
+        end: 70,
+        group: 1,
+        boxes: [
+          {
+            offsetX: 18,
+            offsetY: 10,
+            width: 44,
+            height: 36,
+            zRange: Z,
+            damage: 10,
+            knockbackX: 3,
+            knockbackY: 5,
+            hitstun: 30,
+            hitstop: 5,
+            effect: 'groundBounce',
+            spark: 'arcane',
+            sfx: 'heavy',
+          },
+        ],
+      },
+    ],
+    motion: [
+      { from: 0, to: 4, vx: 0.6, vy: 1.2, noGravity: true },
+      { from: 5, to: 70, vx: 6.2, vy: -7, noGravity: true },
+    ],
+    events: [
+      { frame: 4, fx: 'dive' },
+      { frame: -1, fx: 'runic_land' },
+    ],
+  },
+  s_special: {
+    id: 's_special',
+    name: 'Ninpo: Abyssal Rift',
+    kind: 'special',
+    pose: 'slade_mudra',
+    duration: 56,
+    invuln: [0, 12],
+    hpCost: 0.08,
+    hits: [
+      {
+        start: 13,
+        end: 22,
+        group: 1,
+        boxes: [
+          {
+            offsetX: 0,
+            offsetY: 44,
+            width: 240,
+            height: 130,
+            zRange: 56,
+            damage: 24,
+            knockbackX: 8,
+            knockbackY: 6,
+            hitstun: 40,
+            hitstop: 6,
+            effect: 'launch',
+            spark: 'void',
+            sfx: 'magic',
+            radial: true,
+          },
+        ],
+      },
+    ],
+    events: [
+      { frame: 0, fx: 'mudra' },
+      { frame: 12, fx: 'sigils' },
+    ],
+  },
+};
+
+export const SLADE: CharacterDef = {
+  id: 'slade',
+  name: 'SLADE',
+  title: 'The Magick Ninja',
+  archetype: 'ninja',
+  voice: 'slade',
+  stats: { speed: 4.8, maxHp: 100, defense: 0.9, jumpPower: 8.5 },
+  combo: ['s_combo1', 's_combo2', 's_combo3'],
+  dashAttack: 's_dash',
+  airAttack: 's_air',
+  special: 's_special',
+  moves,
+  hurtbox: { offsetX: 0, offsetY: 46, width: 30, height: 92, zDepth: 14 },
+  scale: 1,
+  blurb: 'Elusive arcane zoner. Blinks through smoke, carves space with a void-lit ninjato and detonates sigils when crowded.',
+  ratings: { power: 3, speed: 5, range: 4, defense: 2 },
+  moveList: [
+    { name: 'Ninjato Triple Flurry', input: 'J, J, J', desc: 'Slash → arcane palm → launching void crescent' },
+    { name: 'Shadow Step', input: 'Run + J', desc: 'Vanish into smoke, reappear with a tripping sweep' },
+    { name: 'Tengu Dive', input: 'Air + J', desc: 'Runic dive kick that ground-bounces' },
+    { name: 'Ninpo: Abyssal Rift', input: 'U  /  J+K', desc: 'Invulnerable sigil eruption (costs 8% HP)' },
+  ],
+};
