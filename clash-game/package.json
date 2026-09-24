@@ -1,0 +1,17 @@
+{
+  "name": "clash-arcane-and-iron",
+  "private": true,
+  "version": "1.0.0",
+  "description": "CLASH: ARCANE & IRON — a 2.5D belt-scrolling beat 'em up with a 1v1 versus mode, built with zero external assets.",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "vite": "^5.4.10"
+  }
+}
