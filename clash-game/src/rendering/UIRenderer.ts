@@ -383,14 +383,15 @@ export class UIRenderer {
     });
   }
 
-  pauseOverlay(ctx: Ctx, index: number, time: number): void {
+  pauseOverlay(ctx: Ctx, index: number, time: number, touch = false): void {
     ctx.save();
     ctx.fillStyle = 'rgba(4,2,10,0.72)';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     ctx.restore();
     this.text(ctx, 'PAUSED', CANVAS_WIDTH / 2, 190, 56, '#ffffff', { stroke: '#000', strokeWidth: 6, shadow: 'rgba(138,77,255,0.8)' });
     this.menu(ctx, ['RESUME', 'RESTART', 'QUIT TO TITLE'], index, CANVAS_WIDTH / 2, 270, time);
-    this.text(ctx, '`  toggles hitbox debug overlay   ·   M  mutes audio', CANVAS_WIDTH / 2, 470, 12, 'rgba(255,255,255,0.5)', { template: FONT_UI });
+    const help = touch ? 'Stick up / down to choose   ·   ATK to select   ·   II to resume' : '`  toggles hitbox debug overlay   ·   M  mutes audio';
+    this.text(ctx, help, CANVAS_WIDTH / 2, 470, 12, 'rgba(255,255,255,0.5)', { template: FONT_UI });
   }
 
   statBar(ctx: Ctx, label: string, value: number, x: number, y: number, color: string): void {

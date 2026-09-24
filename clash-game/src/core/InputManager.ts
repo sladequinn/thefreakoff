@@ -38,6 +38,7 @@ interface SlotState {
   dashDir: number;
   lastAttackPress: number;
   lastJumpPress: number;
+  touchRun: boolean;
   comboSpecialLatched: boolean;
   specialFromCombo: boolean;
   frame: InputFrame;
@@ -52,8 +53,14 @@ export interface MenuInput {
   back: boolean;
 }
 
+export type InputDevice = 'keyboard' | 'gamepad' | 'touch';
+
+export function isTouchDevice(): boolean {
+  return typeof window !== 'undefined' && (window.matchMedia?.('(pointer: coarse)').matches || 'ontouchstart' in window);
+}
+
 /**
- * Keyboard + Gamepad aggregation into two logical player slots.
+ * Keyboard + Gamepad + on-screen touch aggregation into two logical player slots (touch always drives slot 0).
  * Presses are latched between fixed updates so sub-frame taps are never dropped.
  */
 export class InputManager {
@@ -63,8 +70,37 @@ export class InputManager {
   private frameNo = 0;
   private slots: SlotState[];
   private padsPrev: boolean[][] = [[], []];
+  private touchHeld = blankActions();
+  private touchLatched = blankActions();
+  private touchRun = false;
+  private touchPoked = false;
   anyInputThisFrame = false;
-  lastDevice: 'keyboard' | 'gamepad' = 'keyboard';
+  lastDevice: InputDevice = isTouchDevice() ? 'touch' : 'keyboard';
+
+  get touchMode(): boolean {
+    return this.lastDevice === 'touch';
+  }
+
+  setTouchAction(action: Action, down: boolean): void {
+    if (down && !this.touchHeld[action]) this.touchLatched[action] = true;
+    this.touchHeld[action] = down;
+    if (down) this.lastDevice = 'touch';
+  }
+
+  setTouchRun(run: boolean): void {
+    this.touchRun = run;
+  }
+
+  /** Any touch on the control surface; counts as "any input" for press-start screens. */
+  touchPoke(): void {
+    this.touchPoked = true;
+    this.lastDevice = 'touch';
+  }
+
+  /** Queues a synthetic key press (used by on-screen pause / mute buttons). */
+  injectKey(code: string): void {
+    this.pressedQueue.add(code);
+  }
 
   constructor(target: Window = window) {
     this.slots = [this.makeSlot(P1_KEYS, 0), this.makeSlot(P2_KEYS, 1)];
@@ -98,6 +134,7 @@ export class InputManager {
       dashDir: 0,
       lastAttackPress: -999,
       lastJumpPress: -999,
+      touchRun: false,
       comboSpecialLatched: false,
       specialFromCombo: false,
       frame: emptyInput(),
@@ -115,10 +152,11 @@ export class InputManager {
     this.frameNo++;
     this.pressedNow = this.pressedQueue;
     this.pressedQueue = new Set();
-    this.anyInputThisFrame = this.pressedNow.size > 0;
+    this.anyInputThisFrame = this.pressedNow.size > 0 || this.touchPoked;
+    this.touchPoked = false;
 
     const pads = this.getPads();
-    for (const slot of this.slots) {
+    this.slots.forEach((slot, slotIndex) => {
       slot.prev = slot.held;
       const held = blankActions();
       const pressed = blankActions();
@@ -130,6 +168,19 @@ export class InputManager {
             pressed[a] = true;
           }
         }
+      }
+      slot.touchRun = false;
+      if (slotIndex === 0) {
+        for (const a of ACTIONS) {
+          if (this.touchHeld[a]) held[a] = true;
+          if (this.touchLatched[a]) {
+            held[a] = true;
+            pressed[a] = true;
+            this.anyInputThisFrame = true;
+            this.touchLatched[a] = false;
+          }
+        }
+        slot.touchRun = this.touchRun;
       }
 
       const pad = pads[slot.padIndex] ?? null;
@@ -175,7 +226,7 @@ export class InputManager {
       slot.held = held;
       slot.pressed = pressed;
       this.buildFrame(slot);
-    }
+    });
   }
 
   private buildFrame(slot: SlotState): void {
@@ -199,7 +250,7 @@ export class InputManager {
       }
     }
     if (slot.runDir !== 0 && f.moveX !== slot.runDir) slot.runDir = 0;
-    f.run = slot.runDir !== 0;
+    f.run = slot.runDir !== 0 || (slot.touchRun && f.moveX !== 0);
 
     if (pressed.attack) slot.lastAttackPress = this.frameNo;
     if (pressed.jump) slot.lastJumpPress = this.frameNo;

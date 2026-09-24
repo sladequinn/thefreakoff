@@ -234,7 +234,7 @@ export class VsScene extends CombatScene {
       case 'matchEnd': {
         const w = this.matchWinner;
         const name = w === -1 ? 'DRAW GAME' : `${w === 0 ? this.p1.name : this.p2.name} WINS`;
-        ui.banner(ctx, name, 'Press J / Enter to continue', pt, w === 1 ? '#ff4d6d' : '#6fb6ff');
+        ui.banner(ctx, name, this.game.input.touchMode ? 'Tap ATK to continue' : 'Press J / Enter to continue', pt, w === 1 ? '#ff4d6d' : '#6fb6ff');
         break;
       }
       default:

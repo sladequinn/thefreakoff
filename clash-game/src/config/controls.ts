@@ -77,6 +77,17 @@ export const PREVENT_DEFAULT_KEYS = new Set([
   'Backspace',
 ]);
 
+export const TOUCH_HELP: { label: string; how: string }[] = [
+  { label: 'Move', how: 'Drag anywhere on the left side (the stick follows your thumb)' },
+  { label: 'Run / Dash', how: 'Push the stick all the way sideways, or flick it twice' },
+  { label: 'Jump', how: 'JMP button' },
+  { label: 'Attack', how: 'ATK button (tap repeatedly for combos; air attack while jumping)' },
+  { label: 'Dash Attack', how: 'ATK while running' },
+  { label: 'Special', how: 'SPL button, or ATK + JMP together (costs 8% HP)' },
+  { label: 'Block (Versus)', how: 'Hold the stick away from your opponent' },
+  { label: 'Pause / Mute', how: 'II and \u266A buttons in the corner' },
+];
+
 export const CONTROL_HELP: { label: string; p1: string; p2: string; pad: string }[] = [
   { label: 'Move', p1: 'W A S D', p2: 'Arrow Keys', pad: 'D-Pad / Left Stick' },
   { label: 'Dash / Run', p1: 'Double-tap A / D', p2: 'Double-tap ← / →', pad: 'Double-tap left / right' },

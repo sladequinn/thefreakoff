@@ -146,7 +146,8 @@ export class GameOverScene extends Scene {
       }
       ctx.restore();
     }
-    g.ui.text(ctx, 'W / S or arrows to choose  ·  J / Enter to confirm', CANVAS_WIDTH / 2, CANVAS_HEIGHT - 16, 11, 'rgba(255,255,255,0.45)', {
+    const help = g.input.touchMode ? 'Stick up / down to choose  ·  ATK to confirm' : 'W / S or arrows to choose  ·  J / Enter to confirm';
+    g.ui.text(ctx, help, CANVAS_WIDTH / 2, CANVAS_HEIGHT - 16, 11, 'rgba(255,255,255,0.45)', {
       template: FONT_UI,
     });
     g.renderer.drawVignette();

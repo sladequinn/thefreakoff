@@ -1,5 +1,5 @@
 import { CANVAS_HEIGHT, CANVAS_WIDTH, COLORS, FONT_UI } from '../config/constants';
-import { CONTROL_HELP } from '../config/controls';
+import { CONTROL_HELP, TOUCH_HELP } from '../config/controls';
 import type { GameContext, SceneMap } from '../core/StateManager';
 import { idlePose } from '../rendering/SpriteRenderer';
 import { Scene } from './Scene';
@@ -122,9 +122,19 @@ export class TitleScene extends Scene {
       return;
     }
     if (m.confirm) {
+      if (this.disabled()[this.index]) {
+        audio.playBack();
+        return;
+      }
       audio.playConfirm();
       this.items[this.index].go();
     }
+  }
+
+  /** Local 2P needs a second physical device when Player 1 is on the touch pad. */
+  private disabled(): boolean[] {
+    const needsSecondDevice = this.game.input.touchMode && this.game.input.connectedPads() === 0;
+    return this.items.map((_, i) => i === 1 && needsSecondDevice);
   }
 
   render(ctx: CanvasRenderingContext2D): void {
@@ -148,23 +158,33 @@ export class TitleScene extends Scene {
     const logoY = this.pressedStart ? 132 : 170;
     g.ui.logo(ctx, CANVAS_WIDTH / 2, logoY, this.pressedStart ? 0.82 : 1, time);
 
+    const touch = g.input.touchMode;
     if (!this.pressedStart) {
       const a = 0.45 + 0.55 * Math.abs(Math.sin(time * 0.05));
-      g.ui.text(ctx, 'PRESS ANY KEY', CANVAS_WIDTH / 2, 380, 24, '#ffffff', { stroke: '#000', strokeWidth: 5, alpha: a });
+      g.ui.text(ctx, touch ? 'TAP TO START' : 'PRESS ANY KEY', CANVAS_WIDTH / 2, 380, 24, '#ffffff', { stroke: '#000', strokeWidth: 5, alpha: a });
       g.ui.text(ctx, 'A 2.5D arcade brawler  ·  Story Mode  ·  1v1 Versus', CANVAS_WIDTH / 2, 412, 13, 'rgba(255,255,255,0.7)', {
         template: FONT_UI,
       });
     } else if (this.showControls) {
       this.drawControls(ctx);
     } else {
-      g.ui.menu(ctx, this.items.map((i) => i.label), this.index, CANVAS_WIDTH / 2, 262, time, 42);
+      const disabled = this.disabled();
+      g.ui.menu(ctx, this.items.map((i) => i.label), this.index, CANVAS_WIDTH / 2, 262, time, 42, disabled);
       g.ui.panel(ctx, CANVAS_WIDTH / 2 - 300, 440, 600, 30);
-      g.ui.text(ctx, this.items[this.index].hint, CANVAS_WIDTH / 2, 460, 13, 'rgba(255,255,255,0.82)', { template: FONT_UI });
+      const hint = disabled[this.index] ? 'Player 2 needs a keyboard or gamepad. Connect one to play local versus.' : this.items[this.index].hint;
+      g.ui.text(ctx, hint, CANVAS_WIDTH / 2, 460, 13, 'rgba(255,255,255,0.82)', { template: FONT_UI });
+      if (touch) g.ui.text(ctx, 'Stick up / down to choose  ·  ATK to select', CANVAS_WIDTH / 2, 490, 12, 'rgba(255,255,255,0.55)', { template: FONT_UI });
     }
 
     const pads = g.input.connectedPads();
     const status = [
-      g.audio.muted ? 'SOUND: MUTED (M)' : g.audio.ready ? 'SOUND: ON (M to mute)' : 'Press any key or click to enable sound',
+      g.audio.muted
+        ? `SOUND: MUTED (${touch ? '\u266A' : 'M'})`
+        : g.audio.ready
+          ? `SOUND: ON (${touch ? '\u266A' : 'M'} to mute)`
+          : touch
+            ? 'Tap to enable sound'
+            : 'Press any key or click to enable sound',
       pads > 0 ? `${pads} GAMEPAD${pads > 1 ? 'S' : ''} CONNECTED` : 'Gamepads supported',
     ].join('   ·   ');
     g.ui.text(ctx, status, CANVAS_WIDTH / 2, CANVAS_HEIGHT - 16, 11, 'rgba(255,255,255,0.45)', { template: FONT_UI });
@@ -257,6 +277,10 @@ export class TitleScene extends Scene {
   }
 
   private drawControls(ctx: CanvasRenderingContext2D): void {
+    if (this.game.input.touchMode) {
+      this.drawTouchControls(ctx);
+      return;
+    }
     const ui = this.game.ui;
     const x = 110;
     const y = 190;
@@ -283,5 +307,26 @@ export class TitleScene extends Scene {
     ui.text(ctx, 'Press attack, jump or Esc to return', CANVAS_WIDTH / 2, y + 44 + CONTROL_HELP.length * rowH + 18, 12, 'rgba(255,255,255,0.55)', {
       template: FONT_UI,
     });
+  }
+
+  private drawTouchControls(ctx: CanvasRenderingContext2D): void {
+    const ui = this.game.ui;
+    const x = 110;
+    const y = 180;
+    const w = CANVAS_WIDTH - 220;
+    const rowH = 32;
+    const h = 40 + TOUCH_HELP.length * rowH + 34;
+    ui.panel(ctx, x, y, w, h, 'rgba(8,6,18,0.92)');
+    ui.text(ctx, 'TOUCH CONTROLS', x + 24, y + 28, 15, COLORS.hazard, { align: 'left' });
+    TOUCH_HELP.forEach((row, r) => {
+      const yy = y + 62 + r * rowH;
+      if (r % 2 === 0) {
+        ctx.fillStyle = 'rgba(255,255,255,0.04)';
+        ctx.fillRect(x + 10, yy - 21, w - 20, rowH);
+      }
+      ui.text(ctx, row.label, x + 24, yy, 17, COLORS.voidGlow, { align: 'left', template: FONT_UI });
+      ui.text(ctx, row.how, x + 190, yy, 16, '#ffffff', { align: 'left', template: FONT_UI });
+    });
+    ui.text(ctx, 'Tap ATK to return', CANVAS_WIDTH / 2, y + h - 12, 15, 'rgba(255,255,255,0.6)', { template: FONT_UI });
   }
 }

@@ -556,7 +556,7 @@ export class StoryScene extends CombatScene {
     const shown = page.text.slice(0, Math.floor(this.typed));
     this.wrapText(ctx, shown, tx, py + 78, px + pw - tx - 30, 22);
     if (this.typed >= page.text.length && Math.floor(this.game.time / 20) % 2 === 0) {
-      ui.text(ctx, '▶  J / ENTER', px + pw - 30, py + ph - 18, 12, '#ffd21f', { align: 'right', template: FONT_UI });
+      ui.text(ctx, this.game.input.touchMode ? '▶  TAP ATK' : '▶  J / ENTER', px + pw - 30, py + ph - 18, 12, '#ffd21f', { align: 'right', template: FONT_UI });
     }
     ui.text(ctx, `${this.pageIndex + 1} / ${this.pages.length}     ESC — skip`, px + 40, py + ph - 18, 11, 'rgba(255,255,255,0.4)', { align: 'left', template: FONT_UI });
   }

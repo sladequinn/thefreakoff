@@ -56,13 +56,16 @@ export class Renderer {
     this.ctx = ctx;
     this.resize();
     window.addEventListener('resize', () => this.resize());
+    window.addEventListener('orientationchange', () => setTimeout(() => this.resize(), 200));
   }
 
   resize(): void {
     const w = window.innerWidth;
     const h = window.innerHeight;
     this.scale = Math.max(0.2, Math.min(w / CANVAS_WIDTH, h / CANVAS_HEIGHT));
-    this.dpr = Math.min(2, window.devicePixelRatio || 1);
+    // Phones report DPR 3; 1.5 keeps fill-rate manageable while staying sharp at small physical sizes.
+    const coarse = window.matchMedia?.('(pointer: coarse)').matches ?? false;
+    this.dpr = Math.min(coarse ? 1.5 : 2, window.devicePixelRatio || 1);
     const cssW = Math.floor(CANVAS_WIDTH * this.scale);
     const cssH = Math.floor(CANVAS_HEIGHT * this.scale);
     this.canvas.style.width = `${cssW}px`;

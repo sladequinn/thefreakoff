@@ -322,6 +322,6 @@ export abstract class CombatScene extends Scene implements World {
   }
 
   protected renderPause(ctx: CanvasRenderingContext2D): void {
-    if (this.paused) this.game.ui.pauseOverlay(ctx, this.pauseIndex, this.game.time);
+    if (this.paused) this.game.ui.pauseOverlay(ctx, this.pauseIndex, this.game.time, this.game.input.touchMode);
   }
 }

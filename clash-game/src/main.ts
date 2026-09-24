@@ -3,6 +3,7 @@ import { AudioEngine } from './core/AudioEngine';
 import { GameLoop } from './core/GameLoop';
 import { InputManager } from './core/InputManager';
 import { StateManager, type GameContext } from './core/StateManager';
+import { TouchControls } from './core/TouchControls';
 import { Renderer } from './rendering/Renderer';
 import { SpriteRenderer } from './rendering/SpriteRenderer';
 import { UIRenderer } from './rendering/UIRenderer';
@@ -15,11 +16,14 @@ import { VsScene } from './scenes/VsScene';
 const root = document.getElementById('app');
 if (!root) throw new Error('Missing #app container');
 root.replaceChildren();
+document.querySelectorAll('.tc-root').forEach((el) => el.remove());
 
 const renderer = new Renderer(root);
 const sprites = new SpriteRenderer();
 const ui = new UIRenderer(sprites);
 const input = new InputManager(window);
+const touch = new TouchControls(input, renderer.canvas);
+touch.setVisible(input.touchMode);
 const audio = new AudioEngine();
 const scenes = new StateManager();
 
@@ -56,6 +60,7 @@ function update(): void {
     toast = audio.toggleMute() ? 'SOUND MUTED' : 'SOUND ON';
     toastT = 90;
   }
+  touch.setVisible(input.touchMode);
   scenes.update();
   game.time++;
   if (toastT > 0) toastT--;
@@ -78,8 +83,12 @@ const unlockAudio = (): void => {
   audio.unlock();
   renderer.canvas.focus({ preventScroll: true });
 };
-window.addEventListener('keydown', unlockAudio);
-window.addEventListener('pointerdown', unlockAudio);
+// iOS Safari only resumes an AudioContext inside touchend/click, not pointerdown.
+const UNLOCK_EVENTS = ['keydown', 'pointerdown', 'touchend', 'click'] as const;
+for (const ev of UNLOCK_EVENTS) window.addEventListener(ev, unlockAudio);
+const blockGesture = (e: Event): void => e.preventDefault();
+document.addEventListener('gesturestart', blockGesture);
+document.addEventListener('dblclick', blockGesture);
 
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) loop.stop();
@@ -93,7 +102,9 @@ if (import.meta.hot) {
   import.meta.hot.dispose(() => {
     loop.stop();
     audio.stopMusic();
-    window.removeEventListener('keydown', unlockAudio);
-    window.removeEventListener('pointerdown', unlockAudio);
+    for (const ev of UNLOCK_EVENTS) window.removeEventListener(ev, unlockAudio);
+    document.removeEventListener('gesturestart', blockGesture);
+    document.removeEventListener('dblclick', blockGesture);
+    touch.root.remove();
   });
 }

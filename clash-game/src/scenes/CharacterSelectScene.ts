@@ -286,7 +286,11 @@ export class CharacterSelectScene extends Scene {
       }
       return;
     }
-    const help = this.params.cpu
+    const help = this.game.input.touchMode
+      ? this.params.cpu && this.cursors[0].locked
+        ? 'Stick left / right to choose the CPU fighter   ·   ATK to lock   ·   II to undo'
+        : 'Stick left / right to choose   ·   ATK to lock   ·   II to go back'
+      : this.params.cpu
       ? this.cursors[0].locked
         ? 'A / D choose the CPU fighter   ·   J confirm   ·   Esc undo'
         : 'A / D choose your fighter   ·   J confirm   ·   Esc back'

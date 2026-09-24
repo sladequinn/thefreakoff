@@ -41,6 +41,10 @@ Click or press any key once to enable sound (browsers block audio until then).
 | Block (versus) | Hold away           | Hold away         | Hold away                |
 | Pause          | Esc / P             |                   | Start                    |
 
+### Phones and tablets
+
+On touch devices an on-screen pad appears automatically. A floating joystick follows your thumb on the left half of the screen. Push it fully sideways to run. The ATK, JMP and SPL buttons sit on the right, and pause, mute and fullscreen buttons are in the corner. Landscape gives the biggest view. In portrait the game sits above the controls. Local 1P vs 2P needs a keyboard or gamepad for Player 2. To test on a phone from a remote dev box, expose port 47321 with a tunnel such as `cloudflared tunnel --url http://127.0.0.1:47321` (the `.trycloudflare.com` and `.loca.lt` hosts are already allowed in `vite.config.ts`).
+
 Contextual moves: attack while running for a dash attack (Shadow Step / Bull Charge), attack in the air for an air attack (Tengu Dive / Comet Hammer). Specials cost 8% of your current HP.
 
 Press `` ` `` (backtick) to toggle the debug overlay: red hitboxes, green hurtboxes, blue z-depth planes, FPS and state info. Press `M` to mute.
