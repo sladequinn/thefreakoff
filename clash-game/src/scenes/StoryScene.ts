@@ -10,6 +10,7 @@ import {
   STORY_LIVES,
   TEAM_ENEMY,
   TEAM_PLAYER,
+  font,
 } from '../config/constants';
 import { FRECKLES } from '../characters/Freckles';
 import { SLADE } from '../characters/Slade';
@@ -45,27 +46,68 @@ function stagesFor(kind: EnemyKind): StageDef[] {
       label: 'STAGE 1',
       name: 'THE OUTSKIRTS',
       theme: 'outskirts',
-      width: 2400,
+      width: 2600,
       music: 'stage',
       waves: [
         { at: 360, enemies: ['normal', 'normal', 'normal'] },
-        { at: 1300, enemies: ['normal', 'normal', 'normal', 'normal', 'elite'] },
+        { at: 1100, enemies: ['normal', 'normal', mix, 'normal'] },
+        { at: 1640, enemies: ['normal', 'normal', 'normal', 'normal', 'elite'] },
       ],
     },
     {
       label: 'STAGE 2',
+      name: 'PIER 9 HARBOR',
+      theme: 'harbor',
+      width: 2800,
+      music: 'harbor',
+      waves: [
+        { at: 380, enemies: ['normal', mix, 'normal', mix] },
+        { at: 1150, enemies: ['normal', 'normal', 'normal', mix, 'normal'] },
+        { at: 1840, enemies: ['boss', 'normal', mix] },
+      ],
+    },
+    {
+      label: 'STAGE 3',
       name: 'THE CORE FACILITY',
       theme: 'facility',
-      width: 2600,
+      width: 2800,
       music: 'facility',
       waves: [
         { at: 420, enemies: ['normal', 'normal', 'normal', 'normal', 'normal'] },
-        { at: 1500, enemies: ['normal', mix, 'normal', mix, 'normal', mix] },
+        { at: 1200, enemies: ['normal', mix, 'normal', mix, 'normal', mix] },
+        { at: 1840, enemies: ['elite', 'normal', mix, 'elite'] },
       ],
     },
-    { label: 'STAGE 3', name: 'THE SANCTUARY', theme: 'sanctuary', width: CANVAS_WIDTH, music: 'boss', waves: [], boss: true },
+    {
+      label: 'STAGE 4',
+      name: 'NEON SKYLINE',
+      theme: 'rooftop',
+      width: 2700,
+      music: 'skyline',
+      waves: [
+        { at: 380, enemies: [mix, mix, 'normal', 'normal'] },
+        { at: 1120, enemies: ['elite', 'normal', 'normal', mix, 'normal'] },
+        { at: 1740, enemies: ['elite', 'elite', mix, 'normal', 'normal'] },
+      ],
+    },
+    {
+      label: 'STAGE 5',
+      name: 'THE IRON FOUNDRY',
+      theme: 'foundry',
+      width: 3000,
+      music: 'foundry',
+      waves: [
+        { at: 400, enemies: ['normal', 'normal', mix, mix, 'normal'] },
+        { at: 1180, enemies: ['elite', 'normal', mix, 'normal', mix, 'normal'] },
+        { at: 2040, enemies: ['boss', 'elite', mix, 'normal'] },
+      ],
+    },
+    { label: 'STAGE 6', name: 'THE SANCTUARY', theme: 'sanctuary', width: CANVAS_WIDTH, music: 'boss', waves: [], boss: true },
   ];
 }
+
+/** Stages after which the player earns an extra life. */
+const ONE_UP_AFTER = new Set([2, 4]);
 
 interface Page {
   speaker: string;
@@ -73,19 +115,32 @@ interface Page {
   text: string;
 }
 
-const STORY: Record<CharId, { intro: Page[]; pre2: Page[]; pre3: Page[]; boss: string[]; ending: Page[] }> = {
+const STORY: Record<CharId, { pre: Page[][]; boss: string[]; ending: Page[] }> = {
   freckles: {
-    intro: [
-      { speaker: 'NEO-KASAI, 2089', arch: null, text: 'The Iron Syndicate flooded the Outskirts with a new line of security automata overnight. Sleek. Silent. Built to move like one man.' },
-      { speaker: 'FRECKLES', arch: 'brawler', text: "Those tin shinobi torched my garage and everyone who fixed cars there. Somebody's gonna answer for it. Starting with every bot between me and the Core." },
-    ],
-    pre2: [
-      { speaker: 'FRECKLES', arch: 'brawler', text: "Every one of these Ninjabots runs the same combat file. Same stance, same smoke tricks. I've seen it before — on a poster in the old dojo." },
-      { speaker: 'SYNDICATE PA', arch: null, text: 'CORE FACILITY LOCKDOWN. MOTION TEMPLATE "SLADE" LICENSED TO ALL UNITS. INTRUDER: FRECKLES. PRIORITY: TERMINATE.' },
-    ],
-    pre3: [
-      { speaker: 'FRECKLES', arch: 'brawler', text: 'The template signal leads up the mountain. A shrine, of all places. And somebody is waiting at the gate.' },
-      { speaker: 'SLADE', arch: 'ninja', text: 'You broke my shadows all the way here. Impressive. But nobody reaches the Syndicate vault through my sanctuary without proving their fists are worth it.' },
+    pre: [
+      [
+        { speaker: 'NEO-KASAI, 2089', arch: null, text: 'The Iron Syndicate flooded the Outskirts with a new line of security automata overnight. Sleek. Silent. Built to move like one man.' },
+        { speaker: 'FRECKLES', arch: 'brawler', text: "Those tin shinobi torched my garage and everyone who fixed cars there. Somebody's gonna answer for it. Starting with every bot between me and the Core." },
+      ],
+      [
+        { speaker: 'FRECKLES', arch: 'brawler', text: 'Followed the scrap trail to Pier 9. The Syndicate ships these bots in by the crate load, every night, right under the harbor lights.' },
+        { speaker: 'SYNDICATE PA', arch: null, text: 'PIER 9 ALERT. SHOGUN-X COMMAND UNIT ACTIVATED. DOCK CREWS EVACUATE. INTRUDER WILL BE FILED AS SCRAP.' },
+      ],
+      [
+        { speaker: 'FRECKLES', arch: 'brawler', text: "Every one of these Ninjabots runs the same combat file. Same stance, same smoke tricks. I've seen it before — on a poster in the old dojo." },
+        { speaker: 'SYNDICATE PA', arch: null, text: 'CORE FACILITY LOCKDOWN. MOTION TEMPLATE "SLADE" LICENSED TO ALL UNITS. INTRUDER: FRECKLES. PRIORITY: TERMINATE.' },
+      ],
+      [
+        { speaker: 'FRECKLES', arch: 'brawler', text: 'Busted out through the vents and landed on the roof. Every billboard in the city is selling Syndicate steel. And there are shinobi on every ledge.' },
+      ],
+      [
+        { speaker: 'FRECKLES', arch: 'brawler', text: "So this is where they pour 'em. Molten iron, conveyor lines, and a rebuilt Shogun guarding the forge. Wreck the forge and they can't make any more." },
+        { speaker: 'SYNDICATE PA', arch: null, text: 'FOUNDRY BREACH. SHOGUN-X REBUILD COMPLETE. ALL LINES: PROTECT THE CRUCIBLE.' },
+      ],
+      [
+        { speaker: 'FRECKLES', arch: 'brawler', text: 'The template signal leads up the mountain. A shrine, of all places. And somebody is waiting at the gate.' },
+        { speaker: 'SLADE', arch: 'ninja', text: 'You broke my shadows all the way here. Impressive. But nobody reaches the Syndicate vault through my sanctuary without proving their fists are worth it.' },
+      ],
     ],
     boss: ['SLADE: The Syndicate stole my form. I will not let a brawler steal my ground.', 'FRECKLES: Then stop talking and show me the original.'],
     ending: [
@@ -94,17 +149,30 @@ const STORY: Record<CharId, { intro: Page[]; pre2: Page[]; pre3: Page[]; boss: s
     ],
   },
   slade: {
-    intro: [
-      { speaker: 'NEO-KASAI, 2089', arch: null, text: 'Hydraulic boxers stalk the Outskirts: Frecklebots, forged by the Iron Syndicate from the fight data of one legendary street brawler.' },
-      { speaker: 'SLADE', arch: 'ninja', text: 'Their pistons shake the old shrine every night. Someone taught iron to throw punches. I will unmake the lesson, one sigil at a time.' },
-    ],
-    pre2: [
-      { speaker: 'SLADE', arch: 'ninja', text: "Each unit carries the same signature: a four-strike rhythm, a shoulder tackle, brass on the knuckles. This is a living fighter's style." },
-      { speaker: 'SYNDICATE PA', arch: null, text: 'CORE FACILITY LOCKDOWN. MOTION TEMPLATE "FRECKLES" LICENSED TO ALL UNITS. INTRUDER: SLADE. PRIORITY: TERMINATE.' },
-    ],
-    pre3: [
-      { speaker: 'SLADE', arch: 'ninja', text: 'The trail ends at my own sanctuary. The gate is already broken open — and the one who broke it is cracking their knuckles.' },
-      { speaker: 'FRECKLES', arch: 'brawler', text: 'So YOU are the ghost wrecking my copies. Figures. Syndicate says you sold them my moves. Only one way I trust an answer.' },
+    pre: [
+      [
+        { speaker: 'NEO-KASAI, 2089', arch: null, text: 'Hydraulic boxers stalk the Outskirts: Frecklebots, forged by the Iron Syndicate from the fight data of one legendary street brawler.' },
+        { speaker: 'SLADE', arch: 'ninja', text: 'Their pistons shake the old shrine every night. Someone taught iron to throw punches. I will unmake the lesson, one sigil at a time.' },
+      ],
+      [
+        { speaker: 'SLADE', arch: 'ninja', text: 'The Frecklebots arrive packed in shipping crates at Pier 9. The docks smell of brine and machine oil, and something large is waking in the hold.' },
+        { speaker: 'SYNDICATE PA', arch: null, text: 'PIER 9 ALERT. FOREMAN MK-II ONLINE. SECURE THE SHIPMENT. THE NINJA IS NOT TO REACH THE CORE.' },
+      ],
+      [
+        { speaker: 'SLADE', arch: 'ninja', text: "Each unit carries the same signature: a four-strike rhythm, a shoulder tackle, brass on the knuckles. This is a living fighter's style." },
+        { speaker: 'SYNDICATE PA', arch: null, text: 'CORE FACILITY LOCKDOWN. MOTION TEMPLATE "FRECKLES" LICENSED TO ALL UNITS. INTRUDER: SLADE. PRIORITY: TERMINATE.' },
+      ],
+      [
+        { speaker: 'SLADE', arch: 'ninja', text: 'Above the neon the wind carries the sound of their pistons. I will cross these rooftops faster than iron can climb.' },
+      ],
+      [
+        { speaker: 'SLADE', arch: 'ninja', text: 'The forge where they are born. Every chassis poured here carries a stolen fighting style. Tonight, the fire goes out.' },
+        { speaker: 'SYNDICATE PA', arch: null, text: 'FOUNDRY BREACH. FOREMAN MK-II REBUILT AND REINFORCED. ALL LINES: PROTECT THE CRUCIBLE.' },
+      ],
+      [
+        { speaker: 'SLADE', arch: 'ninja', text: 'The trail ends at my own sanctuary. The gate is already broken open — and the one who broke it is cracking their knuckles.' },
+        { speaker: 'FRECKLES', arch: 'brawler', text: 'So YOU are the ghost wrecking my copies. Figures. Syndicate says you sold them my moves. Only one way I trust an answer.' },
+      ],
     ],
     boss: ['FRECKLES: I licensed nothing. Somebody stole me, and I think it was you.', "SLADE: Then strike. Your fists will tell you what my words can't."],
     ending: [
@@ -135,6 +203,8 @@ export class StoryScene extends CombatScene {
   private goTimer = 0;
   private bannerTimer = 0;
   private boss: Boss | null = null;
+  private midBoss: Enemy | null = null;
+  private midBossTimer = 0;
   private focus: Fighter | null = null;
   private focusTimer = 0;
   private startScore = 0;
@@ -153,7 +223,7 @@ export class StoryScene extends CombatScene {
     this.stages = stagesFor(this.enemyKind);
     this.stageIndex = Math.max(0, Math.min(this.stages.length - 1, params.stage));
     this.setupStage(this.stageIndex);
-    this.openCard(this.stageIndex === 0 ? STORY[params.char].intro : this.stageIndex === 1 ? STORY[params.char].pre2 : STORY[params.char].pre3);
+    this.openCard(STORY[params.char].pre[this.stageIndex]);
   }
 
   enter(): void {
@@ -181,6 +251,7 @@ export class StoryScene extends CombatScene {
     this.exitOpen = false;
     this.goTimer = 0;
     this.boss = null;
+    this.midBoss = null;
     this.focus = null;
     this.maxTokens = this.enemyKind === 'frecklebot' ? 3 : 2;
     const p = this.player;
@@ -246,7 +317,7 @@ export class StoryScene extends CombatScene {
   onHitLanded(attacker: Fighter, target: Fighter, damage: number): void {
     if (attacker === this.player) {
       this.player.addScore(damage * 12 + 10);
-      if (target !== this.boss) {
+      if (target !== this.boss && target !== this.midBoss) {
         this.focus = target;
         this.focusTimer = 180;
       }
@@ -257,6 +328,10 @@ export class StoryScene extends CombatScene {
     if (f instanceof Enemy) {
       this.player.addScore(f.scoreValue);
       this.releaseToken(f);
+      if (f === this.midBoss) {
+        this.slowmo = 70;
+        this.audio.playKO();
+      }
     } else if (f === this.boss) {
       this.player.addScore(10000);
       this.slowmo = 110;
@@ -276,10 +351,15 @@ export class StoryScene extends CombatScene {
     w.enemies.forEach((variant, i) => {
       const right = i % 2 === 0;
       const x = right ? lockX + CANVAS_WIDTH + 60 + i * 34 : lockX - 60 - i * 26;
-      const z = STAGE_MIN_Z + 20 + Math.random() * (STAGE_MAX_Z - STAGE_MIN_Z - 40);
+      const z = variant === 'boss' ? (STAGE_MIN_Z + STAGE_MAX_Z) / 2 : STAGE_MIN_Z + 20 + Math.random() * (STAGE_MAX_Z - STAGE_MIN_Z - 40);
       const e = new Enemy(this.enemyKind, variant, x, z);
       e.facing = right ? -1 : 1;
       this.fighters.push(e);
+      if (variant === 'boss') {
+        this.midBoss = e;
+        this.midBossTimer = 0;
+        this.audio.startMusic('boss');
+      }
     });
     this.audio.playWarning();
   }
@@ -306,8 +386,13 @@ export class StoryScene extends CombatScene {
         this.waveActive = true;
         this.spawnWave(wave);
       }
+      if (this.midBoss) this.midBossTimer++;
       if (this.waveActive && this.enemiesAlive() === 0) {
         this.waveActive = false;
+        if (this.midBoss) {
+          this.midBoss = null;
+          this.audio.startMusic(this.stage.music);
+        }
         cam.unlock();
         this.waveIndex++;
         this.goTimer = 220;
@@ -359,10 +444,11 @@ export class StoryScene extends CombatScene {
   private nextStage(): void {
     const p = this.player;
     p.hp = Math.min(p.maxHp, p.hp + p.maxHp * STAGE_CLEAR_HEAL);
+    if (ONE_UP_AFTER.has(this.stageIndex)) p.lives++;
     this.stageIndex++;
     this.setupStage(this.stageIndex);
     this.audio.startMusic(this.stage.music);
-    this.openCard(this.stageIndex === 1 ? STORY[this.params.char].pre2 : STORY[this.params.char].pre3);
+    this.openCard(STORY[this.params.char].pre[this.stageIndex]);
   }
 
   private toGameOver(victory: boolean): void {
@@ -496,7 +582,15 @@ export class StoryScene extends CombatScene {
       if (this.waveActive && this.phase === 'play' && this.camera.locked) {
         ui.text(ctx, `ENEMIES  ${this.enemiesAlive()}`, CANVAS_WIDTH - 16, 46, 12, '#ff9aa8', { align: 'right', template: FONT_UI, stroke: '#000', strokeWidth: 3 });
       }
-      if (this.phase === 'clear') ui.banner(ctx, 'STAGE CLEAR', `+${Math.round(STAGE_CLEAR_HEAL * 100)}% HEALTH RESTORED`, this.phaseTimer, '#ffd21f');
+      const mb = this.midBoss;
+      if (mb && !mb.remove && this.phase === 'play') {
+        if (mb.state !== FState.DEAD) ui.bossBar(ctx, mb, t, this.midBossTimer, 'WARDEN');
+        if (this.midBossTimer < 140) ui.banner(ctx, 'WARNING', `${mb.name} APPROACHING`, this.midBossTimer, '#ff3b3b', 200);
+      }
+      if (this.phase === 'clear') {
+        const heal = `+${Math.round(STAGE_CLEAR_HEAL * 100)}% HEALTH RESTORED`;
+        ui.banner(ctx, 'STAGE CLEAR', ONE_UP_AFTER.has(this.stageIndex) ? `${heal}  ·  EXTRA LIFE!` : heal, this.phaseTimer, '#ffd21f');
+      }
       if (this.phase === 'bossIntro') this.renderBossIntro(ctx);
       if (this.phase === 'bossDown' && this.phaseTimer < 200) ui.banner(ctx, 'K.O.', '', this.phaseTimer, '#ff3b3b');
       if (this.player.state === FState.DEAD && this.player.lives > 0) {
@@ -563,7 +657,7 @@ export class StoryScene extends CombatScene {
 
   private wrapText(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, maxW: number, lh: number): void {
     ctx.save();
-    ctx.font = "600 16px 'Trebuchet MS', 'Segoe UI', sans-serif";
+    ctx.font = font(FONT_UI, 16);
     ctx.fillStyle = '#f0ecff';
     ctx.textAlign = 'left';
     const words = text.split(' ');

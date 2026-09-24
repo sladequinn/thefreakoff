@@ -19,7 +19,7 @@ const VOICE_PITCH: Record<VoiceId, number> = {
 };
 
 export type GruntType = 'hah' | 'take' | 'pain' | 'ko' | 'hyah';
-export type MusicTrack = 'title' | 'stage' | 'facility' | 'boss' | 'versus' | 'victory';
+export type MusicTrack = 'title' | 'stage' | 'harbor' | 'facility' | 'skyline' | 'foundry' | 'boss' | 'versus' | 'victory';
 
 interface TrackDef {
   bpm: number;
@@ -59,6 +59,42 @@ const TRACKS: Record<MusicTrack, TrackDef> = {
     stab: [[12, 15, 19], r, r, r, r, r, r, r, r, r, r, r, r, r, r, r, [17, 20, 24], r, r, r, r, r, r, r, [15, 19, 22], r, r, r, r, r, r, r],
     wave: 'sawtooth',
     leadWave: 'square',
+  },
+  harbor: {
+    bpm: 124,
+    root: 41,
+    bass: [0, r, 0, r, 7, r, 0, r, 5, r, 5, r, 3, r, 5, r, 0, r, 0, r, 7, r, 0, r, 10, r, 8, r, 7, r, 3, r],
+    lead: [r, r, 19, r, 22, r, 24, r, r, r, 22, 19, r, r, 17, r, r, r, 19, r, 22, r, 27, r, 26, r, 24, r, 22, r, r, r],
+    kick: 'x.....x...x.....x.....x...x.....',
+    snare: '....x.......x.......x.......x...',
+    hat: '..x...x...x...x...x...x...x...xx',
+    stab: [r, r, r, r, [12, 15, 19], r, r, r, r, r, r, r, [10, 14, 17], r, r, r, r, r, r, r, [8, 12, 15], r, r, r, r, r, r, r, [7, 10, 14], r, r, r],
+    wave: 'triangle',
+    leadWave: 'square',
+  },
+  skyline: {
+    bpm: 150,
+    root: 42,
+    bass: [0, 12, 0, 12, 0, 12, 0, 12, -2, 10, -2, 10, -2, 10, -2, 10, -4, 8, -4, 8, -4, 8, -4, 8, -5, 7, -5, 7, -2, 10, -2, 10],
+    lead: [24, r, 22, 24, r, 27, r, 24, 22, r, 19, r, 22, r, r, r, 20, r, 19, 20, r, 24, r, 20, 19, r, 17, r, 19, r, 22, r],
+    kick: 'x...x...x...x...x...x...x...x...',
+    snare: '....x.......x.......x.......x.xx',
+    hat: 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
+    stab: [[12, 16, 19], r, r, r, r, r, r, r, [10, 14, 17], r, r, r, r, r, r, r, [8, 12, 15], r, r, r, r, r, r, r, [7, 10, 14], r, r, r, r, r, r, r],
+    wave: 'sawtooth',
+    leadWave: 'square',
+  },
+  foundry: {
+    bpm: 112,
+    root: 36,
+    bass: [0, r, 0, 0, r, 0, 1, r, 0, r, 0, 0, r, 3, 1, r, 0, r, 0, 0, r, 0, 1, r, -2, r, -2, -2, r, 1, 0, r],
+    lead: [r, r, r, r, 12, r, 13, r, 15, r, r, r, 13, r, 12, r, r, r, r, r, 12, r, 13, r, 10, r, r, r, 8, r, 7, r],
+    kick: 'x..x..x...x..x..x..x..x...x..xx.',
+    snare: '....x.......x.......x.......x...',
+    hat: 'x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.x.',
+    stab: [[0, 1, 7], r, r, r, r, r, r, r, r, r, r, r, r, r, r, r, [-2, 1, 5], r, r, r, r, r, r, r, r, r, r, r, r, r, r, r],
+    wave: 'square',
+    leadWave: 'sawtooth',
   },
   facility: {
     bpm: 128,

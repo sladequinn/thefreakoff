@@ -25,7 +25,7 @@ Click or press any key once to enable sound (browsers block audio until then).
 
 ## Modes
 
-- **Story Mode**: three stages. Playing as Freckles you fight Ninjabots and then Slade. Playing as Slade you fight Frecklebots and then Freckles. You get three lives, and each cleared stage restores some health.
+- **Story Mode**: six stages, each with its own look and music: The Outskirts, Pier 9 Harbor, The Core Facility, Neon Skyline, The Iron Foundry and The Sanctuary. Playing as Freckles you fight Ninjabots and then Slade. Playing as Slade you fight Frecklebots and then Freckles. The Harbor and Foundry end with a Warden mid-boss (SHOGUN-X or FOREMAN MK-II). You start with three lives and earn an extra one after stages 3 and 5. Each cleared stage restores some health.
 - **Versus: 1P vs 2P**: local head-to-head, best of three rounds with a 99-second timer. Combo damage scales down the longer a combo runs.
 - **Versus: 1P vs CPU**: pick your fighter, then pick the CPU's. The CPU blocks, punishes and uses specials.
 
@@ -63,6 +63,7 @@ src/
   scenes/     title, character select, story, versus, results
 ```
 
+- **Pixel look**: the world is painted into a 480x270 buffer, reduced to a 7-level-per-channel palette with 4x4 ordered (Bayer) dithering, and scaled up with nearest-neighbour. The HUD is drawn on top at 960x540 in pixel fonts (Press Start 2P and VT323, bundled via Fontsource), and the browser scales the whole frame with `image-rendering: pixelated`.
 - **Projection**: `screenX = x - cam.x`, `screenY = z - y - cam.y`. Entities are sorted by `z` before drawing, and shadows are drawn at `(screenX, z - cam.y)`.
 - **Hit test**: X overlap, Y overlap, and `|dz| <= zRange` (default 14). Hits trigger 4 to 6 frames of hitstop and a camera shake in the direction of the hit.
 - **Fighter states**: IDLE, WALK, RUN, PREJUMP, JUMP, LAND, ATTACK, HURT, KNOCKDOWN, WAKEUP, plus BLOCK, SUBSTITUTE, DEAD, INTRO and VICTORY.

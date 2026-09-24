@@ -280,6 +280,20 @@ export abstract class CombatScene extends Scene implements World {
       case 'outskirts':
         if (this.frame % 14 === 0) p.spawn('dust', cx + 980, 10 + Math.random() * 60, STAGE_MIN_Z + Math.random() * 170, -1.2 - Math.random(), 0, 0, 160, 2, 'rgba(255,190,150,0.35)', { size2: 3 });
         break;
+      case 'harbor':
+        if (this.frame % 9 === 0) {
+          p.spawn('dust', cx + 980, 140 + Math.random() * 200, STAGE_MIN_Z + Math.random() * 170, -1.6 - Math.random(), 0.1, 0, 200, 3, 'rgba(180,230,255,0.22)', { size2: 6 });
+        }
+        break;
+      case 'foundry':
+        if (this.frame % 3 === 0) {
+          p.spawn('ember', cx + Math.random() * 1000, 10 + Math.random() * 40, STAGE_MIN_Z + Math.random() * 176, (Math.random() - 0.5) * 0.8, 1.2 + Math.random() * 1.6, 0, 90, 1.8, Math.random() < 0.5 ? '#ffb347' : '#ff6a2a', { drag: 0.99 });
+        }
+        if (this.frame % 70 === 0) {
+          const x = cx + Math.random() * 960;
+          p.burst(x, 40, STAGE_MIN_Z - 2, Math.random() < 0.5 ? 1 : -1, '#fff1a8', 10, 4, 2.6);
+        }
+        break;
       case 'rooftop':
         if (this.frame % 4 === 0) {
           p.spawn('spark', cx + Math.random() * 1000, 330, STAGE_MIN_Z + Math.random() * 176, -0.8, -5, 0, 40, 1.4, 'rgba(160,190,255,0.5)', {});
@@ -288,7 +302,7 @@ export abstract class CombatScene extends Scene implements World {
     }
   }
 
-  protected renderWorld(ctx: CanvasRenderingContext2D): void {
+  protected renderWorld(screen: CanvasRenderingContext2D): void {
     const game = this.game;
     const view: RenderView = {
       camX: this.camera.viewX,
@@ -297,6 +311,7 @@ export abstract class CombatScene extends Scene implements World {
       sprites: game.sprites,
       debug: game.settings.debug,
     };
+    const ctx = game.renderer.beginWorld();
     game.renderer.drawStage(this.theme, view.camX, view.camY, game.time, this.stageWidth);
     for (const f of this.fighters) f.drawShadow(ctx, view);
     for (const p of this.projectiles) p.drawShadow(ctx, view);
@@ -305,10 +320,14 @@ export abstract class CombatScene extends Scene implements World {
     list.length = 0;
     for (const f of this.fighters) list.push(f);
     for (const p of this.projectiles) list.push(p);
-    for (const p of this.particles.active) list.push(p);
+    for (const p of this.particles.active) if (p.kind !== 'text') list.push(p);
     list.sort((a, b) => a.sortZ - b.sortZ);
     for (const e of list) e.draw(ctx, view);
     game.renderer.drawVignette();
+    game.renderer.endWorld();
+
+    // Floating combat text stays at full resolution so it remains legible over the pixelated world.
+    for (const p of this.particles.active) if (p.kind === 'text') p.draw(screen, view);
 
     if (game.settings.debug) {
       game.renderer.drawDebug(this.fighters, this.projectiles, view.camX, view.camY, [

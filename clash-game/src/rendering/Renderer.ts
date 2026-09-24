@@ -1,9 +1,20 @@
-import { CANVAS_HEIGHT, CANVAS_WIDTH, COLORS, FONT_MONO, STAGE_MAX_Z, STAGE_MIN_Z, font } from '../config/constants';
+import {
+  CANVAS_HEIGHT,
+  CANVAS_WIDTH,
+  COLORS,
+  FONT_DISPLAY,
+  FONT_MONO,
+  PIXEL_HEIGHT,
+  PIXEL_WIDTH,
+  STAGE_MAX_Z,
+  STAGE_MIN_Z,
+  font,
+} from '../config/constants';
 import { hitboxWorld, hurtboxWorld } from '../physics/Collision';
 import type { Projectile } from '../entities/Entity';
 import type { Fighter } from '../entities/Fighter';
 
-export type StageTheme = 'outskirts' | 'facility' | 'sanctuary' | 'rooftop';
+export type StageTheme = 'outskirts' | 'harbor' | 'facility' | 'rooftop' | 'foundry' | 'sanctuary';
 
 interface Layer {
   canvas: HTMLCanvasElement;
@@ -40,20 +51,52 @@ function makeLayer(width: number, height: number, factor: number, y: number, pai
   return { canvas: c, factor, y, q: LAYER_Q };
 }
 
+/** 4x4 Bayer matrix, normalised to [-0.5, 0.5). */
+const BAYER4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map((v) => (v + 0.5) / 16 - 0.5);
+const PALETTE_LEVELS = 7;
+
+/**
+ * Presentation pipeline: the world is painted into a 480x270 buffer, reduced to a limited palette with ordered
+ * dithering (16-bit console look), then blown up with nearest-neighbour onto a fixed 960x540 screen buffer where the
+ * HUD is drawn in pixel fonts. The browser scales that buffer to the window with `image-rendering: pixelated`.
+ */
 export class Renderer {
   readonly canvas: HTMLCanvasElement;
-  readonly ctx: CanvasRenderingContext2D;
+  /** Current drawing target: the world buffer between beginWorld()/endWorld(), otherwise the screen. */
+  ctx: CanvasRenderingContext2D;
+  readonly screen: CanvasRenderingContext2D;
+  private readonly world: HTMLCanvasElement;
+  private readonly worldCtx: CanvasRenderingContext2D;
+  private readonly lut: Uint8ClampedArray;
   scale = 1;
-  dpr = 1;
+  pixelArt = true;
   private layers = new Map<string, Layer[]>();
 
   constructor(parent: HTMLElement) {
     this.canvas = document.createElement('canvas');
     this.canvas.tabIndex = 0;
+    this.canvas.width = CANVAS_WIDTH;
+    this.canvas.height = CANVAS_HEIGHT;
     parent.appendChild(this.canvas);
     const ctx = this.canvas.getContext('2d', { alpha: false });
     if (!ctx) throw new Error('Canvas 2D is not supported in this browser');
+    this.screen = ctx;
     this.ctx = ctx;
+
+    this.world = document.createElement('canvas');
+    this.world.width = PIXEL_WIDTH;
+    this.world.height = PIXEL_HEIGHT;
+    this.worldCtx = this.world.getContext('2d', { alpha: false, willReadFrequently: true })!;
+
+    // lut[bayerIndex * 256 + value] -> quantised channel value
+    this.lut = new Uint8ClampedArray(16 * 256);
+    const step = 255 / (PALETTE_LEVELS - 1);
+    for (let b = 0; b < 16; b++) {
+      for (let v = 0; v < 256; v++) {
+        this.lut[b * 256 + v] = Math.round(Math.round(v / step + BAYER4[b] * 0.85) * step);
+      }
+    }
+
     this.resize();
     window.addEventListener('resize', () => this.resize());
     window.addEventListener('orientationchange', () => setTimeout(() => this.resize(), 200));
@@ -63,27 +106,66 @@ export class Renderer {
     const w = window.innerWidth;
     const h = window.innerHeight;
     this.scale = Math.max(0.2, Math.min(w / CANVAS_WIDTH, h / CANVAS_HEIGHT));
-    // Phones report DPR 3; 1.5 keeps fill-rate manageable while staying sharp at small physical sizes.
-    const coarse = window.matchMedia?.('(pointer: coarse)').matches ?? false;
-    this.dpr = Math.min(coarse ? 1.5 : 2, window.devicePixelRatio || 1);
     const cssW = Math.floor(CANVAS_WIDTH * this.scale);
     const cssH = Math.floor(CANVAS_HEIGHT * this.scale);
     this.canvas.style.width = `${cssW}px`;
     this.canvas.style.height = `${cssH}px`;
-    this.canvas.width = Math.floor(cssW * this.dpr);
-    this.canvas.height = Math.floor(cssH * this.dpr);
+    // Nearest-neighbour only looks clean once each buffer pixel covers ~1.5+ device pixels; below that, smooth.
+    const devicePixels = this.scale * (window.devicePixelRatio || 1);
+    this.canvas.style.imageRendering = devicePixels >= 1.5 ? 'pixelated' : 'auto';
   }
 
   beginFrame(): CanvasRenderingContext2D {
-    const ctx = this.ctx;
-    const k = this.scale * this.dpr;
-    ctx.setTransform(k, 0, 0, k, 0, 0);
+    const ctx = this.screen;
+    this.ctx = ctx;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.imageSmoothingEnabled = true;
+    ctx.fillStyle = '#05040a';
+    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    ctx.lineCap = 'round';
+    return ctx;
+  }
+
+  /** Redirects drawing to the low-res world buffer. Callers keep using 960x540 coordinates. */
+  beginWorld(): CanvasRenderingContext2D {
+    if (!this.pixelArt) return this.screen;
+    const ctx = this.worldCtx;
+    this.ctx = ctx;
+    ctx.setTransform(PIXEL_WIDTH / CANVAS_WIDTH, 0, 0, PIXEL_HEIGHT / CANVAS_HEIGHT, 0, 0);
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
     ctx.fillStyle = '#05040a';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     ctx.lineCap = 'round';
     return ctx;
+  }
+
+  /** Palette-reduces the world buffer and blits it to the screen with hard pixel edges. */
+  endWorld(): void {
+    this.ctx = this.screen;
+    if (!this.pixelArt) return;
+    const img = this.worldCtx.getImageData(0, 0, PIXEL_WIDTH, PIXEL_HEIGHT);
+    const d = img.data;
+    const lut = this.lut;
+    for (let y = 0; y < PIXEL_HEIGHT; y++) {
+      const row = (y & 3) << 2;
+      let i = y * PIXEL_WIDTH * 4;
+      for (let x = 0; x < PIXEL_WIDTH; x++, i += 4) {
+        const b = (row | (x & 3)) << 8;
+        d[i] = lut[b | d[i]];
+        d[i + 1] = lut[b | d[i + 1]];
+        d[i + 2] = lut[b | d[i + 2]];
+      }
+    }
+    this.worldCtx.putImageData(img, 0, 0);
+    const s = this.screen;
+    s.save();
+    s.setTransform(1, 0, 0, 1, 0, 0);
+    s.imageSmoothingEnabled = false;
+    s.drawImage(this.world, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    s.restore();
   }
 
   // ============================================================== stages
@@ -112,7 +194,157 @@ export class Renderer {
         return [makeLayer(CANVAS_WIDTH, 340, 0, 0, (c, w) => this.paintSanctuary(c, w))];
       case 'rooftop':
         return [makeLayer(CANVAS_WIDTH, 340, 0, 0, (c, w) => this.paintRooftop(c, w))];
+      case 'harbor':
+        return [
+          makeLayer(CANVAS_WIDTH + scroll * 0.12 + 20, 300, 0.12, 0, (c, w) => this.paintHarborFar(c, w)),
+          makeLayer(CANVAS_WIDTH + scroll * 0.5 + 20, 330, 0.5, 0, (c, w) => this.paintHarborMid(c, w)),
+        ];
+      case 'foundry':
+        return [
+          makeLayer(CANVAS_WIDTH + scroll * 0.25 + 20, 330, 0.25, 0, (c, w) => this.paintFoundryFar(c, w)),
+          makeLayer(CANVAS_WIDTH + scroll * 0.6 + 20, 330, 0.6, 0, (c, w) => this.paintFoundryMid(c, w)),
+        ];
     }
+  }
+
+  private paintHarborFar(ctx: CanvasRenderingContext2D, w: number): void {
+    const rnd = mulberry32(512);
+    let x = -10;
+    while (x < w) {
+      const bw = 30 + rnd() * 70;
+      const bh = 40 + rnd() * 110;
+      ctx.fillStyle = '#10213a';
+      ctx.fillRect(x, 262 - bh, bw, bh);
+      for (let wy = 262 - bh + 6; wy < 258; wy += 8) {
+        for (let wx = x + 4; wx < x + bw - 4; wx += 7) {
+          if (rnd() < 0.22) {
+            ctx.fillStyle = rnd() < 0.7 ? 'rgba(120,230,255,0.7)' : 'rgba(255,120,200,0.7)';
+            ctx.fillRect(wx, wy, 3, 3);
+          }
+        }
+      }
+      x += bw + 4 + rnd() * 16;
+    }
+    for (let cx = 120; cx < w; cx += 420 + rnd() * 200) {
+      ctx.strokeStyle = '#0b1830';
+      ctx.lineWidth = 5;
+      ctx.beginPath();
+      ctx.moveTo(cx, 262);
+      ctx.lineTo(cx, 120);
+      ctx.lineTo(cx + 150, 120);
+      ctx.moveTo(cx - 40, 120);
+      ctx.lineTo(cx, 120);
+      ctx.moveTo(cx, 150);
+      ctx.lineTo(cx + 60, 120);
+      ctx.stroke();
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(cx + 120, 120);
+      ctx.lineTo(cx + 120, 175);
+      ctx.stroke();
+      ctx.fillStyle = '#0b1830';
+      ctx.fillRect(cx + 108, 175, 24, 14);
+    }
+  }
+
+  private paintHarborMid(ctx: CanvasRenderingContext2D, w: number): void {
+    const rnd = mulberry32(2718);
+    const colors = [
+      ['#8a2b2b', '#5e1b1b'],
+      ['#2b5a8a', '#1b3a5e'],
+      ['#c77d1f', '#8a5410'],
+      ['#2f7a55', '#1d5038'],
+      ['#6b3a8a', '#47255e'],
+    ];
+    let x = 0;
+    while (x < w) {
+      const stacks = 1 + Math.floor(rnd() * 3);
+      const cw = 110 + rnd() * 40;
+      for (let s = 0; s < stacks; s++) {
+        const [c1, c2] = colors[Math.floor(rnd() * colors.length)];
+        const y = 316 - (s + 1) * 34;
+        ctx.fillStyle = c1;
+        ctx.fillRect(x, y, cw, 32);
+        ctx.fillStyle = c2;
+        for (let r = x + 6; r < x + cw - 4; r += 8) ctx.fillRect(r, y + 3, 3, 26);
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        ctx.fillRect(x, y + 28, cw, 4);
+        ctx.fillStyle = 'rgba(255,255,255,0.12)';
+        ctx.fillRect(x, y, cw, 2);
+      }
+      x += cw + 30 + rnd() * 140;
+    }
+    ctx.fillStyle = '#0c1422';
+    ctx.fillRect(0, 316, w, 14);
+    for (let px = 10; px < w; px += 64) ctx.fillRect(px, 300, 8, 20);
+  }
+
+  private paintFoundryFar(ctx: CanvasRenderingContext2D, w: number): void {
+    const rnd = mulberry32(9001);
+    ctx.fillStyle = '#1c0f0c';
+    ctx.fillRect(0, 60, w, 270);
+    for (let x = 0; x < w; x += 140) {
+      ctx.fillStyle = '#241410';
+      ctx.fillRect(x + 10, 60, 120, 270);
+      for (let k = 0; k < 3; k++) {
+        const wy = 90 + k * 60;
+        const g = ctx.createLinearGradient(0, wy, 0, wy + 34);
+        g.addColorStop(0, '#ff9a2a');
+        g.addColorStop(1, '#8a1a0a');
+        ctx.fillStyle = rnd() < 0.8 ? g : '#2a1612';
+        ctx.fillRect(x + 30, wy, 26, 34);
+        ctx.fillRect(x + 84, wy, 26, 34);
+      }
+    }
+    ctx.fillStyle = '#120806';
+    for (let x = 60; x < w; x += 360 + rnd() * 160) {
+      ctx.fillRect(x, 0, 46, 80);
+      ctx.fillRect(x - 6, 0, 58, 10);
+    }
+    ctx.strokeStyle = '#3a2218';
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.moveTo(0, 70);
+    ctx.lineTo(w, 70);
+    ctx.stroke();
+  }
+
+  private paintFoundryMid(ctx: CanvasRenderingContext2D, w: number): void {
+    const rnd = mulberry32(606);
+    ctx.fillStyle = '#0f0907';
+    ctx.fillRect(0, 0, w, 26);
+    for (let x = 0; x < w; x += 240) {
+      ctx.fillStyle = '#1a110d';
+      ctx.fillRect(x + 20, 0, 22, 320);
+      ctx.fillRect(x + 200, 0, 22, 320);
+      ctx.strokeStyle = '#1a110d';
+      ctx.lineWidth = 6;
+      ctx.beginPath();
+      for (let y = 30; y < 300; y += 60) {
+        ctx.moveTo(x + 42, y);
+        ctx.lineTo(x + 200, y + 60);
+        ctx.moveTo(x + 200, y);
+        ctx.lineTo(x + 42, y + 60);
+      }
+      ctx.stroke();
+      if (rnd() < 0.7) {
+        const cx = x + 120;
+        ctx.strokeStyle = '#2c201a';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(cx, 26);
+        ctx.lineTo(cx, 120 + rnd() * 60);
+        ctx.stroke();
+        ctx.fillStyle = '#3a2a22';
+        ctx.fillRect(cx - 10, 150, 20, 8);
+      }
+    }
+    ctx.fillStyle = '#ffd21f';
+    for (let x = 0; x < w; x += 24) {
+      ctx.fillRect(x, 304, 12, 8);
+    }
+    ctx.fillStyle = '#16100c';
+    for (let x = 12; x < w; x += 24) ctx.fillRect(x, 304, 12, 8);
   }
 
   drawStage(theme: StageTheme, camX: number, camY: number, time: number, stageWidth: number): void {
@@ -196,6 +428,38 @@ export class Renderer {
         ctx.arc(708, 82, 8, 0, Math.PI * 2);
         ctx.arc(732, 104, 5, 0, Math.PI * 2);
         ctx.fill();
+        break;
+      }
+      case 'harbor': {
+        g = ctx.createLinearGradient(0, 0, 0, 300);
+        g.addColorStop(0, '#040a1a');
+        g.addColorStop(0.6, '#0e2a4a');
+        g.addColorStop(1, '#2a6a8a');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, CANVAS_WIDTH, 340);
+        for (let i = 0; i < 60; i++) {
+          const tw = 0.5 + 0.5 * Math.sin(time * 0.04 + i * 3);
+          ctx.fillStyle = `rgba(200,240,255,${0.2 + tw * 0.5})`;
+          ctx.fillRect(hash(i + 7) * CANVAS_WIDTH, hash(i + 70) * 160, 2, 2);
+        }
+        const mx = 760 - camX * 0.02;
+        ctx.fillStyle = 'rgba(200,240,255,0.18)';
+        ctx.beginPath();
+        ctx.arc(mx, 80, 54, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#e6f6ff';
+        ctx.beginPath();
+        ctx.arc(mx, 80, 34, 0, Math.PI * 2);
+        ctx.fill();
+        break;
+      }
+      case 'foundry': {
+        g = ctx.createLinearGradient(0, 0, 0, 330);
+        g.addColorStop(0, '#0a0404');
+        g.addColorStop(0.7, '#3a1208');
+        g.addColorStop(1, '#8a2a0a');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, CANVAS_WIDTH, 340);
         break;
       }
       case 'rooftop': {
@@ -530,13 +794,65 @@ export class Renderer {
     } else if (theme === 'rooftop') {
       const on = Math.floor(time / 40) % 2 === 0;
       ctx.save();
-      ctx.font = "900 34px 'Arial Black', Impact, sans-serif";
+      ctx.font = font(FONT_DISPLAY, 34);
       ctx.textAlign = 'center';
       ctx.shadowColor = on ? '#ff3dbb' : '#39f3ff';
       ctx.shadowBlur = 18;
       ctx.fillStyle = on ? '#ff8ad8' : '#9ffbff';
       ctx.fillText(on ? 'CLASH' : 'ARCANE & IRON', 470, 150);
       ctx.restore();
+    } else if (theme === 'harbor') {
+      const wy = 262;
+      const wg = ctx.createLinearGradient(0, wy, 0, 322);
+      wg.addColorStop(0, '#0f3a5a');
+      wg.addColorStop(1, '#06182a');
+      ctx.fillStyle = wg;
+      ctx.fillRect(0, wy, CANVAS_WIDTH, 60);
+      for (let i = 0; i < 26; i++) {
+        const y = wy + 4 + (i % 7) * 8;
+        const speed = 0.3 + (i % 5) * 0.12;
+        const x = ((hash(i) * 1400 - time * speed - camX * 0.3) % 1100 + 1100) % 1100 - 70;
+        ctx.fillStyle = i % 3 === 0 ? 'rgba(255,120,200,0.35)' : 'rgba(150,230,255,0.4)';
+        ctx.fillRect(x, y, 26 + (i % 4) * 12, 2);
+      }
+      const mx = 760 - camX * 0.02;
+      for (let k = 0; k < 6; k++) {
+        const wob = Math.sin(time * 0.08 + k) * 6;
+        ctx.fillStyle = `rgba(230,246,255,${0.45 - k * 0.06})`;
+        ctx.fillRect(mx - 22 + wob, wy + 6 + k * 8, 44 - k * 5, 2);
+      }
+      const on = Math.floor(time / 30) % 2 === 0;
+      for (let i = 0; i < 4; i++) {
+        const lx = ((i * 380 + 250 - camX * 0.12) % 1200 + 1200) % 1200 - 120;
+        ctx.fillStyle = on === (i % 2 === 0) ? '#ff3b3b' : '#4a0a0a';
+        ctx.fillRect(lx, 116, 5, 5);
+      }
+    } else if (theme === 'foundry') {
+      for (let i = 0; i < 3; i++) {
+        const px = ((i * 420 + 260 - camX * 0.6) % 1260 + 1260) % 1260 - 150;
+        const flow = (time * 3) % 40;
+        const g = ctx.createLinearGradient(px - 40, 0, px + 40, 0);
+        g.addColorStop(0, 'rgba(255,90,20,0)');
+        g.addColorStop(0.5, 'rgba(255,140,40,0.35)');
+        g.addColorStop(1, 'rgba(255,90,20,0)');
+        ctx.fillStyle = g;
+        ctx.fillRect(px - 40, 40, 80, 280);
+        ctx.fillStyle = '#ffb347';
+        ctx.fillRect(px - 5, 40, 10, 260);
+        ctx.fillStyle = '#fff1a8';
+        for (let y = 40 + flow; y < 300; y += 40) ctx.fillRect(px - 2, y, 4, 14);
+        ctx.fillStyle = '#2a1a14';
+        ctx.fillRect(px - 34, 20, 68, 26);
+        ctx.fillStyle = '#ff7a1a';
+        ctx.fillRect(px - 28, 40, 56, 4);
+        ctx.fillStyle = '#3a1a10';
+        ctx.fillRect(px - 44, 296, 88, 20);
+        ctx.fillStyle = `rgba(255,${150 + Math.floor(Math.sin(time * 0.2 + i) * 40)},40,0.9)`;
+        ctx.fillRect(px - 38, 296, 76, 6);
+      }
+      const flick = 0.12 + 0.06 * Math.sin(time * 0.37) + 0.04 * Math.sin(time * 1.3);
+      ctx.fillStyle = `rgba(255,110,30,${flick})`;
+      ctx.fillRect(0, 0, CANVAS_WIDTH, 330);
     } else if (theme === 'sanctuary') {
       for (const lx of [240, 420, 540, 720]) {
         const flick = 0.8 + 0.2 * Math.sin(time * 0.3 + lx);
@@ -694,6 +1010,98 @@ export class Renderer {
         }
         ctx.stroke();
         ctx.restore();
+        break;
+      }
+      case 'harbor': {
+        const g = ctx.createLinearGradient(0, top, 0, CANVAS_HEIGHT);
+        g.addColorStop(0, '#5a4030');
+        g.addColorStop(1, '#2a1c14');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, top, CANVAS_WIDTH, H);
+        ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+        ctx.lineWidth = 2;
+        for (let r = 1; r < 9; r++) {
+          const y = top + H * (r / 9) ** 1.15;
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(CANVAS_WIDTH, y);
+          ctx.stroke();
+          const off = (r * 53) % 180;
+          const s = Math.floor((camX - off) / 180) - 1;
+          for (let i = s; i < s + 9; i++) {
+            const xs = i * 180 + off - camX;
+            const y0 = top + H * ((r - 1) / 9) ** 1.15;
+            ctx.beginPath();
+            ctx.moveTo(persp(xs, y0), y0);
+            ctx.lineTo(persp(xs, y), y);
+            ctx.stroke();
+          }
+        }
+        ctx.fillStyle = 'rgba(255,220,160,0.06)';
+        for (let r = 0; r < 9; r += 2) ctx.fillRect(0, top + H * (r / 9) ** 1.15 + 2, CANVAS_WIDTH, 3);
+        const bs = Math.floor(camX / 320) - 1;
+        for (let i = bs; i < bs + 5; i++) {
+          const xs = i * 320 + 60 - camX;
+          ctx.fillStyle = '#1a1a20';
+          ctx.fillRect(xs - 9, top - 16, 18, 20);
+          ctx.fillStyle = '#3a3a44';
+          ctx.fillRect(xs - 11, top - 18, 22, 5);
+          ctx.strokeStyle = '#8a7250';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(xs + 9, top - 8);
+          ctx.quadraticCurveTo(xs + 160, top + 4, xs + 311, top - 8);
+          ctx.stroke();
+        }
+        ctx.fillStyle = '#ffd21f';
+        ctx.fillRect(0, top - 2, CANVAS_WIDTH, 3);
+        break;
+      }
+      case 'foundry': {
+        const g = ctx.createLinearGradient(0, top, 0, CANVAS_HEIGHT);
+        g.addColorStop(0, '#3a302c');
+        g.addColorStop(1, '#16110f');
+        ctx.fillStyle = g;
+        ctx.fillRect(0, top, CANVAS_WIDTH, H);
+        ctx.strokeStyle = 'rgba(0,0,0,0.5)';
+        ctx.lineWidth = 1.5;
+        for (let r = 1; r < 12; r++) {
+          const y = top + H * (r / 12) ** 1.1;
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(CANVAS_WIDTH, y);
+          ctx.stroke();
+        }
+        const s = Math.floor(camX / 48) - 6;
+        for (let i = s; i < s + 32; i++) {
+          const xs = i * 48 - camX;
+          ctx.beginPath();
+          ctx.moveTo(persp(xs, top), top);
+          ctx.lineTo(persp(xs, CANVAS_HEIGHT), CANVAS_HEIGHT);
+          ctx.stroke();
+        }
+        // Molten channel runs just behind the walkable belt so fighters never appear to stand in it.
+        const cy = top - 18;
+        const cg = ctx.createLinearGradient(0, cy, 0, cy + 12);
+        cg.addColorStop(0, '#fff1a8');
+        cg.addColorStop(0.4, '#ff9a2a');
+        cg.addColorStop(1, '#b8300a');
+        ctx.fillStyle = cg;
+        ctx.fillRect(0, cy, CANVAS_WIDTH, 12);
+        ctx.fillStyle = 'rgba(255,241,168,0.8)';
+        const flow = (time * 1.5 + camX) % 90;
+        for (let x = -flow; x < CANVAS_WIDTH; x += 90) ctx.fillRect(x, cy + 3, 30, 2);
+        ctx.fillStyle = 'rgba(255,120,30,0.14)';
+        ctx.fillRect(0, cy - 24, CANVAS_WIDTH, 24);
+        ctx.fillRect(0, top + 5, CANVAS_WIDTH, 30);
+        ctx.fillStyle = '#2a2420';
+        ctx.fillRect(0, cy - 3, CANVAS_WIDTH, 3);
+        ctx.fillRect(0, cy + 12, CANVAS_WIDTH, 3);
+        const hs = Math.floor(camX / 40) - 1;
+        for (let i = hs; i < hs + 26; i++) {
+          ctx.fillStyle = i % 2 === 0 ? '#ffd21f' : '#1a1410';
+          ctx.fillRect(i * 40 - camX, top, 40, 5);
+        }
         break;
       }
       case 'rooftop': {

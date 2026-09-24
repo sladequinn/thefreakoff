@@ -229,11 +229,13 @@ const TUNING: Record<EnemyKind, Partial<Record<Variant, VariantTuning>>> = {
     normal: { label: 'NINJABOT', hpMult: 1, scale: 1, speed: 1, damage: 1, score: 400 },
     alt: { label: 'NINJABOT // STAR UNIT', hpMult: 0.85, scale: 0.96, speed: 1.05, damage: 1, score: 500 },
     elite: { label: 'ELITE NINJABOT', hpMult: 1.9, scale: 1.08, speed: 1.15, damage: 1.25, score: 1500 },
+    boss: { label: 'SHOGUN-X', hpMult: 6, scale: 1.34, speed: 1.1, damage: 1.45, score: 6000 },
   },
   frecklebot: {
     normal: { label: 'FRECKLEBOT', hpMult: 1, scale: 1, speed: 1, damage: 1, score: 400 },
     heavy: { label: 'FRECKLEBOT // HEAVY', hpMult: 1.7, scale: 1.16, speed: 0.8, damage: 1.25, score: 700 },
     elite: { label: 'ELITE FRECKLEBOT', hpMult: 1.7, scale: 1.1, speed: 1.1, damage: 1.25, score: 1500 },
+    boss: { label: 'FOREMAN MK-II', hpMult: 5.5, scale: 1.4, speed: 0.95, damage: 1.5, score: 6000 },
   },
 };
 
@@ -279,7 +281,7 @@ export class Enemy extends Fighter {
     if (this.kind === 'ninjabot') {
       const moving = Math.abs(this.vx) + Math.abs(this.vz) > 1.2;
       if (moving && this.animTime % 3 === 0) {
-        const color = this.variant === 'elite' ? '#ff4d6d' : this.variant === 'alt' ? '#7dff9b' : COLORS.cyan;
+        const color = this.variant === 'boss' ? '#ffc857' : this.variant === 'elite' ? '#ff4d6d' : this.variant === 'alt' ? '#7dff9b' : COLORS.cyan;
         p.spawn('ember', this.x - this.facing * 10, this.y + 40 + Math.random() * 30, this.z - 1, -this.vx * 0.2, 0.2, 0, 18, 2.2, color);
       }
     } else {

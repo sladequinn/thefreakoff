@@ -21,7 +21,7 @@ export class FrecklebotAI implements Controller {
 
   constructor(private readonly variant: Variant) {
     this.tackleCd = rand(90, 220);
-    this.aggression = variant === 'elite' ? 0.8 : variant === 'heavy' ? 0.5 : 0.6;
+    this.aggression = variant === 'boss' ? 0.9 : variant === 'elite' ? 0.8 : variant === 'heavy' ? 0.5 : 0.6;
   }
 
   getInput(self: Fighter, world: World): InputFrame {
@@ -71,7 +71,7 @@ export class FrecklebotAI implements Controller {
       if (!targetDown && adx < 72 * self.scale && Math.abs(dz) < 12) {
         if (Math.random() < this.aggression && world.requestToken(self)) this.pendingAttack = Math.round(rand(3, 10));
       } else if (!targetDown && adx > 140 && adx < 330 && Math.abs(dz) < 12 && this.tackleCd <= 0) {
-        this.tackleCd = this.variant === 'heavy' ? rand(160, 240) : rand(220, 340);
+        this.tackleCd = this.variant === 'boss' ? rand(110, 170) : this.variant === 'heavy' ? rand(160, 240) : rand(220, 340);
         o.moveRequest = 'fb_tackle';
         return o;
       }

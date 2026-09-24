@@ -24,9 +24,9 @@ export class NinjabotAI implements Controller {
   private readonly throwRate: [number, number];
 
   constructor(private readonly variant: Variant) {
-    this.preferred = variant === 'alt' ? 300 : variant === 'elite' ? 170 : 210;
-    this.subChance = variant === 'elite' ? 0.4 : variant === 'alt' ? 0.18 : 0.22;
-    this.throwRate = variant === 'alt' ? [80, 130] : variant === 'elite' ? [110, 170] : [150, 240];
+    this.preferred = variant === 'alt' ? 300 : variant === 'elite' ? 170 : variant === 'boss' ? 180 : 210;
+    this.subChance = variant === 'boss' ? 0.5 : variant === 'elite' ? 0.4 : variant === 'alt' ? 0.18 : 0.22;
+    this.throwRate = variant === 'alt' ? [80, 130] : variant === 'elite' ? [110, 170] : variant === 'boss' ? [60, 110] : [150, 240];
     this.throwCd = rand(40, this.throwRate[1]);
   }
 
