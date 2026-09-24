@@ -1,0 +1,1205 @@
+import { WAKEUP_FRAMES } from '../config/constants';
+import { FState, type Archetype, type Variant } from '../physics/Types';
+import type { RenderView } from '../entities/Entity';
+import type { Fighter } from '../entities/Fighter';
+
+// ============================================================================ pose model
+
+/** Angles in radians measured from straight down; positive rotates toward the facing direction. */
+export interface Pose {
+  lean: number;
+  head: number;
+  sL: number;
+  eL: number;
+  sR: number;
+  eR: number;
+  hL: number;
+  kL: number;
+  hR: number;
+  kR: number;
+  rot: number;
+  weapon: number;
+  spin: number;
+  lying: boolean;
+}
+
+const P = (
+  lean: number,
+  head: number,
+  sL: number,
+  eL: number,
+  sR: number,
+  eR: number,
+  hL: number,
+  kL: number,
+  hR: number,
+  kR: number,
+  rot = 0,
+  weapon = 0,
+): Pose => ({ lean, head, sL, eL, sR, eR, hL, kL, hR, kR, rot, weapon, spin: 0, lying: false });
+
+const NUM_KEYS: (keyof Pose)[] = ['lean', 'head', 'sL', 'eL', 'sR', 'eR', 'hL', 'kL', 'hR', 'kR', 'rot', 'weapon', 'spin'];
+
+function lerpPose(a: Pose, b: Pose, t: number): Pose {
+  const out = { ...a };
+  for (const k of NUM_KEYS) (out[k] as number) = (a[k] as number) + ((b[k] as number) - (a[k] as number)) * t;
+  out.lying = t < 0.5 ? a.lying : b.lying;
+  return out;
+}
+
+type Keys = [number, Pose][];
+
+function sample(keys: Keys, f: number): Pose {
+  if (f <= keys[0][0]) return keys[0][1];
+  for (let i = 1; i < keys.length; i++) {
+    const [f1, p1] = keys[i];
+    if (f <= f1) {
+      const [f0, p0] = keys[i - 1];
+      const t = (f - f0) / Math.max(1, f1 - f0);
+      const e = t * t * (3 - 2 * t);
+      return lerpPose(p0, p1, e);
+    }
+  }
+  return keys[keys.length - 1][1];
+}
+
+const IDLE: Record<Archetype, Pose> = {
+  ninja: P(0.18, -0.1, -0.5, 1.4, 1.0, 0.7, -0.35, -0.12, 0.45, -0.5, 0, 0.7),
+  brawler: P(0.22, 0.02, 0.55, 2.1, 0.8, 1.9, -0.4, -0.15, 0.4, -0.4),
+  ninjabot: P(0.15, 0, -0.2, 1.1, 0.8, 0.9, -0.3, -0.1, 0.35, -0.4, 0, 0.9),
+  frecklebot: P(0.08, 0, 0.3, 1.5, 0.5, 1.4, -0.25, -0.1, 0.25, -0.2),
+};
+
+const withLegs = (p: Pose, hL: number, kL: number, hR: number, kR: number): Pose => ({ ...p, hL, kL, hR, kR });
+const crouchOf = (a: Archetype): Pose => ({ ...withLegs(IDLE[a], 0.7, -1.5, 1.0, -1.5), lean: IDLE[a].lean + 0.25 });
+
+const LYING: Pose = { ...P(0, 0.2, -0.3, 0.3, 0.3, 0.2, 0.05, 0, 0.15, -0.1, -Math.PI / 2), lying: true };
+const HURT_POSE = P(-0.35, -0.4, -1.2, 0.8, -0.9, 0.6, -0.2, -0.2, 0.35, -0.3, 0, 0.7);
+const GUARD: Record<Archetype, Pose> = {
+  ninja: P(-0.05, 0.1, 1.2, 1.8, 1.0, 1.6, -0.4, -0.2, 0.4, -0.4, 0, 1.4),
+  brawler: P(0.1, 0.2, 1.0, 2.3, 1.2, 2.2, -0.45, -0.2, 0.4, -0.4),
+  ninjabot: P(-0.05, 0.1, 1.2, 1.6, 1.0, 1.6, -0.4, -0.2, 0.4, -0.4, 0, 1.4),
+  frecklebot: P(0.05, 0.1, 1.0, 2.0, 1.2, 1.9, -0.3, -0.1, 0.3, -0.2),
+};
+const VICTORY: Record<Archetype, Pose> = {
+  ninja: P(-0.05, -0.15, -0.4, 1.2, 3.0, 0, -0.3, -0.05, 0.3, -0.05, 0, 0),
+  brawler: P(-0.05, -0.2, 0.5, 2.0, 3.0, 0.3, -0.3, -0.05, 0.3, -0.05),
+  ninjabot: IDLE.ninjabot,
+  frecklebot: IDLE.frecklebot,
+};
+
+const NI = IDLE.ninja;
+const BI = IDLE.brawler;
+const NB = IDLE.ninjabot;
+const FB = IDLE.frecklebot;
+
+const MOVE_KEYS: Record<string, Keys> = {
+  slade_slash: [
+    [0, NI],
+    [2, P(0.05, -0.1, -0.6, 1.2, 2.6, 0.9, -0.4, -0.1, 0.5, -0.5, 0, 0.6)],
+    [4, P(0.4, 0.1, -0.9, 0.9, 1.65, 0.0, -0.6, -0.1, 0.75, -0.3, 0, 0.05)],
+    [9, P(0.35, 0.1, -0.8, 1.0, 1.1, 0.2, -0.6, -0.1, 0.75, -0.3, 0, -0.5)],
+    [18, NI],
+  ],
+  slade_palm: [
+    [0, NI],
+    [3, P(0.1, 0, 0.4, 1.8, -0.5, 1.2, -0.4, -0.1, 0.5, -0.5, 0, 1.2)],
+    [5, P(0.45, 0.1, 1.6, -0.05, -0.8, 1.0, -0.7, -0.05, 0.85, -0.3, 0, 1.4)],
+    [12, P(0.4, 0.1, 1.55, 0, -0.8, 1.0, -0.7, -0.05, 0.85, -0.3, 0, 1.4)],
+    [20, NI],
+  ],
+  slade_crescent: [
+    [0, NI],
+    [3, P(0.55, 0.2, -0.8, 1.0, 0.35, 0.1, 0.9, -1.6, 1.0, -1.4, 0, -0.2)],
+    [6, P(-0.15, -0.2, -1.0, 0.8, 3.0, 0, -0.2, -0.2, 0.4, -0.2, 0, 0.1)],
+    [15, P(-0.1, -0.2, -1.0, 0.8, 2.9, 0.1, -0.2, -0.2, 0.4, -0.2, 0, 0.2)],
+    [30, NI],
+  ],
+  slade_sweep: [
+    [0, P(0.5, 0.1, -0.8, 1, 0.6, 0.6, 0.7, -1.5, 1.0, -1.5, 0, 0.6)],
+    [9, P(0.35, 0.1, -0.9, 0.3, 0.9, 0.5, 1.0, -2.3, 1.35, -0.05, 0, 0.9)],
+    [18, P(0.35, 0.1, -0.9, 0.3, 0.9, 0.5, 1.0, -2.3, 1.3, -0.1, 0, 0.9)],
+    [32, NI],
+  ],
+  slade_dive: [
+    [0, P(0.1, 0, -0.4, 1.4, 1.8, 0.6, 1.0, -1.8, 1.2, -1.6, 0, 0.8)],
+    [5, P(0.3, 0.2, -1.6, 0.4, -1.3, 0.5, 1.2, -2.0, 0.55, -0.05, 0.55, 0.3)],
+    [70, P(0.3, 0.2, -1.6, 0.4, -1.3, 0.5, 1.2, -2.0, 0.55, -0.05, 0.55, 0.3)],
+  ],
+  slade_mudra: [
+    [0, NI],
+    [6, P(0, 0, 0.9, 1.7, 0.8, 1.8, -0.4, -0.2, 0.4, -0.2, 0, 1.6)],
+    [12, P(0, 0, 0.9, 1.7, 0.8, 1.8, -0.45, -0.2, 0.45, -0.2, 0, 1.6)],
+    [15, P(-0.1, -0.3, 2.7, 0.2, 2.6, 0.2, -0.6, -0.1, 0.6, -0.1, 0, 0.2)],
+    [40, P(-0.1, -0.3, 2.6, 0.2, 2.5, 0.2, -0.6, -0.1, 0.6, -0.1, 0, 0.2)],
+    [56, NI],
+  ],
+  fr_jab: [
+    [0, BI],
+    [3, P(0.35, 0.05, 0.55, 2.1, 1.6, 0.05, -0.5, -0.1, 0.5, -0.4)],
+    [7, P(0.35, 0.05, 0.55, 2.1, 1.55, 0.1, -0.5, -0.1, 0.5, -0.4)],
+    [14, BI],
+  ],
+  fr_liver: [
+    [0, BI],
+    [2, P(0.1, 0, -0.4, 1.6, 0.8, 1.9, -0.4, -0.15, 0.4, -0.4)],
+    [4, P(0.55, 0.15, 1.35, 0.25, 0.7, 2.0, -0.6, -0.1, 0.8, -0.7)],
+    [10, P(0.55, 0.15, 1.3, 0.3, 0.7, 2.0, -0.6, -0.1, 0.8, -0.7)],
+    [18, BI],
+  ],
+  fr_uppercut: [
+    [0, BI],
+    [3, P(0.6, 0.2, 0.2, 1.2, 0.8, 2.0, 0.8, -1.5, 0.9, -1.4)],
+    [6, P(-0.1, -0.2, 2.8, 0.4, 0.6, 2.0, -0.3, -0.1, 0.3, -0.2)],
+    [13, P(-0.1, -0.2, 2.7, 0.5, 0.6, 2.0, -0.3, -0.1, 0.3, -0.2)],
+    [22, BI],
+  ],
+  fr_haymaker: [
+    [0, BI],
+    [6, P(-0.15, -0.1, 0.6, 2.0, -0.7, 1.6, -0.3, -0.1, 0.5, -0.4)],
+    [10, P(0.65, 0.2, -0.5, 1.2, 1.85, 0.1, -0.8, -0.05, 0.9, -0.5)],
+    [20, P(0.6, 0.2, -0.5, 1.2, 1.7, 0.2, -0.8, -0.05, 0.9, -0.5)],
+    [34, BI],
+  ],
+  fr_charge: [
+    [0, P(0.5, 0.1, -0.3, 1.2, 0.2, 1.8, -0.5, -0.2, 0.6, -0.6)],
+    [4, P(0.8, 0.3, -0.6, 1.0, 0.3, 1.6, -0.8, -0.3, 0.9, -0.9)],
+    [26, P(0.8, 0.3, -0.6, 1.0, 0.3, 1.6, -0.8, -0.3, 0.9, -0.9)],
+    [36, BI],
+  ],
+  fr_hammer: [
+    [0, P(-0.1, -0.2, 3.0, 0.2, 3.0, 0.2, 0.9, -1.6, 1.1, -1.5)],
+    [7, P(0.5, 0.3, 1.0, 0.1, 1.1, 0.1, 0.4, -0.6, 0.5, -0.5)],
+    [70, P(0.5, 0.3, 1.0, 0.1, 1.1, 0.1, 0.4, -0.6, 0.5, -0.5)],
+  ],
+  fr_riot: [
+    [0, BI],
+    [10, P(0.3, 0, 1.2, 0.4, 1.4, 0.4, -0.7, -0.3, 0.7, -0.5)],
+    [14, P(0.1, 0, -1.6, 0, 1.6, 0, -0.6, -0.2, 0.6, -0.3)],
+    [44, P(0.1, 0, -1.6, 0, 1.6, 0, -0.6, -0.2, 0.6, -0.3)],
+    [47, P(-0.2, -0.3, 3.0, 0.2, 3.0, 0.2, -0.4, -0.1, 0.4, -0.1)],
+    [50, P(0.9, 0.4, 0.8, 0.1, 0.9, 0.1, 0.9, -1.7, 1.0, -1.5)],
+    [66, P(0.9, 0.4, 0.8, 0.1, 0.9, 0.1, 0.9, -1.7, 1.0, -1.5)],
+    [80, BI],
+  ],
+  nb_slash1: [
+    [0, NB],
+    [3, P(0.05, 0, -0.3, 1.0, 2.6, 0.8, -0.35, -0.1, 0.4, -0.4, 0, 0.6)],
+    [6, P(0.4, 0.1, -0.6, 0.9, 1.6, 0, -0.6, -0.1, 0.7, -0.3, 0, 0.1)],
+    [12, P(0.35, 0.1, -0.6, 0.9, 1.0, 0.2, -0.6, -0.1, 0.7, -0.3, 0, -0.5)],
+    [22, NB],
+  ],
+  nb_slash2: [
+    [0, NB],
+    [4, P(0.0, 0, 2.5, 0.8, 0.4, 1.2, -0.35, -0.1, 0.4, -0.4, 0, 0.6)],
+    [7, P(0.45, 0.1, 1.6, 0, 0.2, 1.2, -0.7, -0.05, 0.8, -0.3, 0, 0.1)],
+    [14, P(0.4, 0.1, 1.2, 0.2, 0.2, 1.2, -0.7, -0.05, 0.8, -0.3, 0, -0.4)],
+    [28, NB],
+  ],
+  nb_flip: [
+    [0, crouchOf('ninjabot')],
+    [4, P(0.2, 0, 1.5, 1.0, 1.5, 1.0, 1.1, -2.0, 1.2, -2.0, 0, 0.9)],
+    [12, P(0.1, 0, -1.2, 0.5, -1.0, 0.5, 0.9, -1.8, 1.4, 0, 0, 0.3)],
+    [60, P(0.1, 0, -1.2, 0.5, -1.0, 0.5, 0.9, -1.8, 1.4, 0, 0, 0.3)],
+  ],
+  nb_throw: [
+    [0, NB],
+    [6, P(-0.1, 0, -0.4, 1.0, 2.8, 0.8, -0.4, -0.1, 0.5, -0.3, 0, 0.5)],
+    [10, P(0.35, 0.1, -0.7, 1.0, 1.5, 0.1, -0.6, -0.1, 0.7, -0.4, 0, 0.5)],
+    [18, P(0.3, 0.1, -0.7, 1.0, 1.4, 0.2, -0.6, -0.1, 0.7, -0.4, 0, 0.5)],
+    [28, NB],
+  ],
+  fb_punch1: [
+    [0, FB],
+    [5, P(-0.05, 0, 0.3, 1.5, 0.1, 1.7, -0.3, -0.1, 0.3, -0.2)],
+    [9, P(0.3, 0.05, 0.3, 1.5, 1.6, 0.05, -0.5, -0.1, 0.5, -0.3)],
+    [16, P(0.3, 0.05, 0.3, 1.5, 1.55, 0.1, -0.5, -0.1, 0.5, -0.3)],
+    [26, FB],
+  ],
+  fb_punch2: [
+    [0, FB],
+    [6, P(-0.05, 0, -0.6, 1.4, 0.5, 1.4, -0.3, -0.1, 0.3, -0.2)],
+    [10, P(0.4, 0.05, 1.6, 0.05, 0.4, 1.4, -0.6, -0.1, 0.6, -0.3)],
+    [20, P(0.4, 0.05, 1.55, 0.1, 0.4, 1.4, -0.6, -0.1, 0.6, -0.3)],
+    [32, FB],
+  ],
+  fb_tackle: [
+    [0, FB],
+    [10, P(0.35, 0.1, -0.3, 1.4, 0.1, 1.6, 0.6, -1.2, 0.8, -1.2)],
+    [14, P(0.85, 0.3, -0.6, 1.1, 0.3, 1.7, -0.8, -0.3, 0.9, -0.9)],
+    [42, P(0.85, 0.3, -0.6, 1.1, 0.3, 1.7, -0.8, -0.3, 0.9, -0.9)],
+    [52, FB],
+  ],
+  fb_pulse: [
+    [0, FB],
+    [10, P(-0.2, -0.2, 2.0, 0.3, 2.0, 0.3, -0.5, -0.1, 0.5, -0.1)],
+    [30, P(-0.2, -0.2, 2.1, 0.3, 2.1, 0.3, -0.5, -0.1, 0.5, -0.1)],
+    [34, P(0.5, 0.3, 0.9, 0.1, 0.9, 0.1, 0.8, -1.5, 0.9, -1.4)],
+    [50, P(0.5, 0.3, 0.9, 0.1, 0.9, 0.1, 0.8, -1.5, 0.9, -1.4)],
+    [62, FB],
+  ],
+};
+
+const RUN_LEG_MOVES: Record<string, [number, number]> = {
+  fr_charge: [4, 26],
+  fb_tackle: [14, 42],
+};
+
+function walkLegs(p: Pose, ph: number, amp: number, knee: number): Pose {
+  const q = { ...p };
+  q.hR = Math.sin(ph) * amp;
+  q.kR = -(0.12 + Math.max(0, Math.cos(ph)) * knee);
+  q.hL = Math.sin(ph + Math.PI) * amp;
+  q.kL = -(0.12 + Math.max(0, Math.cos(ph + Math.PI)) * knee);
+  return q;
+}
+
+export function idlePose(a: Archetype, t: number): Pose {
+  const b = IDLE[a];
+  const breathe = Math.sin(t * 0.08);
+  if (a === 'brawler') {
+    const bounce = Math.abs(Math.sin(t * 0.13));
+    return { ...b, kL: b.kL - bounce * 0.3, kR: b.kR - bounce * 0.3, hL: b.hL + bounce * 0.1, hR: b.hR + bounce * 0.12, eR: b.eR + breathe * 0.06 };
+  }
+  return { ...b, lean: b.lean + breathe * 0.03, sR: b.sR + breathe * 0.04, kR: b.kR - breathe * 0.05 };
+}
+
+export function poseFor(f: Fighter): Pose {
+  const a = f.def.archetype;
+  const base = IDLE[a];
+  switch (f.state) {
+    case FState.IDLE:
+    case FState.INTRO:
+      if (f.guarding) return GUARD[a];
+      return idlePose(a, f.animTime);
+    case FState.WALK: {
+      const p = walkLegs(base, f.walkPhase, 0.5, 0.75);
+      if (f.guarding) return walkLegs(GUARD[a], f.walkPhase, 0.35, 0.5);
+      if (a === 'ninja' || a === 'ninjabot') {
+        p.sL = base.sL + Math.sin(f.walkPhase) * 0.3;
+      }
+      return p;
+    }
+    case FState.RUN: {
+      const p = walkLegs(base, f.walkPhase, 0.9, 1.45);
+      p.lean = base.lean + 0.35;
+      if (a === 'ninja' || a === 'ninjabot') {
+        p.sL = -1.3;
+        p.eL = 0.3;
+        p.sR = -1.0;
+        p.eR = 0.4;
+        p.weapon = -1.2;
+      } else {
+        p.sR = 0.3 + Math.sin(f.walkPhase) * 0.8;
+        p.sL = 0.3 - Math.sin(f.walkPhase) * 0.8;
+        p.eR = 1.7;
+        p.eL = 1.7;
+      }
+      return p;
+    }
+    case FState.PREJUMP:
+    case FState.LAND:
+    case FState.SUBSTITUTE:
+      return crouchOf(a);
+    case FState.JUMP: {
+      const tuck = withLegs(base, 0.6, -1.3, 1.1, -1.5);
+      if (f.vy > 1) return { ...tuck, sL: base.sL + 0.6, sR: base.sR + 0.6 };
+      return withLegs(base, 0.3, -0.7, 0.6, -0.9);
+    }
+    case FState.ATTACK: {
+      const m = f.move;
+      if (!m) return base;
+      const keys = MOVE_KEYS[m.pose];
+      let p = keys ? sample(keys, Math.max(0, f.moveFrame)) : base;
+      const runWin = RUN_LEG_MOVES[m.pose];
+      if (runWin && f.moveFrame >= runWin[0] && f.moveFrame <= runWin[1]) {
+        const w = walkLegs(p, f.walkPhase, 0.85, 1.3);
+        p = { ...p, hL: w.hL, kL: w.kL, hR: w.hR, kR: w.kR };
+      }
+      if (m.pose === 'fr_riot' && f.moveFrame >= 14 && f.moveFrame < 46) p = { ...p, spin: ((f.moveFrame - 14) / 16) * Math.PI * 2 };
+      if (m.pose === 'nb_flip' && f.moveFrame >= 4 && f.moveFrame < 12) p = { ...p, rot: ((f.moveFrame - 4) / 8) * Math.PI * 2 };
+      return p;
+    }
+    case FState.BLOCK:
+      return GUARD[a];
+    case FState.HURT: {
+      const t = Math.min(1, f.stateFrame / 3);
+      const back = Math.max(0, 1 - f.stateFrame / Math.max(6, f.hitstun));
+      return lerpPose(base, HURT_POSE, Math.min(t, 0.4 + back * 0.6));
+    }
+    case FState.JUGGLE: {
+      const fall = Math.max(0, Math.min(1, (6 - f.vy) / 12));
+      return P(-0.2, -0.3, 2.4, 0.4, 2.0, 0.3, 0.6, -0.4, 0.9, -0.3, -0.5 - fall * 0.9, base.weapon);
+    }
+    case FState.KNOCKDOWN:
+    case FState.DEAD:
+      return LYING;
+    case FState.WAKEUP:
+      return lerpPose(LYING, crouchOf(a), Math.min(1, f.stateFrame / (WAKEUP_FRAMES * 0.8)));
+    case FState.VICTORY: {
+      const v = VICTORY[a];
+      return { ...v, sR: v.sR + Math.sin(f.animTime * 0.1) * 0.05 };
+    }
+  }
+  return base;
+}
+
+// ============================================================================ rig
+
+interface Dims {
+  thigh: number;
+  shin: number;
+  torso: number;
+  upper: number;
+  fore: number;
+  headR: number;
+  neck: number;
+  hipW: number;
+  chestW: number;
+  blade: number;
+}
+
+const DIMS: Record<Archetype, Dims> = {
+  ninja: { thigh: 22, shin: 22, torso: 30, upper: 16, fore: 16, headR: 9, neck: 11, hipW: 8, chestW: 10, blade: 46 },
+  brawler: { thigh: 21, shin: 21, torso: 32, upper: 17, fore: 16, headR: 10, neck: 12, hipW: 9, chestW: 12, blade: 0 },
+  ninjabot: { thigh: 22, shin: 23, torso: 29, upper: 16, fore: 15, headR: 8.5, neck: 11, hipW: 7, chestW: 11, blade: 28 },
+  frecklebot: { thigh: 19, shin: 20, torso: 34, upper: 16, fore: 17, headR: 8, neck: 10, hipW: 12, chestW: 17, blade: 0 },
+};
+
+interface V {
+  x: number;
+  y: number;
+}
+
+interface Skeleton {
+  hipY: number;
+  hip: V;
+  kneeL: V;
+  footL: V;
+  kneeR: V;
+  footR: V;
+  neck: V;
+  head: V;
+  shL: V;
+  shR: V;
+  elL: V;
+  hdL: V;
+  elR: V;
+  hdR: V;
+  foreL: number;
+  foreR: number;
+  up: V;
+  perp: V;
+}
+
+const dirv = (a: number): V => ({ x: Math.sin(a), y: Math.cos(a) });
+const add = (a: V, d: V, s: number): V => ({ x: a.x + d.x * s, y: a.y + d.y * s });
+const mix = (a: V, b: V, t: number): V => ({ x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t });
+
+function buildSkeleton(p: Pose, d: Dims): Skeleton {
+  const legH = (h: number, k: number): number => Math.cos(h) * d.thigh + Math.cos(h + k) * d.shin;
+  const hipY = p.lying ? -7 : -Math.max(8, legH(p.hL, p.kL), legH(p.hR, p.kR));
+  const hip = { x: 0, y: hipY };
+  const kneeL = add(hip, dirv(p.hL), d.thigh);
+  const footL = add(kneeL, dirv(p.hL + p.kL), d.shin);
+  const kneeR = add(hip, dirv(p.hR), d.thigh);
+  const footR = add(kneeR, dirv(p.hR + p.kR), d.shin);
+  const up = { x: Math.sin(p.lean), y: -Math.cos(p.lean) };
+  const perp = { x: -up.y, y: up.x };
+  const neck = add(hip, up, d.torso);
+  const head = add(neck, { x: Math.sin(p.lean + p.head), y: -Math.cos(p.lean + p.head) }, d.neck);
+  const sh = add(neck, up, -3);
+  const shL = add(sh, perp, -3);
+  const shR = add(sh, perp, 2);
+  const elL = add(shL, dirv(p.sL), d.upper);
+  const hdL = add(elL, dirv(p.sL + p.eL), d.fore);
+  const elR = add(shR, dirv(p.sR), d.upper);
+  const hdR = add(elR, dirv(p.sR + p.eR), d.fore);
+  return { hipY, hip, kneeL, footL, kneeR, footR, neck, head, shL, shR, elL, hdL, elR, hdR, foreL: p.sL + p.eL, foreR: p.sR + p.eR, up, perp };
+}
+
+// ============================================================================ palettes
+
+interface Palette {
+  [k: string]: string;
+}
+
+const PALETTES: Record<Archetype, Partial<Record<Variant, Palette>> & { normal: Palette }> = {
+  ninja: {
+    normal: { gi: '#17131f', giDark: '#0b0910', gi2: '#2c2244', trim: '#8a4dff', scarf: '#6b2fd6', scarfTip: '#b48cff', skin: '#e0b48f', eye: '#d6b8ff', blade: '#e6ebff', glow: '#9d5cff', wrap: '#46287e', hilt: '#2a1f3a' },
+    alt: { gi: '#e9e6f2', giDark: '#b7b1c9', gi2: '#ffffff', trim: '#d11a4a', scarf: '#c0102f', scarfTip: '#ff6b8b', skin: '#d9a57f', eye: '#ff6b8b', blade: '#fff0f0', glow: '#ff3b6b', wrap: '#7e1d33', hilt: '#3a1f24' },
+    boss: { gi: '#120e18', giDark: '#07050a', gi2: '#2a1740', trim: '#b066ff', scarf: '#7a1fe0', scarfTip: '#e0c4ff', skin: '#e0b48f', eye: '#ff4dff', blade: '#f2eaff', glow: '#c070ff', wrap: '#5a2aa0', hilt: '#2a1f3a' },
+  },
+  brawler: {
+    normal: { jacket: '#9c7c49', jacketDark: '#6c5431', cuff: '#b89660', pants: '#34404f', pantsDark: '#242d38', boots: '#2a1f18', skin: '#eab48e', skinDark: '#c98f6b', hair: '#ea6a2a', hairDark: '#b8481a', tape: '#efe9dc', tapeDark: '#c8c0ae', brass: '#ffc857', shirt: '#26262e', freckle: '#b25a33', belt: '#4a3222' },
+    alt: { jacket: '#3d4b62', jacketDark: '#28324a', cuff: '#56688a', pants: '#4a2b2b', pantsDark: '#321c1c', boots: '#1a1512', skin: '#d6a07c', skinDark: '#b58062', hair: '#f4d24a', hairDark: '#c29a22', tape: '#e6f4ff', tapeDark: '#b0c4d2', brass: '#9fe8ff', shirt: '#b8212f', freckle: '#9c5030', belt: '#222' },
+    boss: { jacket: '#8e6a38', jacketDark: '#5e4424', cuff: '#b08850', pants: '#2c3542', pantsDark: '#1c232d', boots: '#1f1712', skin: '#eab48e', skinDark: '#c98f6b', hair: '#ff5a1a', hairDark: '#b83a0a', tape: '#fff2dc', tapeDark: '#d0c4a8', brass: '#ffd86a', shirt: '#1a1a20', freckle: '#b25a33', belt: '#3a2618' },
+  },
+  ninjabot: {
+    normal: { chrome1: '#eef3f8', chrome2: '#7d8896', dark: '#1b2129', mesh: '#2a3440', visor: '#39f3ff', blade: '#c9fbff', joint: '#39f3ff' },
+    alt: { chrome1: '#e6f2ea', chrome2: '#6e8a78', dark: '#17221b', mesh: '#233328', visor: '#7dff9b', blade: '#d6ffe0', joint: '#7dff9b' },
+    elite: { chrome1: '#5b6170', chrome2: '#262a33', dark: '#0d0f14', mesh: '#1a1d24', visor: '#ff4d6d', blade: '#ffd0d8', joint: '#ffc857' },
+  },
+  frecklebot: {
+    normal: { rust: '#93512c', rust2: '#5c2f18', steel: '#a4adb6', steel2: '#525a64', hazard: '#ffd21f', eye: '#ffd21f', fist: '#b0452a', fist2: '#6e2412' },
+    heavy: { rust: '#56633f', rust2: '#343d24', steel: '#8d959c', steel2: '#3f454b', hazard: '#ff9a1f', eye: '#ff8a1f', fist: '#6f7a4a', fist2: '#3c4426' },
+    elite: { rust: '#8a1f22', rust2: '#4f0f12', steel: '#b8b0a8', steel2: '#5a4e48', hazard: '#ff3b3b', eye: '#ff3b3b', fist: '#d8a23a', fist2: '#7a5214' },
+  },
+};
+
+function paletteFor(a: Archetype, v: Variant): Palette {
+  const set = PALETTES[a];
+  return set[v] ?? set.normal;
+}
+
+// ============================================================================ drawing primitives
+
+type Ctx = CanvasRenderingContext2D;
+
+function seg(ctx: Ctx, a: V, b: V, w: number, color: string): void {
+  ctx.strokeStyle = color;
+  ctx.lineWidth = w;
+  ctx.beginPath();
+  ctx.moveTo(a.x, a.y);
+  ctx.lineTo(b.x, b.y);
+  ctx.stroke();
+}
+
+function dot(ctx: Ctx, c: V, r: number, color: string): void {
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(c.x, c.y, r, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function taper(ctx: Ctx, a: V, b: V, w1: number, w2: number, fill: string | CanvasGradient): void {
+  const dx = b.x - a.x;
+  const dy = b.y - a.y;
+  const L = Math.hypot(dx, dy) || 1;
+  const nx = -dy / L;
+  const ny = dx / L;
+  ctx.fillStyle = fill;
+  ctx.beginPath();
+  ctx.moveTo(a.x + (nx * w1) / 2, a.y + (ny * w1) / 2);
+  ctx.lineTo(b.x + (nx * w2) / 2, b.y + (ny * w2) / 2);
+  ctx.lineTo(b.x - (nx * w2) / 2, b.y - (ny * w2) / 2);
+  ctx.lineTo(a.x - (nx * w1) / 2, a.y - (ny * w1) / 2);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function torsoQuad(ctx: Ctx, J: Skeleton, hipW: number, chestW: number, fill: string | CanvasGradient): void {
+  const { hip, neck, perp } = J;
+  ctx.fillStyle = fill;
+  ctx.beginPath();
+  ctx.moveTo(hip.x - perp.x * hipW, hip.y - perp.y * hipW + 2);
+  ctx.lineTo(hip.x + perp.x * hipW, hip.y + perp.y * hipW + 2);
+  ctx.lineTo(neck.x + perp.x * chestW, neck.y + perp.y * chestW);
+  ctx.lineTo(neck.x - perp.x * chestW, neck.y - perp.y * chestW);
+  ctx.closePath();
+  ctx.fill();
+}
+
+function perpGradient(ctx: Ctx, J: Skeleton, w: number, stops: [number, string][]): CanvasGradient {
+  const c = mix(J.hip, J.neck, 0.5);
+  const g = ctx.createLinearGradient(c.x - J.perp.x * w, c.y - J.perp.y * w, c.x + J.perp.x * w, c.y + J.perp.y * w);
+  for (const [o, col] of stops) g.addColorStop(o, col);
+  return g;
+}
+
+interface DrawOpts {
+  tint: string | null;
+  time: number;
+  motion: number;
+  /** Receives the blade tip & mid points in screen space when a weapon is drawn. */
+  blade?: (tip: V, mid: V) => void;
+  toScreen?: (p: V) => V;
+}
+
+// ============================================================================ character painters
+
+function drawNinja(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: DrawOpts): void {
+  const T = (c: string): string => o.tint ?? c;
+  const t = o.time;
+
+  // scarf and mask tails trail behind the neck
+  const s0 = add(J.neck, J.perp, -3);
+  ctx.lineCap = 'round';
+  let prev = s0;
+  for (let i = 1; i <= 8; i++) {
+    const wave = Math.sin(t * 0.22 + i * 0.85) * i * (0.7 + o.motion * 0.6);
+    const pt = { x: s0.x - i * (5.5 + o.motion * 3.5), y: s0.y + i * (1.4 - o.motion * 0.9) + wave };
+    seg(ctx, prev, pt, Math.max(1.5, 7 - i * 0.7), T(i > 5 ? pal.scarfTip : pal.scarf));
+    prev = pt;
+  }
+  let prevT = add(J.head, J.perp, -7);
+  for (let i = 1; i <= 4; i++) {
+    const pt = { x: prevT.x - 5 - o.motion * 2, y: prevT.y + 1.5 + Math.sin(t * 0.3 + i) * 1.6 };
+    seg(ctx, prevT, pt, 2.4, T(pal.trim));
+    prevT = pt;
+  }
+
+  // back limbs
+  seg(ctx, J.hip, J.kneeL, 10, T(pal.giDark));
+  seg(ctx, J.kneeL, J.footL, 8.5, T(pal.giDark));
+  seg(ctx, mix(J.kneeL, J.footL, 0.45), J.footL, 8, T(pal.wrap));
+  seg(ctx, J.footL, add(J.footL, { x: 1, y: 0 }, 5), 5, T(pal.giDark));
+  seg(ctx, J.shL, J.elL, 8, T(pal.giDark));
+  seg(ctx, J.elL, J.hdL, 7, T(pal.giDark));
+  seg(ctx, mix(J.elL, J.hdL, 0.55), J.hdL, 7.5, T(pal.wrap));
+  dot(ctx, J.hdL, 3.6, T(pal.giDark));
+
+  // torso
+  torsoQuad(ctx, J, d.hipW, d.chestW, o.tint ?? perpGradient(ctx, J, d.chestW, [[0, pal.giDark], [0.6, pal.gi], [1, pal.gi2]]));
+  const lapelTop = add(J.neck, J.perp, 6);
+  seg(ctx, lapelTop, add(J.hip, J.perp, -1), 2.4, T(pal.trim));
+  seg(ctx, add(J.neck, J.perp, -7), add(J.neck, J.perp, 8), 3, T(pal.trim));
+  seg(ctx, add(J.hip, J.perp, -d.hipW - 1), add(J.hip, J.perp, d.hipW + 1), 5, T(pal.trim));
+  const knot = add(J.hip, J.perp, -d.hipW);
+  seg(ctx, knot, { x: knot.x - 7 - o.motion * 4, y: knot.y + 9 + Math.sin(t * 0.25) * 2 }, 2.6, T(pal.trim));
+
+  // front leg
+  seg(ctx, J.hip, J.kneeR, 11, T(pal.gi));
+  seg(ctx, J.kneeR, J.footR, 9.5, T(pal.gi));
+  seg(ctx, mix(J.kneeR, J.footR, 0.45), J.footR, 9, T(pal.wrap));
+  seg(ctx, J.footR, add(J.footR, { x: 1, y: 0 }, 6), 5.5, T(pal.gi));
+
+  // head: hood, eye slit, glowing eyes
+  seg(ctx, J.neck, J.head, 6, T(pal.gi));
+  dot(ctx, J.head, d.headR, T(pal.gi));
+  const face = add(J.head, J.perp, 3.5);
+  ctx.fillStyle = T(pal.skin);
+  ctx.beginPath();
+  ctx.ellipse(face.x + 1, face.y - 1.5, 5.5, 2.4, p.lean + p.head, 0, Math.PI * 2);
+  ctx.fill();
+  if (!o.tint) {
+    ctx.globalCompositeOperation = 'lighter';
+    const eye = add(face, J.perp, 3);
+    const g = ctx.createRadialGradient(eye.x, eye.y - 1.5, 0, eye.x, eye.y - 1.5, 6);
+    g.addColorStop(0, pal.eye);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(eye.x - 6, eye.y - 7.5, 12, 12);
+    ctx.globalCompositeOperation = 'source-over';
+    dot(ctx, { x: eye.x, y: eye.y - 1.5 }, 1.3, '#ffffff');
+  }
+  dot(ctx, add(J.head, J.perp, -d.headR + 1), 2.6, T(pal.trim));
+
+  // front arm + ninjato
+  seg(ctx, J.shR, J.elR, 8.5, T(pal.gi));
+  seg(ctx, J.elR, J.hdR, 7.5, T(pal.gi));
+  seg(ctx, mix(J.elR, J.hdR, 0.55), J.hdR, 8, T(pal.wrap));
+  const bd = dirv(J.foreR + p.weapon);
+  const hiltBack = add(J.hdR, bd, -9);
+  const guard = add(J.hdR, bd, 2.5);
+  const tip = add(J.hdR, bd, 3 + d.blade);
+  seg(ctx, hiltBack, guard, 3.4, T(pal.hilt));
+  seg(ctx, add(guard, { x: -bd.y, y: bd.x }, -3), add(guard, { x: -bd.y, y: bd.x }, 3), 2.2, T('#9a8cb0'));
+  if (!o.tint) {
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = 0.35 + 0.15 * Math.sin(t * 0.3);
+    seg(ctx, guard, tip, 7, pal.glow);
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  seg(ctx, guard, tip, 2.6, T(pal.blade));
+  dot(ctx, J.hdR, 4, T(pal.giDark));
+  if (o.blade && o.toScreen) o.blade(o.toScreen(tip), o.toScreen(add(J.hdR, bd, 3 + d.blade * 0.45)));
+}
+
+function drawBrawler(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: DrawOpts): void {
+  const T = (c: string): string => o.tint ?? c;
+  const t = o.time;
+  ctx.lineCap = 'round';
+
+  // ponytail
+  const tieP = add(J.head, J.perp, -d.headR + 1);
+  const sway = Math.sin(t * 0.18) * 3 + o.motion * 6;
+  ctx.strokeStyle = T(pal.hair);
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.moveTo(tieP.x, tieP.y);
+  ctx.quadraticCurveTo(tieP.x - 10 - sway, tieP.y + 2, tieP.x - 13 - sway * 1.6, tieP.y + 14 - o.motion * 6);
+  ctx.stroke();
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = T(pal.hairDark);
+  ctx.stroke();
+
+  // back limbs
+  seg(ctx, J.hip, J.kneeL, 11, T(pal.pantsDark));
+  seg(ctx, J.kneeL, J.footL, 10, T(pal.pantsDark));
+  seg(ctx, mix(J.kneeL, J.footL, 0.5), J.footL, 12, T(pal.boots));
+  seg(ctx, J.footL, add(J.footL, { x: 1, y: 0 }, 7), 6, T(pal.boots));
+  seg(ctx, J.shL, J.elL, 10, T(pal.jacketDark));
+  dot(ctx, J.elL, 5.5, T(pal.jacketDark));
+  seg(ctx, J.elL, J.hdL, 8, T(pal.skinDark));
+  dot(ctx, J.hdL, 5.5, T(pal.tapeDark));
+
+  // torso
+  torsoQuad(ctx, J, d.hipW, d.chestW, o.tint ?? perpGradient(ctx, J, d.chestW, [[0, pal.jacketDark], [0.55, pal.jacket], [1, pal.cuff]]));
+  const shirtTop = add(J.neck, J.perp, 4);
+  const shirtBot = add(J.hip, J.perp, 3);
+  taper(ctx, shirtTop, shirtBot, 7, 5, T(pal.shirt));
+  seg(ctx, add(J.neck, J.perp, 9), add(J.hip, J.perp, 7), 1.2, T(pal.jacketDark));
+  seg(ctx, add(J.hip, J.perp, -d.hipW - 1), add(J.hip, J.perp, d.hipW + 1), 4, T(pal.belt));
+  seg(ctx, add(J.neck, J.perp, -9), add(J.neck, J.perp, 6), 4, T(pal.cuff));
+
+  // front leg
+  seg(ctx, J.hip, J.kneeR, 12, T(pal.pants));
+  seg(ctx, J.kneeR, J.footR, 10.5, T(pal.pants));
+  seg(ctx, mix(J.kneeR, J.footR, 0.5), J.footR, 12.5, T(pal.boots));
+  seg(ctx, J.footR, add(J.footR, { x: 1, y: 0 }, 8), 6.5, T(pal.boots));
+  seg(ctx, add(J.footR, { x: 1, y: 0 }, -2), add(J.footR, { x: 1, y: 0 }, 9), 1.5, T('#6a5040'));
+
+  // head
+  seg(ctx, J.neck, J.head, 7, T(pal.skinDark));
+  dot(ctx, J.head, d.headR, T(pal.skin));
+  const ang = p.lean + p.head;
+  ctx.save();
+  ctx.translate(J.head.x, J.head.y);
+  ctx.rotate(ang);
+  ctx.fillStyle = T(pal.hair);
+  ctx.beginPath();
+  ctx.arc(0, 0, d.headR + 1.2, Math.PI * 0.95, Math.PI * 2.05);
+  ctx.lineTo(d.headR * 0.9, -2);
+  ctx.lineTo(3, -4);
+  ctx.lineTo(-2, 1);
+  ctx.lineTo(-d.headR - 1, 3);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = T(pal.hairDark);
+  ctx.fillRect(-d.headR + 0.5, -2, 3, 3.5);
+  if (!o.tint) {
+    ctx.fillStyle = '#2a1a14';
+    ctx.fillRect(4.5, -1.2, 3.2, 1.6);
+    ctx.fillRect(3.5, -3.6, 4.6, 1.1);
+    ctx.fillStyle = pal.freckle;
+    for (const [fx, fy] of [
+      [4.2, 2.2],
+      [6.2, 2.8],
+      [5.3, 4.0],
+      [7.3, 1.6],
+    ]) {
+      ctx.fillRect(fx, fy, 1.1, 1.1);
+    }
+    ctx.fillStyle = '#9a4a3a';
+    ctx.fillRect(5.5, 5.6, 3, 0.9);
+    ctx.fillStyle = pal.skinDark;
+    ctx.beginPath();
+    ctx.arc(-1.5, 1, 2, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.restore();
+
+  // front arm with taped fist and brass knuckles
+  seg(ctx, J.shR, J.elR, 10.5, T(pal.jacket));
+  dot(ctx, J.elR, 6, T(pal.cuff));
+  seg(ctx, J.elR, J.hdR, 8.5, T(pal.skin));
+  seg(ctx, mix(J.elR, J.hdR, 0.7), J.hdR, 9, T(pal.tape));
+  dot(ctx, J.hdR, 6.2, T(pal.tape));
+  const fd = dirv(J.foreR);
+  const knuck = add(J.hdR, fd, 4);
+  const knuckL = add(J.hdL, dirv(J.foreL), 4);
+  if (!o.tint) {
+    ctx.globalCompositeOperation = 'lighter';
+    for (const k of [knuck, knuckL]) {
+      const g = ctx.createRadialGradient(k.x, k.y, 0, k.x, k.y, 9);
+      g.addColorStop(0, pal.brass);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(k.x - 9, k.y - 9, 18, 18);
+    }
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  seg(ctx, add(knuck, { x: -fd.y, y: fd.x }, -4), add(knuck, { x: -fd.y, y: fd.x }, 4), 3, T(pal.brass));
+}
+
+function drawNinjabot(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: DrawOpts): void {
+  const T = (c: string): string => o.tint ?? c;
+  ctx.lineCap = 'round';
+  const chrome = (a: V, b: V, w: number): CanvasGradient | string => {
+    if (o.tint) return o.tint;
+    const n = { x: -(b.y - a.y), y: b.x - a.x };
+    const L = Math.hypot(n.x, n.y) || 1;
+    const c = mix(a, b, 0.5);
+    const g = ctx.createLinearGradient(c.x - (n.x / L) * w, c.y - (n.y / L) * w, c.x + (n.x / L) * w, c.y + (n.y / L) * w);
+    g.addColorStop(0, pal.dark);
+    g.addColorStop(0.45, pal.chrome2);
+    g.addColorStop(0.75, pal.chrome1);
+    g.addColorStop(1, pal.chrome2);
+    return g;
+  };
+  const joint = (c: V, r: number): void => {
+    dot(ctx, c, r, T(pal.dark));
+    if (!o.tint) dot(ctx, c, r * 0.45, pal.joint);
+  };
+  const katana = (hand: V, fore: number, len: number, back: boolean): void => {
+    const bd = dirv(fore + (back ? -p.weapon : p.weapon));
+    const tip = add(hand, bd, len);
+    seg(ctx, add(hand, bd, -5), hand, 3, T(pal.dark));
+    if (!o.tint) {
+      ctx.globalCompositeOperation = 'lighter';
+      ctx.globalAlpha = 0.4;
+      seg(ctx, hand, tip, 5.5, pal.visor);
+      ctx.globalAlpha = 1;
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    seg(ctx, hand, tip, 2, T(pal.blade));
+    if (!back && o.blade && o.toScreen) o.blade(o.toScreen(tip), o.toScreen(add(hand, bd, len * 0.4)));
+  };
+
+  // back limbs
+  taper(ctx, J.hip, J.kneeL, 9, 7, chrome(J.hip, J.kneeL, 5));
+  taper(ctx, J.kneeL, J.footL, 7, 5, chrome(J.kneeL, J.footL, 4));
+  seg(ctx, J.footL, add(J.footL, { x: 1, y: 0 }, 6), 4, T(pal.dark));
+  joint(J.kneeL, 3.5);
+  taper(ctx, J.shL, J.elL, 7, 6, chrome(J.shL, J.elL, 4));
+  taper(ctx, J.elL, J.hdL, 6, 4.5, chrome(J.elL, J.hdL, 3));
+  joint(J.elL, 3);
+  katana(J.hdL, J.foreL, d.blade * 0.9, true);
+
+  // torso: stealth-mesh abdomen + angular chest plate
+  torsoQuad(ctx, J, d.hipW, d.chestW * 0.7, T(pal.mesh));
+  if (!o.tint) {
+    ctx.strokeStyle = 'rgba(120,200,255,0.18)';
+    ctx.lineWidth = 0.8;
+    for (let i = 0; i < 5; i++) {
+      const a = mix(J.hip, J.neck, 0.1 + i * 0.12);
+      seg(ctx, add(a, J.perp, -d.hipW), add(a, J.perp, d.hipW), 0.6, 'rgba(120,200,255,0.2)');
+    }
+  }
+  const c1 = mix(J.hip, J.neck, 0.45);
+  const c2 = mix(J.hip, J.neck, 1.0);
+  ctx.fillStyle = o.tint ?? perpGradient(ctx, J, d.chestW, [[0, pal.dark], [0.4, pal.chrome2], [0.8, pal.chrome1], [1, pal.chrome2]]);
+  ctx.beginPath();
+  ctx.moveTo(c1.x - J.perp.x * 5, c1.y - J.perp.y * 5);
+  ctx.lineTo(c1.x + J.perp.x * 7, c1.y + J.perp.y * 7);
+  ctx.lineTo(c2.x + J.perp.x * d.chestW, c2.y + J.perp.y * d.chestW);
+  ctx.lineTo(c2.x - J.perp.x * (d.chestW - 2), c2.y - J.perp.y * (d.chestW - 2));
+  ctx.closePath();
+  ctx.fill();
+  if (!o.tint) {
+    ctx.globalCompositeOperation = 'lighter';
+    seg(ctx, c1, add(c2, J.perp, 3), 1.6, pal.visor);
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  // front leg
+  taper(ctx, J.hip, J.kneeR, 10, 7.5, chrome(J.hip, J.kneeR, 5));
+  taper(ctx, J.kneeR, J.footR, 7.5, 5.5, chrome(J.kneeR, J.footR, 4));
+  seg(ctx, J.footR, add(J.footR, { x: 1, y: 0 }, 7), 4.5, T(pal.dark));
+  joint(J.kneeR, 3.8);
+
+  // head: angular helmet with glowing visor slit
+  const ang = p.lean + p.head;
+  ctx.save();
+  ctx.translate(J.head.x, J.head.y);
+  ctx.rotate(ang);
+  const r = d.headR;
+  ctx.fillStyle = o.tint ?? (() => {
+    const g = ctx.createLinearGradient(-r, -r, r, r);
+    g.addColorStop(0, pal.chrome1);
+    g.addColorStop(0.6, pal.chrome2);
+    g.addColorStop(1, pal.dark);
+    return g;
+  })();
+  ctx.beginPath();
+  ctx.moveTo(-r - 4, -2);
+  ctx.lineTo(-r * 0.4, -r - 1);
+  ctx.lineTo(r * 0.8, -r * 0.7);
+  ctx.lineTo(r + 1.5, 1);
+  ctx.lineTo(r * 0.5, r);
+  ctx.lineTo(-r * 0.7, r * 0.8);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = T(pal.dark);
+  ctx.fillRect(0, -2.8, r + 1.5, 4);
+  if (!o.tint) {
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = pal.visor;
+    ctx.fillRect(1.5, -1.8, r, 1.8);
+    const g = ctx.createRadialGradient(r * 0.6, -1, 0, r * 0.6, -1, 10);
+    g.addColorStop(0, pal.visor);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(-6, -11, 22, 20);
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  ctx.restore();
+
+  // front arm
+  taper(ctx, J.shR, J.elR, 7.5, 6, chrome(J.shR, J.elR, 4));
+  taper(ctx, J.elR, J.hdR, 6, 5, chrome(J.elR, J.hdR, 3));
+  joint(J.elR, 3.2);
+  joint(J.shR, 4);
+  katana(J.hdR, J.foreR, d.blade, false);
+}
+
+function drawFrecklebot(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: DrawOpts): void {
+  const T = (c: string): string => o.tint ?? c;
+  ctx.lineCap = 'round';
+  const piston = (el: V, hd: V, fore: number, w: number, fistR: number, front: boolean): void => {
+    seg(ctx, el, hd, w, T(front ? pal.rust : pal.rust2));
+    seg(ctx, mix(el, hd, 0.15), mix(el, hd, 0.85), 2, T(pal.steel));
+    const fd = dirv(fore);
+    const fist = add(hd, fd, fistR * 0.6);
+    dot(ctx, fist, fistR, T(front ? pal.fist : pal.fist2));
+    if (!o.tint) {
+      dot(ctx, add(fist, { x: -0.4, y: -0.6 }, fistR * 0.35), fistR * 0.45, 'rgba(255,255,255,0.18)');
+      ctx.strokeStyle = 'rgba(0,0,0,0.35)';
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.arc(fist.x, fist.y, fistR * 0.7, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+  };
+
+  // back limbs
+  seg(ctx, J.hip, J.kneeL, 12, T(pal.steel2));
+  seg(ctx, J.kneeL, J.footL, 12, T(pal.steel2));
+  dot(ctx, J.kneeL, 6, T(pal.rust2));
+  ctx.fillStyle = T(pal.rust2);
+  ctx.fillRect(J.footL.x - 6, J.footL.y - 5, 16, 6);
+  seg(ctx, J.shL, J.elL, 10, T(pal.steel2));
+  piston(J.elL, J.hdL, J.foreL, 12, 10, false);
+
+  // torso chassis
+  torsoQuad(ctx, J, d.hipW, d.chestW, o.tint ?? perpGradient(ctx, J, d.chestW, [[0, pal.rust2], [0.55, pal.rust], [1, pal.rust2]]));
+  if (!o.tint) {
+    ctx.save();
+    ctx.beginPath();
+    const b0 = mix(J.hip, J.neck, 0.55);
+    const b1 = mix(J.hip, J.neck, 0.78);
+    const w0 = d.hipW + (d.chestW - d.hipW) * 0.55;
+    const w1 = d.hipW + (d.chestW - d.hipW) * 0.78;
+    ctx.moveTo(b0.x - J.perp.x * w0, b0.y - J.perp.y * w0);
+    ctx.lineTo(b0.x + J.perp.x * w0, b0.y + J.perp.y * w0);
+    ctx.lineTo(b1.x + J.perp.x * w1, b1.y + J.perp.y * w1);
+    ctx.lineTo(b1.x - J.perp.x * w1, b1.y - J.perp.y * w1);
+    ctx.closePath();
+    ctx.fillStyle = '#141414';
+    ctx.fill();
+    ctx.clip();
+    ctx.strokeStyle = pal.hazard;
+    ctx.lineWidth = 3.2;
+    const c = mix(b0, b1, 0.5);
+    for (let i = -5; i <= 5; i++) {
+      const s = add(c, J.perp, i * 6);
+      ctx.beginPath();
+      ctx.moveTo(s.x - 8, s.y + 8);
+      ctx.lineTo(s.x + 8, s.y - 8);
+      ctx.stroke();
+    }
+    ctx.restore();
+    ctx.globalCompositeOperation = 'lighter';
+    const core = mix(J.hip, J.neck, 0.32);
+    const g = ctx.createRadialGradient(core.x, core.y, 0, core.x, core.y, 9);
+    g.addColorStop(0, pal.eye);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(core.x - 9, core.y - 9, 18, 18);
+    ctx.globalCompositeOperation = 'source-over';
+    for (const s of [-1, 1]) {
+      const rv = add(mix(J.hip, J.neck, 0.9), J.perp, s * (d.chestW - 3));
+      dot(ctx, rv, 1.4, pal.steel);
+    }
+  }
+  seg(ctx, add(J.neck, J.perp, -d.chestW), add(J.neck, J.perp, d.chestW), 5, T(pal.steel2));
+
+  // front leg
+  seg(ctx, J.hip, J.kneeR, 13, T(pal.steel));
+  seg(ctx, J.kneeR, J.footR, 13, T(pal.steel));
+  dot(ctx, J.kneeR, 6.5, T(pal.rust));
+  ctx.fillStyle = T(pal.rust);
+  ctx.fillRect(J.footR.x - 6, J.footR.y - 6, 18, 7);
+  if (!o.tint) {
+    ctx.fillStyle = pal.hazard;
+    ctx.fillRect(J.footR.x + 6, J.footR.y - 6, 3, 7);
+  }
+
+  // head dome with single visor eye
+  const ang = p.lean + p.head;
+  ctx.save();
+  ctx.translate(J.head.x, J.head.y);
+  ctx.rotate(ang);
+  const r = d.headR;
+  ctx.fillStyle = T(pal.steel2);
+  ctx.fillRect(-r * 0.6, r * 0.2, r * 1.2, r * 0.9);
+  ctx.fillStyle = o.tint ?? (() => {
+    const g = ctx.createLinearGradient(0, -r, 0, r);
+    g.addColorStop(0, pal.steel);
+    g.addColorStop(1, pal.steel2);
+    return g;
+  })();
+  ctx.beginPath();
+  ctx.arc(0, 0, r + 1, Math.PI, 0);
+  ctx.lineTo(r + 1, r * 0.5);
+  ctx.lineTo(-r - 1, r * 0.5);
+  ctx.closePath();
+  ctx.fill();
+  seg(ctx, { x: -2, y: -r - 1 }, { x: -3, y: -r - 7 }, 1.5, T(pal.steel2));
+  if (!o.tint) {
+    dot(ctx, { x: -3, y: -r - 7.5 }, 1.8, pal.eye);
+    ctx.fillStyle = '#111';
+    ctx.fillRect(-1, -2.5, r + 2, 4);
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.fillStyle = pal.eye;
+    ctx.fillRect(1.5, -1.5, r - 1, 2);
+    const g = ctx.createRadialGradient(r * 0.6, -0.5, 0, r * 0.6, -0.5, 9);
+    g.addColorStop(0, pal.eye);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(-4, -10, 20, 20);
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  ctx.restore();
+
+  // front arm: oversized pneumatic boxing piston
+  dot(ctx, J.shR, 7, T(pal.steel));
+  seg(ctx, J.shR, J.elR, 11, T(pal.steel));
+  piston(J.elR, J.hdR, J.foreR, 14, 12.5, true);
+}
+
+const PAINTERS: Record<Archetype, (ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: DrawOpts) => void> = {
+  ninja: drawNinja,
+  brawler: drawBrawler,
+  ninjabot: drawNinjabot,
+  frecklebot: drawFrecklebot,
+};
+
+const TRAIL_TINT: Record<Archetype, string> = {
+  ninja: '#6a2fd6',
+  brawler: '#ff6a2a',
+  ninjabot: '#39f3ff',
+  frecklebot: '#ffd21f',
+};
+
+// ============================================================================ public renderer
+
+export class SpriteRenderer {
+  /** Draws a posed body with feet at (x, y). */
+  drawBody(
+    ctx: Ctx,
+    arch: Archetype,
+    variant: Variant,
+    pose: Pose,
+    x: number,
+    y: number,
+    facing: number,
+    scale: number,
+    time: number,
+    tint: string | null = null,
+    motion = 0,
+    onBlade?: (tip: V, mid: V) => void,
+  ): void {
+    const d = DIMS[arch];
+    const J = buildSkeleton(pose, d);
+    const pal = paletteFor(arch, variant);
+    let sx = facing * scale;
+    if (pose.spin) {
+      const c = Math.cos(pose.spin);
+      sx *= Math.sign(c || 1) * Math.max(0.12, Math.abs(c));
+    }
+    const rot = pose.rot;
+    const hipY = J.hipY;
+    const cr = Math.cos(rot);
+    const sr = Math.sin(rot);
+    const toScreen = (pt: V): V => {
+      let lx = pt.x;
+      let ly = pt.y;
+      if (rot) {
+        const dy = ly - hipY;
+        const nx = lx * cr - dy * sr;
+        const ny = lx * sr + dy * cr + hipY;
+        lx = nx;
+        ly = ny;
+      }
+      return { x: x + lx * sx, y: y + ly * scale };
+    };
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(sx, scale);
+    if (rot) {
+      ctx.translate(0, hipY);
+      ctx.rotate(rot);
+      ctx.translate(0, -hipY);
+    }
+    ctx.lineJoin = 'round';
+    PAINTERS[arch](ctx, J, pose, d, pal, { tint, time, motion, blade: onBlade, toScreen });
+    ctx.restore();
+  }
+
+  drawFighter(ctx: Ctx, f: Fighter, view: RenderView): void {
+    const arch = f.def.archetype;
+    const sx = f.x - view.camX;
+    const sy = f.z - f.y - view.camY;
+    const pose = poseFor(f);
+
+    const wantsTrail =
+      f.state === FState.RUN ||
+      (f.state === FState.ATTACK && (f.move?.kind === 'dash' || f.move?.kind === 'air' || (arch === 'ninja' && f.move?.kind === 'special')));
+    if (wantsTrail && view.time % 3 === 0 && !f.hidden) {
+      f.trail.push({ x: f.x, y: f.y, z: f.z, facing: f.facing, pose, life: 14 });
+      if (f.trail.length > 6) f.trail.shift();
+    }
+    for (let i = f.trail.length - 1; i >= 0; i--) {
+      const tr = f.trail[i];
+      tr.life -= 1;
+      if (tr.life <= 0) {
+        f.trail.splice(i, 1);
+        continue;
+      }
+      ctx.globalAlpha = (tr.life / 14) * 0.42;
+      this.drawBody(ctx, arch, f.variant, tr.pose as Pose, tr.x - view.camX, tr.z - tr.y - view.camY, tr.facing, f.scale, view.time, TRAIL_TINT[arch]);
+    }
+    ctx.globalAlpha = 1;
+
+    this.drawBladeTrail(ctx, f, view);
+    if (f.hidden) return;
+
+    if (f.variant === 'boss' && f.state !== FState.DEAD) {
+      ctx.globalCompositeOperation = 'lighter';
+      const col = arch === 'ninja' ? 'rgba(140,70,255,0.28)' : 'rgba(255,110,40,0.26)';
+      const g = ctx.createRadialGradient(sx, sy - 48, 4, sx, sy - 48, 70);
+      g.addColorStop(0, col);
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(sx - 70, sy - 118, 140, 140);
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    if (f.hyperArmor > 0 || (f.armorHits > 0 && f.state === FState.ATTACK)) {
+      ctx.globalAlpha = 0.5 + 0.3 * Math.sin(view.time * 0.6);
+      this.drawBody(ctx, arch, f.variant, pose, sx, sy, f.facing, f.scale * 1.07, view.time, '#ffb13b');
+      ctx.globalAlpha = 1;
+    }
+
+    let jx = 0;
+    if (f.hitstop > 0 && f.flash > 0) jx = (Math.random() - 0.5) * 5;
+    const tint = f.flash > 0 && f.flash % 4 < 2 ? '#ffffff' : null;
+    if (f.invulnTimer > 0 && Math.floor(view.time / 3) % 2 === 0) ctx.globalAlpha = 0.35;
+    if (f.state === FState.DEAD && f.deathFade > 0) ctx.globalAlpha = Math.max(0, 1 - f.deathFade);
+
+    const record = f.state === FState.ATTACK && (arch === 'ninja' || arch === 'ninjabot');
+    const motion = Math.min(1, Math.abs(f.vx) / 7);
+    this.drawBody(ctx, arch, f.variant, pose, sx + jx, sy, f.facing, f.scale, view.time, tint, motion, record
+      ? (tip, mid) => {
+          f.bladeTrail.push({ x: tip.x + view.camX, y: tip.y + view.camY, x2: mid.x + view.camX, y2: mid.y + view.camY, life: 7 });
+          if (f.bladeTrail.length > 9) f.bladeTrail.shift();
+        }
+      : undefined);
+    ctx.globalAlpha = 1;
+  }
+
+  private drawBladeTrail(ctx: Ctx, f: Fighter, view: RenderView): void {
+    const tr = f.bladeTrail;
+    for (let i = tr.length - 1; i >= 0; i--) {
+      tr[i].life--;
+      if (tr[i].life <= 0) tr.splice(i, 1);
+    }
+    if (tr.length < 2) return;
+    const col = f.def.archetype === 'ninja' ? (f.variant === 'alt' ? '255,60,110' : '157,92,255') : f.variant === 'elite' ? '255,77,109' : '57,243,255';
+    ctx.globalCompositeOperation = 'lighter';
+    for (let i = 1; i < tr.length; i++) {
+      const a = tr[i - 1];
+      const b = tr[i];
+      if (Math.hypot(b.x - a.x, b.y - a.y) > 90) continue;
+      const alpha = (b.life / 7) * 0.55 * (i / tr.length);
+      ctx.fillStyle = `rgba(${col},${alpha.toFixed(3)})`;
+      ctx.beginPath();
+      ctx.moveTo(a.x - view.camX, a.y - view.camY);
+      ctx.lineTo(b.x - view.camX, b.y - view.camY);
+      ctx.lineTo(b.x2 - view.camX, b.y2 - view.camY);
+      ctx.lineTo(a.x2 - view.camX, a.y2 - view.camY);
+      ctx.closePath();
+      ctx.fill();
+    }
+    ctx.globalCompositeOperation = 'source-over';
+  }
+
+  drawPortrait(ctx: Ctx, arch: Archetype, variant: Variant, x: number, y: number, w: number, h: number, facing = 1, time = 0): void {
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x, y, w, h);
+    ctx.clip();
+    const scale = (h / 60) * 1.35;
+    const pose = idlePose(arch, time);
+    this.drawBody(ctx, arch, variant, { ...pose, lean: 0.05, head: 0 }, x + w / 2 - facing * 6 * scale, y + h * 0.36 + 88 * scale, facing, scale, time);
+    ctx.restore();
+  }
+
+  drawShuriken(ctx: Ctx, x: number, y: number, spin: number, color: string): void {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.globalCompositeOperation = 'lighter';
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 14);
+    g.addColorStop(0, color);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(-14, -14, 28, 28);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.rotate(spin);
+    ctx.fillStyle = '#d7e0ea';
+    ctx.beginPath();
+    for (let i = 0; i < 4; i++) {
+      const a = (i / 4) * Math.PI * 2;
+      ctx.lineTo(Math.cos(a) * 9, Math.sin(a) * 9);
+      ctx.lineTo(Math.cos(a + Math.PI / 4) * 2.6, Math.sin(a + Math.PI / 4) * 2.6);
+    }
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#20262e';
+    ctx.beginPath();
+    ctx.arc(0, 0, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  /** Ground-projected runic circle used by Abyssal Rift. */
+  drawSigil(ctx: Ctx, x: number, y: number, r: number, rot: number, k: number, t: number, color: string): void {
+    const grow = 0.3 + 0.7 * Math.min(1, t * 5);
+    const R = r * grow;
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.scale(1, 0.32);
+    ctx.rotate(rot);
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = Math.min(1, k * 1.6);
+    const g = ctx.createRadialGradient(0, 0, R * 0.2, 0, 0, R);
+    g.addColorStop(0, 'rgba(120,50,255,0.5)');
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(0, 0, R, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, R, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.arc(0, 0, R * 0.78, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.strokeStyle = '#e0c4ff';
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+      const a = (i / 6) * Math.PI * 2;
+      const b = ((i + 2) / 6) * Math.PI * 2;
+      ctx.moveTo(Math.cos(a) * R * 0.78, Math.sin(a) * R * 0.78);
+      ctx.lineTo(Math.cos(b) * R * 0.78, Math.sin(b) * R * 0.78);
+    }
+    ctx.stroke();
+    ctx.fillStyle = '#f0e0ff';
+    for (let i = 0; i < 12; i++) {
+      const a = (i / 12) * Math.PI * 2;
+      ctx.save();
+      ctx.translate(Math.cos(a) * R * 0.89, Math.sin(a) * R * 0.89);
+      ctx.rotate(a);
+      ctx.fillRect(-2, -3, 4, 6);
+      ctx.fillRect(-4, -0.8, 8, 1.6);
+      ctx.restore();
+    }
+    ctx.restore();
+  }
+}
