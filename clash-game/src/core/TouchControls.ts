@@ -121,6 +121,11 @@ export class TouchControls {
     this.root.appendChild(this.hint);
 
     document.body.appendChild(this.root);
+    document.addEventListener('pointerdown', (e) => {
+      if (e.pointerType === 'mouse') return;
+      if ((e.target as Element | null)?.closest?.('.tc-btn, .tc-zone, .tc-mini')) return;
+      this.input.touchPoke();
+    });
     const relayout = (): void => {
       requestAnimationFrame(() => this.layout());
     };

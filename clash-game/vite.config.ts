@@ -8,7 +8,9 @@ export default defineConfig({
     allowedHosts: ['.loca.lt', '.trycloudflare.com'],
   },
   preview: {
+    host: '0.0.0.0',
     port: 47322,
+    allowedHosts: ['.loca.lt', '.trycloudflare.com'],
   },
   build: {
     target: 'es2020',
