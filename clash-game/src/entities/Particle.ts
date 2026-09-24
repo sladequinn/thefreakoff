@@ -1,4 +1,4 @@
-import { COLORS, PARTICLE_POOL_SIZE } from '../config/constants';
+import { COLORS, FONT_DISPLAY, PARTICLE_POOL_SIZE, font } from '../config/constants';
 import type { SparkType } from '../physics/Types';
 import { Entity, type RenderView } from './Entity';
 
@@ -263,7 +263,7 @@ export class Particle extends Entity {
       }
       case 'text': {
         ctx.globalAlpha = Math.min(1, k * 2);
-        ctx.font = `900 ${this.size}px 'Arial Black', Impact, sans-serif`;
+        ctx.font = font(FONT_DISPLAY, this.size);
         ctx.textAlign = 'center';
         ctx.lineWidth = 4;
         ctx.strokeStyle = '#000';

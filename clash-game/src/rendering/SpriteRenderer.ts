@@ -439,11 +439,13 @@ const PALETTES: Record<Archetype, Partial<Record<Variant, Palette>> & { normal: 
     normal: { chrome1: '#eef3f8', chrome2: '#7d8896', dark: '#1b2129', mesh: '#2a3440', visor: '#39f3ff', blade: '#c9fbff', joint: '#39f3ff' },
     alt: { chrome1: '#e6f2ea', chrome2: '#6e8a78', dark: '#17221b', mesh: '#233328', visor: '#7dff9b', blade: '#d6ffe0', joint: '#7dff9b' },
     elite: { chrome1: '#5b6170', chrome2: '#262a33', dark: '#0d0f14', mesh: '#1a1d24', visor: '#ff4d6d', blade: '#ffd0d8', joint: '#ffc857' },
+    boss: { chrome1: '#ffe08a', chrome2: '#a8741f', dark: '#141008', mesh: '#2a2010', visor: '#ff2a2a', blade: '#fff4c8', joint: '#ff2a2a' },
   },
   frecklebot: {
     normal: { rust: '#93512c', rust2: '#5c2f18', steel: '#a4adb6', steel2: '#525a64', hazard: '#ffd21f', eye: '#ffd21f', fist: '#b0452a', fist2: '#6e2412' },
     heavy: { rust: '#56633f', rust2: '#343d24', steel: '#8d959c', steel2: '#3f454b', hazard: '#ff9a1f', eye: '#ff8a1f', fist: '#6f7a4a', fist2: '#3c4426' },
     elite: { rust: '#8a1f22', rust2: '#4f0f12', steel: '#b8b0a8', steel2: '#5a4e48', hazard: '#ff3b3b', eye: '#ff3b3b', fist: '#d8a23a', fist2: '#7a5214' },
+    boss: { rust: '#26221e', rust2: '#12100e', steel: '#e0b04a', steel2: '#8a6420', hazard: '#ffd21f', eye: '#ff2a2a', fist: '#ffd21f', fist2: '#a87a10' },
   },
 };
 
@@ -1117,14 +1119,26 @@ export class SpriteRenderer {
     ctx.globalCompositeOperation = 'source-over';
   }
 
+  private portraitBuf: HTMLCanvasElement | null = null;
+
+  /** Portraits are painted at half resolution and upscaled with nearest-neighbour to match the pixelated world. */
   drawPortrait(ctx: Ctx, arch: Archetype, variant: Variant, x: number, y: number, w: number, h: number, facing = 1, time = 0): void {
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(x, y, w, h);
-    ctx.clip();
+    const bw = Math.max(1, Math.ceil(w / 2));
+    const bh = Math.max(1, Math.ceil(h / 2));
+    const buf = (this.portraitBuf ??= document.createElement('canvas'));
+    if (buf.width < bw) buf.width = bw;
+    if (buf.height < bh) buf.height = bh;
+    const b = buf.getContext('2d')!;
+    b.setTransform(1, 0, 0, 1, 0, 0);
+    b.clearRect(0, 0, bw, bh);
+    b.setTransform(0.5, 0, 0, 0.5, 0, 0);
+    b.lineCap = 'round';
     const scale = (h / 60) * 1.35;
     const pose = idlePose(arch, time);
-    this.drawBody(ctx, arch, variant, { ...pose, lean: 0.05, head: 0 }, x + w / 2 - facing * 6 * scale, y + h * 0.36 + 88 * scale, facing, scale, time);
+    this.drawBody(b, arch, variant, { ...pose, lean: 0.05, head: 0 }, w / 2 - facing * 6 * scale, h * 0.36 + 88 * scale, facing, scale, time);
+    ctx.save();
+    ctx.imageSmoothingEnabled = false;
+    ctx.drawImage(buf, 0, 0, bw, bh, x, y, bw * 2, bh * 2);
     ctx.restore();
   }
 

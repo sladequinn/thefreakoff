@@ -161,14 +161,14 @@ export class UIRenderer {
     this.text(ctx, stageLabel, CANVAS_WIDTH - 16, 26, 12, 'rgba(255,255,255,0.75)', { align: 'right', template: FONT_UI, stroke: '#000', strokeWidth: 3 });
   }
 
-  bossBar(ctx: Ctx, boss: Fighter, time: number, intro: number): void {
+  bossBar(ctx: Ctx, boss: Fighter, time: number, intro: number, tag = 'MASTER'): void {
     const w = 620;
     const x = (CANVAS_WIDTH - w) / 2;
     const y = CANVAS_HEIGHT - 40;
     const reveal = Math.min(1, intro / 40);
     ctx.save();
     ctx.globalAlpha = reveal;
-    const ninja = boss.def.archetype === 'ninja';
+    const ninja = boss.def.archetype === 'ninja' || boss.def.archetype === 'ninjabot';
     const gold = ctx.createLinearGradient(x, 0, x + w, 0);
     gold.addColorStop(0, '#7a5a1c');
     gold.addColorStop(0.5, '#ffe08a');
@@ -202,8 +202,9 @@ export class UIRenderer {
       ctx.quadraticCurveTo(px, y - 26, px + 6, y - 20);
     }
     ctx.stroke();
-    this.text(ctx, `${boss.name}  —  ${boss.def.title.toUpperCase()}`, x, y - 8, 12, '#ffe7a8', { align: 'left', template: FONT_UI, stroke: '#000', strokeWidth: 3 });
-    this.text(ctx, 'MASTER', x + w, y - 8, 11, ninja ? '#c79bff' : '#ffb13b', { align: 'right', template: FONT_UI });
+    const title = boss.def.title ? `  —  ${boss.def.title.toUpperCase()}` : '';
+    this.text(ctx, `${boss.name}${title}`, x, y - 8, 12, '#ffe7a8', { align: 'left', template: FONT_UI, stroke: '#000', strokeWidth: 3 });
+    this.text(ctx, tag, x + w, y - 8, 11, ninja ? '#c79bff' : '#ffb13b', { align: 'right', template: FONT_UI });
     this.healthBar(ctx, x, y - 2, w, 12, boss, time, { colors: ninja ? ['#d6b8ff', '#6a1dff'] : ['#ffd08a', '#ff4a1a'] });
     ctx.restore();
   }

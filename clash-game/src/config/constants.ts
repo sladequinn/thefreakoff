@@ -66,10 +66,24 @@ export const COLORS = {
   debugZ: 'rgba(60, 140, 255, 0.85)',
 };
 
-export const FONT_DISPLAY = "900 {size}px 'Arial Black', 'Impact', 'Haettenschweiler', sans-serif";
-export const FONT_UI = "700 {size}px 'Trebuchet MS', 'Segoe UI', system-ui, sans-serif";
-export const FONT_MONO = "700 {size}px 'Courier New', ui-monospace, monospace";
+export const FONT_DISPLAY = "400 {size}px 'Press Start 2P', 'Arial Black', Impact, sans-serif";
+export const FONT_UI = "400 {size}px 'VT323', 'Courier New', ui-monospace, monospace";
+export const FONT_MONO = "400 {size}px 'VT323', 'Courier New', ui-monospace, monospace";
+
+/**
+ * Layout sizes were authored against Arial Black / Trebuchet metrics. Press Start 2P glyphs are a full em wide
+ * and VT323 is narrow with a small x-height, so each face is rescaled to occupy roughly the same box.
+ */
+const FONT_SCALE = new Map<string, number>([
+  [FONT_DISPLAY, 0.72],
+  [FONT_UI, 1.32],
+  [FONT_MONO, 1.3],
+]);
 
 export function font(template: string, size: number): string {
-  return template.replace('{size}', String(Math.round(size)));
+  return template.replace('{size}', String(Math.max(6, Math.round(size * (FONT_SCALE.get(template) ?? 1)))));
 }
+
+/** Internal resolution of the pixelated world layer (UI stays at CANVAS_WIDTH x CANVAS_HEIGHT). */
+export const PIXEL_WIDTH = 480;
+export const PIXEL_HEIGHT = 270;

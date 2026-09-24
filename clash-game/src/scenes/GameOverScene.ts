@@ -74,6 +74,8 @@ export class GameOverScene extends Scene {
     const g = this.game;
     const p = this.params;
     const time = g.time;
+    const screen = ctx;
+    ctx = g.renderer.beginWorld();
     g.renderer.drawStage(p.victory ? 'sanctuary' : 'facility', 0, 0, time, CANVAS_WIDTH);
     ctx.save();
     ctx.fillStyle = p.victory ? 'rgba(8,6,18,0.62)' : 'rgba(18,2,6,0.78)';
@@ -101,6 +103,10 @@ export class GameOverScene extends Scene {
       g.sprites.drawBody(ctx, def.archetype, 'normal', idlePose(def.archetype, p.victory ? time : time * 0.4), px, 470, 1, 2.1, time);
       ctx.restore();
     }
+    this.drawConfetti(ctx);
+    g.renderer.drawVignette();
+    g.renderer.endWorld();
+    ctx = screen;
 
     const drop = Math.min(1, this.t / 14);
     const titleScale = 1 + (1 - drop) * 0.8;
@@ -133,23 +139,21 @@ export class GameOverScene extends Scene {
       p.options.map(() => !ready),
     );
 
-    if (this.confetti.length) {
-      ctx.save();
-      for (const c of this.confetti) {
-        ctx.save();
-        ctx.translate(c.x, c.y);
-        ctx.rotate(c.rot);
-        ctx.scale(Math.cos(c.rot * 3), 1);
-        ctx.fillStyle = c.color;
-        ctx.fillRect(-3, -5, 6, 10);
-        ctx.restore();
-      }
-      ctx.restore();
-    }
     const help = g.input.touchMode ? 'Stick up / down to choose  ·  ATK to confirm' : 'W / S or arrows to choose  ·  J / Enter to confirm';
     g.ui.text(ctx, help, CANVAS_WIDTH / 2, CANVAS_HEIGHT - 16, 11, 'rgba(255,255,255,0.45)', {
       template: FONT_UI,
     });
-    g.renderer.drawVignette();
+  }
+
+  private drawConfetti(ctx: CanvasRenderingContext2D): void {
+    for (const c of this.confetti) {
+      ctx.save();
+      ctx.translate(c.x, c.y);
+      ctx.rotate(c.rot);
+      ctx.scale(Math.cos(c.rot * 3), 1);
+      ctx.fillStyle = c.color;
+      ctx.fillRect(-4, -6, 8, 12);
+      ctx.restore();
+    }
   }
 }

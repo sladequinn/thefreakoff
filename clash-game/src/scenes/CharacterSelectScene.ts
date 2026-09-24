@@ -134,11 +134,13 @@ export class CharacterSelectScene extends Scene {
   render(ctx: CanvasRenderingContext2D): void {
     const g = this.game;
     const time = g.time;
+    const w = g.renderer.beginWorld();
     g.renderer.drawStage(this.params.mode === 'story' ? 'facility' : 'rooftop', 0, 0, time, CANVAS_WIDTH);
-    ctx.save();
-    ctx.fillStyle = 'rgba(5,3,12,0.72)';
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    ctx.restore();
+    w.fillStyle = 'rgba(5,3,12,0.72)';
+    w.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    ROSTER.forEach((_, i) => this.drawCardBack(w, i, 60 + i * 430, 76, 410, 392, time));
+    g.renderer.drawVignette();
+    g.renderer.endWorld();
 
     const heading =
       this.params.mode === 'story'
@@ -150,7 +152,7 @@ export class CharacterSelectScene extends Scene {
           : 'VERSUS  —  BOTH PLAYERS CHOOSE';
     g.ui.text(ctx, heading, CANVAS_WIDTH / 2, 48, 26, '#ffffff', { stroke: '#000', strokeWidth: 5, shadow: 'rgba(138,77,255,0.7)' });
 
-    ROSTER.forEach((r, i) => this.drawCard(ctx, i, 60 + i * 430, 76, 410, 392, time));
+    ROSTER.forEach((_, i) => this.drawCardFront(ctx, i, 60 + i * 430, 76, 410, 392, time));
     this.drawFooter(ctx, time);
 
     if (this.flash > 0) {
@@ -161,11 +163,9 @@ export class CharacterSelectScene extends Scene {
       ctx.restore();
     }
     if (this.phase === 'splash') this.drawSplash(ctx, time);
-    g.renderer.drawVignette();
   }
 
-  private drawCard(ctx: CanvasRenderingContext2D, i: number, x: number, y: number, w: number, h: number, time: number): void {
-    const ui = this.game.ui;
+  private drawCardBack(ctx: CanvasRenderingContext2D, i: number, x: number, y: number, w: number, h: number, time: number): void {
     const r = ROSTER[i];
     const def = r.def;
     const here = this.cursors.filter((c) => c.index === i);
@@ -183,13 +183,6 @@ export class CharacterSelectScene extends Scene {
     glow.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = glow;
     ctx.fillRect(x, y, w, h);
-    ctx.lineWidth = hovered ? 3 : 1;
-    ctx.strokeStyle = hovered ? r.accent : 'rgba(255,255,255,0.14)';
-    if (hovered) {
-      ctx.shadowColor = r.accent;
-      ctx.shadowBlur = 18 + 6 * Math.sin(time * 0.1);
-    }
-    ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
     ctx.restore();
 
     const feetY = y + 268;
@@ -209,6 +202,25 @@ export class CharacterSelectScene extends Scene {
       this.game.sprites.drawBody(ctx, def.archetype, 'alt', idlePose(def.archetype, time + 20), x + 150, feetY + 6, -1, 1.3, time, null);
       ctx.restore();
     }
+  }
+
+  private drawCardFront(ctx: CanvasRenderingContext2D, i: number, x: number, y: number, w: number, h: number, time: number): void {
+    const ui = this.game.ui;
+    const r = ROSTER[i];
+    const def = r.def;
+    const here = this.cursors.filter((c) => c.index === i);
+    const hovered = here.length > 0;
+    const lockedHere = here.filter((c) => c.locked);
+
+    ctx.save();
+    ctx.lineWidth = hovered ? 3 : 1;
+    ctx.strokeStyle = hovered ? r.accent : 'rgba(255,255,255,0.14)';
+    if (hovered) {
+      ctx.shadowColor = r.accent;
+      ctx.shadowBlur = 18 + 6 * Math.sin(time * 0.1);
+    }
+    ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+    ctx.restore();
 
     const tx = x + 196;
     ui.text(ctx, def.name, tx, y + 44, 30, '#ffffff', { align: 'left', stroke: '#000', strokeWidth: 5 });
@@ -275,7 +287,7 @@ export class CharacterSelectScene extends Scene {
       const c = this.cursors[0];
       const id = ROSTER[c.index].id;
       const route = ROUTES[id];
-      ui.text(ctx, `ROUTE: OUTSKIRTS  >  CORE FACILITY  >  SANCTUARY     FOES: ${route.foes}     FINAL BOSS: ${route.boss}`, CANVAS_WIDTH / 2, y + 18, 12, COLORS.hazard, {
+      ui.text(ctx, `OUTSKIRTS > HARBOR > FACILITY > SKYLINE > FOUNDRY > SANCTUARY   FOES: ${route.foes}   BOSS: ${route.boss}`, CANVAS_WIDTH / 2, y + 18, 12, COLORS.hazard, {
         template: FONT_UI,
       });
       if (this.phase === 'story') {

@@ -35,7 +35,7 @@ export class TitleScene extends Scene {
     this.items = [
       {
         label: 'STORY MODE',
-        hint: 'Fight through three stages of robot hordes and face your rival.',
+        hint: 'Six stages: robot hordes, two Warden mid-bosses, and your rival.',
         go: () => this.game.scenes.go('select', { mode: 'story', cpu: false }),
       },
       {
@@ -140,20 +140,22 @@ export class TitleScene extends Scene {
   render(ctx: CanvasRenderingContext2D): void {
     const g = this.game;
     const time = g.time;
+    const w = g.renderer.beginWorld();
     g.renderer.drawStage('rooftop', 0, 0, time, CANVAS_WIDTH);
-
-    ctx.save();
-    const shade = ctx.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
+    w.save();
+    const shade = w.createLinearGradient(0, 0, 0, CANVAS_HEIGHT);
     shade.addColorStop(0, 'rgba(6,3,14,0.35)');
     shade.addColorStop(0.6, 'rgba(6,3,14,0.55)');
     shade.addColorStop(1, 'rgba(6,3,14,0.9)');
-    ctx.fillStyle = shade;
-    ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    ctx.restore();
-
-    this.drawClashLight(ctx, time);
-    this.drawHeroes(ctx, time);
-    this.drawMotes(ctx, time);
+    w.fillStyle = shade;
+    w.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    w.restore();
+    this.drawClashLight(w, time);
+    this.drawHeroes(w, time);
+    this.drawMotes(w, time);
+    g.renderer.drawVignette();
+    g.renderer.endWorld();
+    this.drawHeroLabels(ctx);
 
     const logoY = this.pressedStart ? 132 : 170;
     g.ui.logo(ctx, CANVAS_WIDTH / 2, logoY, this.pressedStart ? 0.82 : 1, time);
@@ -188,8 +190,7 @@ export class TitleScene extends Scene {
       pads > 0 ? `${pads} GAMEPAD${pads > 1 ? 'S' : ''} CONNECTED` : 'Gamepads supported',
     ].join('   ·   ');
     g.ui.text(ctx, status, CANVAS_WIDTH / 2, CANVAS_HEIGHT - 16, 11, 'rgba(255,255,255,0.45)', { template: FONT_UI });
-    g.ui.text(ctx, 'v1.0', CANVAS_WIDTH - 14, CANVAS_HEIGHT - 16, 11, 'rgba(255,255,255,0.3)', { template: FONT_UI, align: 'right' });
-    g.renderer.drawVignette();
+    g.ui.text(ctx, 'v1.1', CANVAS_WIDTH - 14, CANVAS_HEIGHT - 16, 11, 'rgba(255,255,255,0.3)', { template: FONT_UI, align: 'right' });
   }
 
   private drawClashLight(ctx: CanvasRenderingContext2D, time: number): void {
@@ -246,7 +247,9 @@ export class TitleScene extends Scene {
     rim(220 + sway, 'rgba(138,77,255,0.16)');
     rim(740 - sway, 'rgba(255,106,42,0.14)');
     ctx.restore();
+  }
 
+  private drawHeroLabels(ctx: CanvasRenderingContext2D): void {
     const ui = this.game.ui;
     ui.text(ctx, 'SLADE', 150, 505, 20, COLORS.voidGlow, { stroke: '#000', strokeWidth: 5, align: 'left' });
     ui.text(ctx, 'The Magick Ninja', 150, 522, 11, 'rgba(255,255,255,0.6)', { template: FONT_UI, align: 'left' });

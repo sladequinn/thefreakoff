@@ -1,3 +1,5 @@
+import '@fontsource/press-start-2p/latin-400.css';
+import '@fontsource/vt323/latin-400.css';
 import { CANVAS_WIDTH, FONT_UI } from './config/constants';
 import { AudioEngine } from './core/AudioEngine';
 import { GameLoop } from './core/GameLoop';
@@ -39,6 +41,7 @@ const game: GameContext = {
   time: 0,
 };
 scenes.game = game;
+if (import.meta.env.DEV) (window as unknown as { __clash: GameContext }).__clash = game;
 
 scenes.register('title', (g, p) => new TitleScene(g, p));
 scenes.register('select', (g, p) => new CharacterSelectScene(g, p));
@@ -95,8 +98,16 @@ document.addEventListener('visibilitychange', () => {
   else loop.start();
 });
 
-scenes.go('title', {}, true);
-loop.start();
+const fontsReady = Promise.race([
+  Promise.all([document.fonts.load("16px 'Press Start 2P'"), document.fonts.load("16px 'VT323'")]),
+  new Promise((resolve) => setTimeout(resolve, 2500)),
+]);
+void fontsReady
+  .catch(() => undefined)
+  .then(() => {
+    scenes.go('title', {}, true);
+    loop.start();
+  });
 
 if (import.meta.hot) {
   import.meta.hot.dispose(() => {
