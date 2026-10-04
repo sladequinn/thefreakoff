@@ -19,7 +19,11 @@ export const RUN_MULTIPLIER = 1.75;
 
 export const DEFAULT_Z_RANGE = 14;
 export const DOUBLE_TAP_WINDOW = 14;
-export const SIMULTANEOUS_PRESS_WINDOW = 3;
+/** Presses made during recovery, landing or blockstun stay live this long and fire once the fighter is free. */
+export const INPUT_BUFFER_FRAMES = 10;
+/** A hit that lands within this many frames of the guard button going down is parried instead of blocked. */
+export const PARRY_WINDOW = 6;
+export const PARRY_ATTACKER_HITSTOP = 12;
 export const PREJUMP_FRAMES = 3;
 export const LAND_FRAMES = 5;
 export const KNOCKDOWN_FRAMES = 42;

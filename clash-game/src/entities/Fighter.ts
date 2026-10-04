@@ -8,10 +8,12 @@ import {
   GRAVITY,
   GROUND_FRICTION,
   HARD_KNOCKDOWN_FRAMES,
+  INPUT_BUFFER_FRAMES,
   JUGGLE_GRAVITY_STEP,
   KNOCKDOWN_FRAMES,
   LAND_FRAMES,
   LIGHT_HIT_THRESHOLD,
+  PARRY_WINDOW,
   PREJUMP_FRAMES,
   RUN_MULTIPLIER,
   SPECIAL_HP_COST,
@@ -35,7 +37,8 @@ import {
 } from '../physics/Types';
 import { Entity, Projectile, type RenderView } from './Entity';
 
-export type HitResult = 'hit' | 'blocked' | 'armored' | 'miss';
+/** `parried`: guarded within the parry window; no chip, the defender recovers at once and the attacker eats extra hitstop. */
+export type HitResult = 'hit' | 'blocked' | 'parried' | 'armored' | 'miss';
 
 export interface FighterOptions {
   team: Team;
@@ -87,6 +90,11 @@ export class Fighter extends Entity {
   comboIndex = -1;
   bufferedAttack = false;
   bufferedSpecial = false;
+  /** Frames left on presses made while busy (recovery, landing, blockstun); they fire on the first free frame. */
+  private readonly buffer = { attack: 0, jump: 0, special: 0 };
+  /** Consecutive frames the guard button has been held; small values mean a fresh press that can parry. */
+  blockHeldFrames = 0;
+  canParry = true;
   readonly hitRegistry = new Set<string>();
   moveConnected = false;
 
@@ -117,8 +125,8 @@ export class Fighter extends Entity {
   private subZ = 0;
 
   input: InputFrame = emptyInput();
-  canBlock = false;
-  /** Training dummy: guard without having to hold away. */
+  canBlock = true;
+  /** Training dummy: guard permanently without a button; never parries. */
   autoGuard = false;
   autoFace: Fighter | null = null;
   /** Attacker currently holding this fighter in a command grab. */
@@ -287,7 +295,29 @@ export class Fighter extends Entity {
     this.lastAttacker = null;
     this.trail.length = 0;
     this.bladeTrail.length = 0;
+    this.clearBuffers();
+    this.blockHeldFrames = 0;
     this.setState(FState.INTRO);
+  }
+
+  // ------------------------------------------------------------------ input buffering
+
+  private bufferPresses(inp: InputFrame): void {
+    if (inp.attackPressed) this.buffer.attack = INPUT_BUFFER_FRAMES;
+    if (inp.jumpPressed) this.buffer.jump = INPUT_BUFFER_FRAMES;
+    if (inp.specialPressed) this.buffer.special = INPUT_BUFFER_FRAMES;
+  }
+
+  private decayBuffers(): void {
+    if (this.buffer.attack > 0) this.buffer.attack--;
+    if (this.buffer.jump > 0) this.buffer.jump--;
+    if (this.buffer.special > 0) this.buffer.special--;
+  }
+
+  clearBuffers(): void {
+    this.buffer.attack = this.buffer.jump = this.buffer.special = 0;
+    this.bufferedAttack = false;
+    this.bufferedSpecial = false;
   }
 
   // ------------------------------------------------------------------ update
@@ -297,6 +327,7 @@ export class Fighter extends Entity {
     if (this.flash > 0) this.flash--;
     this.input = this.controller.getInput(this, world);
     const inp = this.input;
+    this.blockHeldFrames = inp.block ? this.blockHeldFrames + 1 : 0;
 
     if (this.hitstop > 0) {
       this.hitstop--;
@@ -304,8 +335,11 @@ export class Fighter extends Entity {
         if (inp.attackPressed) this.bufferedAttack = true;
         if (inp.specialPressed) this.bufferedSpecial = true;
       }
+      // Frozen frames don't age the buffer, so a press during hitstop survives into recovery.
+      this.bufferPresses(inp);
       return;
     }
+    this.decayBuffers();
 
     if (this.hpLagDelay > 0) this.hpLagDelay--;
     else if (this.displayHp > this.hp) this.displayHp = Math.max(this.hp, this.displayHp - Math.max(0.35, (this.displayHp - this.hp) * 0.06));
@@ -327,6 +361,7 @@ export class Fighter extends Entity {
           this.startMove(this.def.special, world);
           break;
         }
+        if (inp.attackPressed) this.buffer.attack = INPUT_BUFFER_FRAMES;
         if (this.stateFrame >= PREJUMP_FRAMES) {
           const sp = this.def.stats.speed * this.speedMult;
           this.vy = this.def.stats.jumpPower;
@@ -337,12 +372,19 @@ export class Fighter extends Entity {
           this.setState(FState.JUMP);
           world.audio.playJump();
           world.particles.dust(this.x, this.z, 4);
+          // An attack pressed on the way up comes out on the first airborne frame.
+          if (this.buffer.attack > 0 && this.def.airAttack) {
+            this.buffer.attack = 0;
+            this.airAttackUsed = true;
+            this.startMove(this.def.airAttack, world);
+          }
         }
         break;
       case FState.JUMP:
         this.updateJump(inp, world);
         break;
       case FState.LAND:
+        this.bufferPresses(inp);
         if (this.stateFrame >= this.landLag) this.setState(FState.IDLE);
         break;
       case FState.ATTACK:
@@ -356,6 +398,7 @@ export class Fighter extends Entity {
         if (this.stateFrame >= this.hitstun) this.setState(FState.IDLE);
         break;
       case FState.BLOCK:
+        this.bufferPresses(inp);
         if (this.stateFrame >= this.blockstun) this.setState(FState.IDLE);
         break;
       case FState.JUGGLE:
@@ -402,18 +445,30 @@ export class Fighter extends Entity {
     const refDir = ref ? Math.sign(ref.x - this.x) || this.facing : 0;
     const towardOpp = ref !== null && inp.moveX === refDir;
     const awayFromOpp = ref !== null && inp.moveX === -refDir;
-    if ((inp.specialPressed || this.bufferedSpecial) && this.def.commandGrab && towardOpp && this.state !== FState.RUN) {
-      this.bufferedSpecial = false;
+    const wantSpecial = inp.specialPressed || this.bufferedSpecial || this.buffer.special > 0;
+    if (wantSpecial && this.def.commandGrab && towardOpp && this.state !== FState.RUN) {
+      this.clearBuffers();
       this.startMove(this.def.commandGrab, world);
       this.facing = refDir as 1 | -1;
       return;
     }
-    if ((inp.specialPressed || this.bufferedSpecial) && this.def.special && this.canAffordSpecial()) {
+    if (wantSpecial && this.def.special && this.canAffordSpecial()) {
+      this.clearBuffers();
       this.startMove(this.def.special, world);
       return;
     }
     this.bufferedSpecial = false;
-    if (inp.attackPressed) {
+    this.buffer.special = 0;
+    // Jump wins a same-frame tie with attack: the press is kept so it comes out as the air attack.
+    if (inp.jumpPressed || this.buffer.jump > 0) {
+      this.buffer.jump = 0;
+      if (inp.attackPressed) this.buffer.attack = INPUT_BUFFER_FRAMES;
+      this.vx *= 0.5;
+      this.setState(FState.PREJUMP);
+      return;
+    }
+    if (inp.attackPressed || this.buffer.attack > 0) {
+      this.buffer.attack = 0;
       if (this.state === FState.RUN && this.def.dashAttack) {
         if (this.input.moveX !== 0 && !this.autoFace) this.facing = this.input.moveX > 0 ? 1 : -1;
         this.startMove(this.def.dashAttack, world);
@@ -425,16 +480,18 @@ export class Fighter extends Entity {
       }
       return;
     }
-    if (inp.jumpPressed) {
-      this.vx *= 0.5;
-      this.setState(FState.PREJUMP);
-      return;
+
+    if (this.canBlock && (inp.block || this.autoGuard)) {
+      this.guarding = true;
+      // Without an auto-face target (story mode) a fresh guard press squares up to the nearest threat.
+      if (!opp && inp.blockPressed) {
+        const near = nearestOpponent(this, world);
+        if (near) this.facing = near.x >= this.x ? 1 : -1;
+      }
     }
 
-    if (this.canBlock && opp && ((inp.moveX !== 0 && inp.moveX === -this.facing) || this.autoGuard)) this.guarding = true;
-
-    let run = inp.run && inp.moveX !== 0 && (!opp || inp.moveX === this.facing);
-    if (inp.dashDir !== 0 && (!opp || inp.dashDir === this.facing)) {
+    let run = !this.guarding && inp.run && inp.moveX !== 0 && (!opp || inp.moveX === this.facing);
+    if (!this.guarding && inp.dashDir !== 0 && (!opp || inp.dashDir === this.facing)) {
       run = true;
       if (!opp) this.facing = inp.dashDir > 0 ? 1 : -1;
       world.particles.dust(this.x, this.z, 5, this.facing);
@@ -446,7 +503,7 @@ export class Fighter extends Entity {
       const diag = inp.moveX !== 0 && inp.moveZ !== 0 ? 0.85 : 1;
       this.vx = inp.moveX * sp * diag;
       this.vz = inp.moveZ * this.def.stats.speed * this.speedMult * DEPTH_SPEED_FACTOR * diag;
-      if (!opp && inp.moveX !== 0) this.facing = inp.moveX > 0 ? 1 : -1;
+      if (!opp && inp.moveX !== 0 && !this.guarding) this.facing = inp.moveX > 0 ? 1 : -1;
       this.setLocomotion(run ? FState.RUN : FState.WALK);
       if (run && this.animTime % 7 === 0) world.particles.dust(this.x - this.facing * 8, this.z, 1, this.facing);
     } else {
@@ -504,8 +561,15 @@ export class Fighter extends Entity {
     }
     this.hidden = !!m.hidden && f >= m.hidden[0] && f <= m.hidden[1];
 
-    if (inp.attackPressed && f > 0) this.bufferedAttack = true;
-    if (inp.specialPressed) this.bufferedSpecial = true;
+    if (inp.attackPressed && f > 0) {
+      this.bufferedAttack = true;
+      this.buffer.attack = INPUT_BUFFER_FRAMES;
+    }
+    if (inp.specialPressed) {
+      this.bufferedSpecial = true;
+      this.buffer.special = INPUT_BUFFER_FRAMES;
+    }
+    if (inp.jumpPressed) this.buffer.jump = INPUT_BUFFER_FRAMES;
 
     if (m.kind === 'combo') {
       if (this.bufferedSpecial && this.def.special && this.canAffordSpecial() && ((this.comboIndex === 0 && f <= 3) || (this.moveConnected && m.cancelFrom !== undefined && f >= m.cancelFrom))) {
@@ -680,17 +744,28 @@ export class Fighter extends Entity {
 
     const attackerInFront = Math.sign(attacker.x - this.x) === this.facing || Math.abs(attacker.x - this.x) < 4;
     if ((this.guarding || this.state === FState.BLOCK) && attackerInFront && !this.isAirborne()) {
+      if (this.move) this.endMove(world);
+      this.setState(FState.BLOCK);
+      // A guard press timed within the parry window (also a re-press inside blockstun) is a parry.
+      if (this.canParry && !this.autoGuard && this.input.block && this.blockHeldFrames <= PARRY_WINDOW) {
+        this.blockstun = 3;
+        this.vx = -this.facing * 0.6;
+        this.hitstop = 3;
+        this.flash = 5;
+        this.clearBuffers();
+        world.particles.text(this.x, this.y + 112 * this.scale, this.z, 'PARRY!', COLORS.brass, 15);
+        return 'parried';
+      }
       const chip = (hb.damage * CHIP_DAMAGE) / this.def.stats.defense;
       this.hp = Math.max(1, this.hp - chip);
       this.hpLagDelay = 20;
-      if (this.move) this.endMove(world);
-      this.setState(FState.BLOCK);
       this.blockstun = Math.round(hb.hitstun * 0.6) + 4;
       this.vx = -this.facing * (hb.knockbackX * 0.45 + 1.5);
       this.hitstop = Math.max(2, hb.hitstop - 1);
       return 'blocked';
     }
 
+    this.clearBuffers();
     const scale = Math.max(COMBO_SCALING_MIN, 1 - COMBO_SCALING_STEP * this.comboTaken);
     const dmg = (hb.damage * scale * attacker.damageMult) / this.def.stats.defense;
     this.lastHitFrame = world.frame;
@@ -766,6 +841,7 @@ export class Fighter extends Entity {
   private receiveGrab(attacker: Fighter, hb: Hitbox, world: World): HitResult {
     if (this.isAirborne() || this.hyperArmor > 0 || this.grabbedBy || this.state === FState.KNOCKDOWN || this.state === FState.WAKEUP) return 'miss';
     if (this.move) this.endMove(world);
+    this.clearBuffers();
     this.hidden = false;
     this.noGravity = false;
     this.guarding = false;

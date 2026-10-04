@@ -938,7 +938,7 @@ export class CharacterSelectScene extends Scene {
         : 'A / D choose your fighter   ·   W / S costume   ·   J confirm   ·   Esc back'
       : 'P1: A / D + J to lock   ·   P2: ← / → + Numpad 1 or , to lock   ·   Esc / gamepad Back undo';
     ui.text(ctx, help, CANVAS_WIDTH / 2, y + 20, 13, '#ffffff', { template: FONT_UI });
-    const sub = this.mode === 'training' ? 'Pick who you practise as, then who stands in front of you' : 'Best of 3 rounds  ·  99 second timer  ·  Hold away from your opponent to block';
+    const sub = this.mode === 'training' ? 'Pick who you practise as, then who stands in front of you' : 'Best of 3 rounds  ·  99 second timer  ·  Hold BLOCK to guard, tap it on impact to parry';
     ui.text(ctx, sub, CANVAS_WIDTH / 2, y + 37, 11, 'rgba(255,255,255,0.55)', {
       template: FONT_UI,
     });

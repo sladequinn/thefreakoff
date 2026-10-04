@@ -373,7 +373,8 @@ export class VsScene extends CombatScene {
         break;
     }
     if (this.params.cpu && this.phase === 'fight' && this.phaseTimer < 240) {
-      ui.text(ctx, 'Hold away from your opponent to BLOCK', CANVAS_WIDTH / 2, 520, 12, 'rgba(255,255,255,0.6)', { template: FONT_UI, stroke: '#000', strokeWidth: 3 });
+      const hint = this.game.input.touchMode ? 'Hold BLK to block  ·  tap it as a hit lands to PARRY' : 'Hold H to block  ·  tap it as a hit lands to PARRY';
+      ui.text(ctx, hint, CANVAS_WIDTH / 2, 520, 12, 'rgba(255,255,255,0.6)', { template: FONT_UI, stroke: '#000', strokeWidth: 3 });
     }
     this.renderPause(ctx);
   }

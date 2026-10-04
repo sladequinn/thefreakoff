@@ -37,6 +37,8 @@ export class BossAI implements Controller {
   private strafe = 1;
   private mode: 'neutral' | 'pressure' | 'backoff' = 'neutral';
   private modeTimer = 0;
+  /** Multiplier on normal-attack odds; drops while the target is guarding. */
+  private guardWary = 1;
 
   constructor(
     private readonly char: CharId,
@@ -55,9 +57,16 @@ export class BossAI implements Controller {
   private reset(): InputFrame {
     const o = this.out;
     o.moveX = o.moveZ = 0;
-    o.run = o.jump = o.jumpPressed = o.attackPressed = o.specialPressed = false;
+    o.run = o.jump = o.jumpPressed = o.attackPressed = o.specialPressed = o.block = o.blockPressed = false;
     o.dashDir = 0;
     o.moveRequest = undefined;
+    return o;
+  }
+
+  private hold(o: InputFrame, frames: number): InputFrame {
+    if (this.blockTimer <= 0) o.blockPressed = true;
+    this.blockTimer = Math.max(this.blockTimer, frames);
+    o.block = true;
     return o;
   }
 
@@ -111,7 +120,8 @@ export class BossAI implements Controller {
     }
 
     if (self.state === FState.BLOCK) {
-      o.moveX = -self.facing;
+      // Stay on guard through blockstun so multi-hit strings keep getting blocked.
+      o.block = true;
       return o;
     }
     if (!self.isActionable()) return o;
@@ -120,20 +130,16 @@ export class BossAI implements Controller {
     const targetDashing =
       (target.state === FState.RUN && Math.sign(target.vx) === -dir) || (targetAttacking && target.move?.kind === 'dash');
 
-    if (this.opts.versus && self.canBlock) {
-      if (this.blockTimer > 0) {
-        o.moveX = -self.facing;
-        return o;
-      }
+    if (self.canBlock) {
+      if (this.blockTimer > 0) return this.hold(o, 0);
       if (targetAttacking && adx < 120 && Math.abs(dz) < 20 && this.cd.block <= 0) {
         this.cd.block = 18;
-        if (Math.random() < 0.38 * diff) {
-          this.blockTimer = Math.round(rand(14, 26));
-          o.moveX = -self.facing;
-          return o;
-        }
+        // Story bosses guard rarely so the campaign stays a brawl; versus CPUs block like a real opponent.
+        if (Math.random() < (this.opts.versus ? 0.38 : 0.14) * diff) return this.hold(o, Math.round(rand(14, 26)));
       }
     }
+    // Respect a raised guard: fewer normals into it, more grabs and spacing.
+    this.guardWary = target.guarding || target.state === FState.BLOCK ? 0.3 : 1;
 
     if (this.reactAction) {
       this.reactTimer--;
@@ -190,7 +196,7 @@ export class BossAI implements Controller {
     }
 
     if (aligned && adx < 74 && target.isHittable()) {
-      if (Math.random() < 0.3 * diff) {
+      if (Math.random() < 0.3 * diff * this.guardWary) {
         o.attackPressed = true;
         this.comboPressTimer = 4;
         return o;
@@ -242,7 +248,7 @@ export class BossAI implements Controller {
 
     // Command grab: punish blockers and cornered foes at point-blank range.
     const grabbable = target.isHittable() && !target.isAirborne() && target.state !== FState.KNOCKDOWN && target.state !== FState.WAKEUP;
-    const blocking = target.state === FState.BLOCK;
+    const blocking = this.guardWary < 1;
     if (self.def.commandGrab && aligned && adx < 62 && grabbable && this.cd.grab <= 0 && Math.random() < (blocking ? 0.6 : 0.12) * diff) {
       this.cd.grab = rand(180, 320) / diff;
       o.moveRequest = self.def.commandGrab;
@@ -250,7 +256,7 @@ export class BossAI implements Controller {
     }
 
     if (aligned && adx < 70 && target.isHittable()) {
-      if (cornerLoop || Math.random() < 0.34 * diff) {
+      if ((cornerLoop && !blocking) || Math.random() < 0.34 * diff * this.guardWary) {
         o.attackPressed = true;
         this.comboPressTimer = 3;
         return o;

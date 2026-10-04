@@ -271,6 +271,6 @@ export const FRECKLES: CharacterDef = {
     { name: 'Scrap Iron Combination', input: 'J, J, J, J', desc: 'Jab → liver → uppercut → knockdown haymaker' },
     { name: 'Bull Charge', input: 'Run + J', desc: 'Armored tackle; wall-bounces near stage edges' },
     { name: 'Comet Hammer', input: 'Air + J', desc: 'Two-fisted drop that forces hard knockdown' },
-    { name: 'Riot Breaker', input: 'U  /  J+K', desc: 'Double lariat into a seismic slam (costs 8% HP)' },
+    { name: 'Riot Breaker', input: 'U', desc: 'Double lariat into a seismic slam (costs 8% HP)' },
   ],
 };

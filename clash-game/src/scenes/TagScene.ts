@@ -514,7 +514,7 @@ export class TagScene extends CombatScene {
         break;
     }
     if (this.phase === 'fight' && this.tagHintT > 0 && !this.paused) {
-      const hint = touch ? 'TAG button swaps in your partner  ·  hold away to BLOCK' : `${this.params.cpu ? 'I' : 'I  /  Numpad 5'} swaps in your partner  ·  hold away to BLOCK`;
+      const hint = touch ? 'TAG swaps in your partner  ·  hold BLK to block' : `${this.params.cpu ? 'I' : 'I  /  Numpad 5'} swaps in your partner  ·  ${this.params.cpu ? 'H' : 'H  /  Numpad 0'} blocks`;
       ui.text(ctx, hint, CANVAS_WIDTH / 2, 520, 12, 'rgba(255,255,255,0.6)', { template: FONT_UI, stroke: '#000', strokeWidth: 3, alpha: Math.min(1, this.tagHintT / 30) });
     }
     this.renderPause(ctx);

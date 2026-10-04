@@ -1,4 +1,4 @@
-import { COLORS, LIGHT_HIT_THRESHOLD, PIXEL_SIZE, STAGE_MAX_Z, STAGE_MIN_Z } from '../config/constants';
+import { COLORS, LIGHT_HIT_THRESHOLD, PARRY_ATTACKER_HITSTOP, PIXEL_SIZE, STAGE_MAX_Z, STAGE_MIN_Z } from '../config/constants';
 import { Camera } from '../core/Camera';
 import type { AudioEngine } from '../core/AudioEngine';
 import type { GameContext } from '../core/StateManager';
@@ -210,8 +210,9 @@ export abstract class CombatScene extends Scene implements World {
             const before = t.hp;
             const res = t.receiveHit(a, hb, this);
             if (res !== 'miss') {
-              a.moveConnected = true;
-              a.hitstop = Math.max(a.hitstop, res === 'blocked' ? Math.max(2, hb.hitstop - 1) : hb.hitstop);
+              // A parried move never counts as connected, so the attacker gets no cancel window out of it.
+              if (res !== 'parried') a.moveConnected = true;
+              a.hitstop = Math.max(a.hitstop, res === 'parried' ? hb.hitstop + PARRY_ATTACKER_HITSTOP : res === 'blocked' ? Math.max(2, hb.hitstop - 1) : hb.hitstop);
               this.applyHitEffects(a, t, hb, res, before - t.hp);
               if (res === 'hit' && a.move?.onHitBounce) a.bounceOffHit();
             }
@@ -268,6 +269,14 @@ export abstract class CombatScene extends Scene implements World {
     const sy = Math.max(t.y + 12, Math.min(t.y + 96 * t.scale, a.y + hb.offsetY * a.scale));
     const sz = t.z + 2;
 
+    if (res === 'parried') {
+      p.burst(sx, sy, sz, -dir, COLORS.brass, 16, 5, 1.4);
+      p.spawn('flash', sx, sy, sz, 0, 0, 0, 10, 8, '#fff2b0', { size2: 44 });
+      p.ring(t.x, t.z, 8, 54, COLORS.brass, 14);
+      this.audio.playParry();
+      this.camera.shake(4, dir, 0, 8);
+      return;
+    }
     if (res === 'blocked') {
       p.burst(sx, sy, sz, -dir, '#9fe8ff', 10, 4, 1.2);
       p.spawn('flash', sx, sy, sz, 0, 0, 0, 8, 6, '#6fb6ff', { size2: 28 });

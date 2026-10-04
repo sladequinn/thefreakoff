@@ -14,13 +14,13 @@ import {
   type Action,
   type KeyBindings,
 } from '../config/controls';
-import { DOUBLE_TAP_WINDOW, SIMULTANEOUS_PRESS_WINDOW } from '../config/constants';
+import { DOUBLE_TAP_WINDOW } from '../config/constants';
 import { emptyInput, type InputFrame } from '../physics/Types';
 
 type ActionMap = Record<Action, boolean>;
 
 function blankActions(): ActionMap {
-  return { up: false, down: false, left: false, right: false, jump: false, attack: false, special: false, tag: false };
+  return { up: false, down: false, left: false, right: false, jump: false, attack: false, special: false, block: false, tag: false };
 }
 
 interface SlotState {
@@ -36,11 +36,7 @@ interface SlotState {
   lastTapFrame: { left: number; right: number };
   runDir: number;
   dashDir: number;
-  lastAttackPress: number;
-  lastJumpPress: number;
   touchRun: boolean;
-  comboSpecialLatched: boolean;
-  specialFromCombo: boolean;
   frame: InputFrame;
 }
 
@@ -132,11 +128,7 @@ export class InputManager {
       lastTapFrame: { left: -999, right: -999 },
       runDir: 0,
       dashDir: 0,
-      lastAttackPress: -999,
-      lastJumpPress: -999,
       touchRun: false,
-      comboSpecialLatched: false,
-      specialFromCombo: false,
       frame: emptyInput(),
     };
   }
@@ -252,20 +244,11 @@ export class InputManager {
     if (slot.runDir !== 0 && f.moveX !== slot.runDir) slot.runDir = 0;
     f.run = slot.runDir !== 0 || (slot.touchRun && f.moveX !== 0);
 
-    if (pressed.attack) slot.lastAttackPress = this.frameNo;
-    if (pressed.jump) slot.lastJumpPress = this.frameNo;
-    let comboSpecial = false;
-    if ((pressed.attack || pressed.jump) && !slot.comboSpecialLatched) {
-      if (Math.abs(slot.lastAttackPress - slot.lastJumpPress) <= SIMULTANEOUS_PRESS_WINDOW) {
-        comboSpecial = true;
-        slot.comboSpecialLatched = true;
-      }
-    }
-    if (!held.attack || !held.jump) slot.comboSpecialLatched = false;
-
-    f.specialPressed = pressed.special || comboSpecial;
-    f.attackPressed = pressed.attack && !comboSpecial;
-    f.jumpPressed = pressed.jump && !comboSpecial;
+    f.specialPressed = pressed.special;
+    f.attackPressed = pressed.attack;
+    f.jumpPressed = pressed.jump;
+    f.block = held.block;
+    f.blockPressed = pressed.block;
     f.tagPressed = pressed.tag;
     f.moveRequest = undefined;
   }

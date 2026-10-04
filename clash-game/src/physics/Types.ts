@@ -156,6 +156,9 @@ export interface InputFrame {
   jumpPressed: boolean;
   attackPressed: boolean;
   specialPressed: boolean;
+  /** Guard button held; `blockPressed` marks the first frame so a tight press can be read as a parry. */
+  block: boolean;
+  blockPressed: boolean;
   /** Tag-team only: ask the scene to swap in the partner. */
   tagPressed: boolean;
   dashDir: number;
@@ -172,6 +175,8 @@ export function emptyInput(): InputFrame {
     jumpPressed: false,
     attackPressed: false,
     specialPressed: false,
+    block: false,
+    blockPressed: false,
     tagPressed: false,
     dashDir: 0,
   };

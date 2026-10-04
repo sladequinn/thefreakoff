@@ -224,6 +224,6 @@ export const SLADE: CharacterDef = {
     { name: 'Ninjato Triple Flurry', input: 'J, J, J', desc: 'Slash → arcane palm → launching void crescent' },
     { name: 'Shadow Step', input: 'Run + J', desc: 'Vanish into smoke, reappear with a tripping sweep' },
     { name: 'Tengu Dive', input: 'Air + J', desc: 'Runic dive kick that ground-bounces' },
-    { name: 'Ninpo: Abyssal Rift', input: 'U  /  J+K', desc: 'Invulnerable sigil eruption (costs 8% HP)' },
+    { name: 'Ninpo: Abyssal Rift', input: 'U', desc: 'Invulnerable sigil eruption (costs 8% HP)' },
   ],
 };

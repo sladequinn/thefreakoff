@@ -307,7 +307,7 @@ export const WHITE_LIE: CharacterDef = {
     { name: 'Bar for Bar', input: 'J, J, J', desc: 'Backhand → cane hook → wall-bouncing belly bump' },
     { name: 'Sold Out Tour', input: 'Run + J', desc: 'Double-armored shoulder rush that flattens anything' },
     { name: 'Drop the Beat', input: 'Air + J', desc: 'Full-weight elbow drop with hard knockdown' },
-    { name: 'Mic Drop', input: 'U  /  J+K', desc: 'Slam the mic for a two-ring shockwave (costs 8% HP)' },
+    { name: 'Mic Drop', input: 'U', desc: 'Slam the mic for a two-ring shockwave (costs 8% HP)' },
     { name: 'Hostile Takeover', input: 'Toward + U', desc: 'Unblockable command grab: hoist them overhead and slam' },
   ],
 };

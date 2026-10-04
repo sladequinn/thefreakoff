@@ -30,6 +30,8 @@ export class Boss extends Fighter {
     this.ai = ai;
     this.versus = opts.versus;
     this.aura = opts.aura ?? !opts.versus;
+    // Only hard versus CPUs get the just-guard; story bosses and easier settings block normally.
+    this.canParry = opts.versus && opts.difficulty >= 1;
     this.facing = -1;
   }
 

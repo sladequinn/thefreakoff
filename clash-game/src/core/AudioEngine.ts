@@ -561,6 +561,15 @@ export class AudioEngine {
     this.noise(0.05, 'bandpass', 2000, 1500, 2, 0.15);
   }
 
+  /** Bright rising chime over a metallic tick: the "just guard" reward. */
+  playParry(): void {
+    if (!this.ctx || !this.throttle('parry', 60)) return;
+    const t = this.now;
+    this.tone('square', 1200, 2400, 0.14, 0.11, t);
+    this.tone('triangle', 1800, 3600, 0.18, 0.09, t + 0.02);
+    this.noise(0.04, 'highpass', 5000, 3000, 1, 0.1, t);
+  }
+
   playSmoke(): void {
     if (!this.ctx || !this.throttle('smoke', 80)) return;
     this.noise(0.35, 'lowpass', 2500, 300, 1, 0.3, this.now, this.sfxBus, 0.02);

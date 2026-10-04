@@ -33,7 +33,7 @@ export class NinjabotAI implements Controller {
   getInput(self: Fighter, world: World): InputFrame {
     const o = this.out;
     o.moveX = o.moveZ = 0;
-    o.run = o.jump = o.jumpPressed = o.attackPressed = o.specialPressed = false;
+    o.run = o.jump = o.jumpPressed = o.attackPressed = o.specialPressed = o.block = o.blockPressed = false;
     o.dashDir = 0;
     o.moveRequest = undefined;
 

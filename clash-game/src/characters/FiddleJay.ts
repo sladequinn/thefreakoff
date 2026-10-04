@@ -283,7 +283,7 @@ export const FIDDLE_JAY: CharacterDef = {
     { name: 'Hoedown String', input: 'J, J, J, J', desc: 'Bow lash → snap kick → hook kick → launching thrust' },
     { name: 'Devil Went Down', input: 'Run + J', desc: 'Sliding sweep kick that trips' },
     { name: 'Reel Dive', input: 'Air + J', desc: 'Flying side kick that knocks down' },
-    { name: 'Hellfire Hoedown', input: 'U  /  J+K', desc: 'Three sonic riffs and a launching finale (costs 8% HP)' },
+    { name: 'Hellfire Hoedown', input: 'U', desc: 'Three sonic riffs and a launching finale (costs 8% HP)' },
     { name: "Devil's Trill", input: 'Away + J', desc: 'Pluck a travelling ♪ note that drifts across the screen' },
   ],
 };
