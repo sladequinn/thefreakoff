@@ -2,6 +2,7 @@ import { WAKEUP_FRAMES } from '../config/constants';
 import { FState, type Archetype, type Variant } from '../physics/Types';
 import type { RenderView } from '../entities/Entity';
 import type { Fighter } from '../entities/Fighter';
+import { pixelize } from './Pixelize';
 
 // ============================================================================ pose model
 
@@ -65,7 +66,7 @@ function sample(keys: Keys, f: number): Pose {
 
 const IDLE: Record<Archetype, Pose> = {
   ninja: P(0.18, -0.1, -0.5, 1.4, 1.0, 0.7, -0.35, -0.12, 0.45, -0.5, 0, 0.7),
-  brawler: P(0.22, 0.02, 0.55, 2.1, 0.8, 1.9, -0.4, -0.15, 0.4, -0.4),
+  brawler: P(0.14, 0.04, 0.25, 1.35, -1.45, 1.95, -0.4, -0.15, 0.4, -0.4),
   ninjabot: P(0.15, 0, -0.2, 1.1, 0.8, 0.9, -0.3, -0.1, 0.35, -0.4, 0, 0.9),
   frecklebot: P(0.08, 0, 0.3, 1.5, 0.5, 1.4, -0.25, -0.1, 0.25, -0.2),
 };
@@ -431,9 +432,10 @@ const PALETTES: Record<Archetype, Partial<Record<Variant, Palette>> & { normal: 
     boss: { gi: '#120e18', giDark: '#07050a', gi2: '#2a1740', trim: '#b066ff', scarf: '#7a1fe0', scarfTip: '#e0c4ff', skin: '#e0b48f', eye: '#ff4dff', blade: '#f2eaff', glow: '#c070ff', wrap: '#5a2aa0', hilt: '#2a1f3a' },
   },
   brawler: {
-    normal: { jacket: '#9c7c49', jacketDark: '#6c5431', cuff: '#b89660', pants: '#34404f', pantsDark: '#242d38', boots: '#2a1f18', skin: '#eab48e', skinDark: '#c98f6b', hair: '#ea6a2a', hairDark: '#b8481a', tape: '#efe9dc', tapeDark: '#c8c0ae', brass: '#ffc857', shirt: '#26262e', freckle: '#b25a33', belt: '#4a3222' },
-    alt: { jacket: '#3d4b62', jacketDark: '#28324a', cuff: '#56688a', pants: '#4a2b2b', pantsDark: '#321c1c', boots: '#1a1512', skin: '#d6a07c', skinDark: '#b58062', hair: '#f4d24a', hairDark: '#c29a22', tape: '#e6f4ff', tapeDark: '#b0c4d2', brass: '#9fe8ff', shirt: '#b8212f', freckle: '#9c5030', belt: '#222' },
-    boss: { jacket: '#8e6a38', jacketDark: '#5e4424', cuff: '#b08850', pants: '#2c3542', pantsDark: '#1c232d', boots: '#1f1712', skin: '#eab48e', skinDark: '#c98f6b', hair: '#ff5a1a', hairDark: '#b83a0a', tape: '#fff2dc', tapeDark: '#d0c4a8', brass: '#ffd86a', shirt: '#1a1a20', freckle: '#b25a33', belt: '#3a2618' },
+    // Gothic jester: black-and-crimson motley, bone-white greasepaint, striped stockings, gold bells.
+    normal: { dark: '#17101e', dark2: '#2a1c33', red: '#b0102c', red2: '#6e0a1c', skin: '#f2eaf5', skinDark: '#d6c4dc', stock1: '#17101e', stock2: '#e6dfe9', boots: '#0d0a12', bell: '#ffd21f', ruff: '#f6f2f8', lace: '#ff3b5c', knuckle: '#d8dfe8', paint: '#0a0710', lips: '#8a0a22', glow: '#ff3b5c', buckle: '#c0c8d4', hair: '#120c18' },
+    alt: { dark: '#ece6f1', dark2: '#cfc5d8', red: '#5a1aa8', red2: '#3a0f70', skin: '#f6f1f8', skinDark: '#dccfe2', stock1: '#5a1aa8', stock2: '#ece6f1', boots: '#1a1424', bell: '#9fe8ff', ruff: '#ffffff', lace: '#9d5cff', knuckle: '#9fe8ff', paint: '#2a0f4a', lips: '#5a1aa8', glow: '#9d5cff', buckle: '#9fe8ff', hair: '#ece6f1' },
+    boss: { dark: '#14101c', dark2: '#261a30', red: '#c8102c', red2: '#7a0a1c', skin: '#f2eaf5', skinDark: '#d6c4dc', stock1: '#14101c', stock2: '#ffd21f', boots: '#0d0a12', bell: '#ffd21f', ruff: '#fff6d0', lace: '#ffd21f', knuckle: '#ffd86a', paint: '#0a0710', lips: '#8a0a22', glow: '#ffb13b', buckle: '#ffd21f', hair: '#120c18' },
   },
   ninjabot: {
     normal: { chrome1: '#eef3f8', chrome2: '#7d8896', dark: '#1b2129', mesh: '#2a3440', visor: '#39f3ff', blade: '#c9fbff', joint: '#39f3ff' },
@@ -612,108 +614,172 @@ function drawNinja(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: Dra
 function drawBrawler(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: DrawOpts): void {
   const T = (c: string): string => o.tint ?? c;
   const t = o.time;
+  const up = J.up;
+  const perp = J.perp;
+  const fwd: V = { x: 1, y: 0 };
   ctx.lineCap = 'round';
 
-  // ponytail
-  const tieP = add(J.head, J.perp, -d.headR + 1);
-  const sway = Math.sin(t * 0.18) * 3 + o.motion * 6;
-  ctx.strokeStyle = T(pal.hair);
-  ctx.lineWidth = 6;
-  ctx.beginPath();
-  ctx.moveTo(tieP.x, tieP.y);
-  ctx.quadraticCurveTo(tieP.x - 10 - sway, tieP.y + 2, tieP.x - 13 - sway * 1.6, tieP.y + 14 - o.motion * 6);
-  ctx.stroke();
-  ctx.lineWidth = 3;
-  ctx.strokeStyle = T(pal.hairDark);
-  ctx.stroke();
-
-  // back limbs
-  seg(ctx, J.hip, J.kneeL, 11, T(pal.pantsDark));
-  seg(ctx, J.kneeL, J.footL, 10, T(pal.pantsDark));
-  seg(ctx, mix(J.kneeL, J.footL, 0.5), J.footL, 12, T(pal.boots));
-  seg(ctx, J.footL, add(J.footL, { x: 1, y: 0 }, 7), 6, T(pal.boots));
-  seg(ctx, J.shL, J.elL, 10, T(pal.jacketDark));
-  dot(ctx, J.elL, 5.5, T(pal.jacketDark));
-  seg(ctx, J.elL, J.hdL, 8, T(pal.skinDark));
-  dot(ctx, J.hdL, 5.5, T(pal.tapeDark));
-
-  // torso
-  torsoQuad(ctx, J, d.hipW, d.chestW, o.tint ?? perpGradient(ctx, J, d.chestW, [[0, pal.jacketDark], [0.55, pal.jacket], [1, pal.cuff]]));
-  const shirtTop = add(J.neck, J.perp, 4);
-  const shirtBot = add(J.hip, J.perp, 3);
-  taper(ctx, shirtTop, shirtBot, 7, 5, T(pal.shirt));
-  seg(ctx, add(J.neck, J.perp, 9), add(J.hip, J.perp, 7), 1.2, T(pal.jacketDark));
-  seg(ctx, add(J.hip, J.perp, -d.hipW - 1), add(J.hip, J.perp, d.hipW + 1), 4, T(pal.belt));
-  seg(ctx, add(J.neck, J.perp, -9), add(J.neck, J.perp, 6), 4, T(pal.cuff));
-
-  // front leg
-  seg(ctx, J.hip, J.kneeR, 12, T(pal.pants));
-  seg(ctx, J.kneeR, J.footR, 10.5, T(pal.pants));
-  seg(ctx, mix(J.kneeR, J.footR, 0.5), J.footR, 12.5, T(pal.boots));
-  seg(ctx, J.footR, add(J.footR, { x: 1, y: 0 }, 8), 6.5, T(pal.boots));
-  seg(ctx, add(J.footR, { x: 1, y: 0 }, -2), add(J.footR, { x: 1, y: 0 }, 9), 1.5, T('#6a5040'));
-
-  // head
-  seg(ctx, J.neck, J.head, 7, T(pal.skinDark));
-  dot(ctx, J.head, d.headR, T(pal.skin));
-  const ang = p.lean + p.head;
-  ctx.save();
-  ctx.translate(J.head.x, J.head.y);
-  ctx.rotate(ang);
-  ctx.fillStyle = T(pal.hair);
-  ctx.beginPath();
-  ctx.arc(0, 0, d.headR + 1.2, Math.PI * 0.95, Math.PI * 2.05);
-  ctx.lineTo(d.headR * 0.9, -2);
-  ctx.lineTo(3, -4);
-  ctx.lineTo(-2, 1);
-  ctx.lineTo(-d.headR - 1, 3);
-  ctx.closePath();
-  ctx.fill();
-  ctx.fillStyle = T(pal.hairDark);
-  ctx.fillRect(-d.headR + 0.5, -2, 3, 3.5);
-  if (!o.tint) {
-    ctx.fillStyle = '#2a1a14';
-    ctx.fillRect(4.5, -1.2, 3.2, 1.6);
-    ctx.fillRect(3.5, -3.6, 4.6, 1.1);
-    ctx.fillStyle = pal.freckle;
-    for (const [fx, fy] of [
-      [4.2, 2.2],
-      [6.2, 2.8],
-      [5.3, 4.0],
-      [7.3, 1.6],
-    ]) {
-      ctx.fillRect(fx, fy, 1.1, 1.1);
+  const striped = (a: V, b: V, w: number, n: number): void => {
+    seg(ctx, a, b, w, T(pal.stock1));
+    if (o.tint) return;
+    ctx.lineCap = 'butt';
+    for (let i = 0; i < n; i++) seg(ctx, mix(a, b, (i + 0.15) / n), mix(a, b, (i + 0.58) / n), w, pal.stock2);
+    ctx.lineCap = 'round';
+  };
+  const boot = (knee: V, foot: V, w: number, front: boolean): void => {
+    seg(ctx, mix(knee, foot, 0.42), foot, w, T(pal.boots));
+    seg(ctx, add(foot, fwd, -3), add(foot, fwd, front ? 9 : 8), w * 0.72, T(pal.boots));
+    if (!o.tint) {
+      const strap = mix(knee, foot, 0.62);
+      seg(ctx, add(strap, fwd, -w * 0.45), add(strap, fwd, w * 0.45), 1.6, pal.red2);
+      dot(ctx, add(strap, fwd, w * 0.3), 1.4, pal.buckle);
     }
-    ctx.fillStyle = '#9a4a3a';
-    ctx.fillRect(5.5, 5.6, 3, 0.9);
-    ctx.fillStyle = pal.skinDark;
-    ctx.beginPath();
-    ctx.arc(-1.5, 1, 2, 0, Math.PI * 2);
-    ctx.fill();
-  }
-  ctx.restore();
-
-  // front arm with taped fist and brass knuckles
-  seg(ctx, J.shR, J.elR, 10.5, T(pal.jacket));
-  dot(ctx, J.elR, 6, T(pal.cuff));
-  seg(ctx, J.elR, J.hdR, 8.5, T(pal.skin));
-  seg(ctx, mix(J.elR, J.hdR, 0.7), J.hdR, 9, T(pal.tape));
-  dot(ctx, J.hdR, 6.2, T(pal.tape));
-  const fd = dirv(J.foreR);
-  const knuck = add(J.hdR, fd, 4);
-  const knuckL = add(J.hdL, dirv(J.foreL), 4);
-  if (!o.tint) {
-    ctx.globalCompositeOperation = 'lighter';
-    for (const k of [knuck, knuckL]) {
+  };
+  const sleeve = (sh: V, el: V, hd: V, w: number, front: boolean): void => {
+    seg(ctx, sh, el, w, T(front ? pal.red : pal.red2));
+    dot(ctx, el, w * 0.55, T(front ? pal.red : pal.red2));
+    seg(ctx, el, hd, w * 0.78, T(front ? pal.dark : pal.dark2));
+    seg(ctx, mix(el, hd, 0.72), mix(el, hd, 0.8), w * 0.86, T(pal.red));
+    dot(ctx, hd, w * 0.58, T(front ? pal.dark : pal.dark2));
+  };
+  const spikes = (hd: V, fore: number): void => {
+    const fd = dirv(fore);
+    const k = add(hd, fd, 4);
+    const side = { x: -fd.y, y: fd.x };
+    if (!o.tint) {
+      ctx.globalCompositeOperation = 'lighter';
       const g = ctx.createRadialGradient(k.x, k.y, 0, k.x, k.y, 9);
-      g.addColorStop(0, pal.brass);
+      g.addColorStop(0, pal.glow);
       g.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = g;
       ctx.fillRect(k.x - 9, k.y - 9, 18, 18);
+      ctx.globalCompositeOperation = 'source-over';
     }
-    ctx.globalCompositeOperation = 'source-over';
+    seg(ctx, add(k, side, -4), add(k, side, 4), 3, T(pal.knuckle));
+    for (const s of [-3, 0, 3]) dot(ctx, add(add(k, side, s), fd, 2.2), 1.1, T(pal.knuckle));
+  };
+
+  // back arm and back leg
+  sleeve(J.shL, J.elL, J.hdL, 10, false);
+  spikes(J.hdL, J.foreL);
+  striped(J.hip, J.kneeL, 10, 3);
+  striped(J.kneeL, J.footL, 9, 3);
+  boot(J.kneeL, J.footL, 11, false);
+
+  // corset torso
+  torsoQuad(ctx, J, d.hipW, d.chestW, T(pal.dark));
+  const cb = mix(J.hip, J.neck, 0.76);
+  dot(ctx, add(cb, perp, 2.5), 8, T(pal.skin));
+  dot(ctx, add(cb, perp, 9), 9, T(pal.skin));
+  if (!o.tint) {
+    seg(ctx, add(add(cb, perp, 7), up, 4), add(add(cb, perp, 7.5), up, -4), 1.4, pal.skinDark);
+    dot(ctx, add(add(cb, perp, 12), up, 3), 1.6, '#ffffff');
   }
-  seg(ctx, add(knuck, { x: -fd.y, y: fd.x }, -4), add(knuck, { x: -fd.y, y: fd.x }, 4), 3, T(pal.brass));
+  const bustLine = add(cb, up, -4);
+  seg(ctx, add(bustLine, perp, -d.chestW), add(bustLine, perp, d.chestW + 7), 9, T(pal.dark));
+  if (!o.tint) {
+    seg(ctx, add(add(bustLine, up, 4), perp, -d.chestW + 1), add(add(bustLine, up, 4), perp, d.chestW + 8), 1.6, pal.lace);
+    ctx.strokeStyle = pal.lace;
+    ctx.lineWidth = 1.1;
+    ctx.beginPath();
+    for (let i = 0; i <= 6; i++) {
+      const c = mix(add(J.hip, up, 3), add(bustLine, up, -2), i / 6);
+      const q = add(c, perp, i % 2 === 0 ? 3 : -3);
+      if (i === 0) ctx.moveTo(q.x, q.y);
+      else ctx.lineTo(q.x, q.y);
+    }
+    ctx.stroke();
+  }
+
+  // front leg, then the ruffled skirt over both thighs
+  striped(J.hip, J.kneeR, 11, 3);
+  striped(J.kneeR, J.footR, 10, 3);
+  boot(J.kneeR, J.footR, 12, true);
+  const skirt = (len: number, w0: number, w1: number, color: string): void => {
+    ctx.fillStyle = T(color);
+    ctx.beginPath();
+    const a = add(J.hip, perp, -w0);
+    const b = add(J.hip, perp, w0);
+    ctx.moveTo(a.x, a.y);
+    ctx.lineTo(b.x, b.y);
+    for (let i = 0; i <= 6; i++) {
+      const base = add(add(J.hip, up, -len), perp, w1 - (i / 6) * 2 * w1);
+      const pt = i % 2 === 0 ? base : add(base, up, 4);
+      ctx.lineTo(pt.x, pt.y);
+    }
+    ctx.closePath();
+    ctx.fill();
+  };
+  skirt(15, d.hipW + 1, d.hipW + 9, pal.red2);
+  skirt(11, d.hipW + 1, d.hipW + 7, pal.dark);
+  seg(ctx, add(J.hip, perp, -d.hipW - 1), add(J.hip, perp, d.hipW + 1), 3.5, T(pal.red));
+
+  // neck and ruff collar
+  seg(ctx, J.neck, J.head, 6, T(pal.skin));
+  for (let i = 0; i < 7; i++) {
+    const a = (i / 7) * Math.PI * 2;
+    const c = add(add(J.neck, perp, Math.cos(a) * 7.5), up, Math.sin(a) * 1.8 + 4);
+    dot(ctx, c, 2.1, T(i % 2 === 0 ? pal.ruff : pal.dark2));
+  }
+
+  // head: greasepaint face, painted eye, jester cap with bells
+  const ang = p.lean + p.head;
+  const sway = Math.sin(t * 0.15) * 2 + o.motion * 5;
+  ctx.save();
+  ctx.translate(J.head.x, J.head.y);
+  ctx.rotate(ang);
+  const r = d.headR;
+  seg(ctx, { x: -r + 1, y: 0 }, { x: -r - 3 - sway * 0.4, y: 8 }, 2.4, T(pal.hair));
+  dot(ctx, { x: 0, y: 0 }, r, T(pal.skin));
+  const point = (bx: number, by: number, tx: number, ty: number, color: string): void => {
+    taper(ctx, { x: bx, y: by }, { x: tx, y: ty }, 9, 2, T(color));
+    dot(ctx, { x: tx, y: ty }, 2.4, T(pal.bell));
+  };
+  point(-4, -6, -17 - sway, -2 + Math.abs(sway) * 0.4, pal.red);
+  point(1, -8, -5 - sway * 0.6, -22, pal.dark);
+  point(6, -5, 16 - sway * 0.3, -11 + sway * 0.5, pal.red);
+  ctx.fillStyle = T(pal.dark);
+  ctx.beginPath();
+  ctx.arc(0, 0, r + 1.5, Math.PI, Math.PI * 2);
+  ctx.closePath();
+  ctx.fill();
+  ctx.fillStyle = T(pal.red);
+  ctx.beginPath();
+  ctx.moveTo(0, 0);
+  ctx.arc(0, 0, r + 1.5, -Math.PI / 2, 0);
+  ctx.closePath();
+  ctx.fill();
+  seg(ctx, { x: -r - 1.5, y: -0.5 }, { x: r + 1.5, y: -0.5 }, 2.2, T(pal.red2));
+  if (!o.tint) {
+    ctx.fillStyle = pal.paint;
+    ctx.beginPath();
+    ctx.moveTo(5, -5.5);
+    ctx.lineTo(8.2, -1.5);
+    ctx.lineTo(5, 2.5);
+    ctx.lineTo(1.8, -1.5);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillRect(4.5, 2.5, 1, 3);
+    dot(ctx, { x: 5.4, y: -1.6 }, 1, pal.lips);
+    ctx.strokeStyle = pal.lips;
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.arc(5.5, 4.2, 2.8, 0.2, Math.PI - 0.2);
+    ctx.stroke();
+    ctx.fillStyle = pal.lips;
+    for (const [fx, fy] of [
+      [7.6, 0.6],
+      [8.6, 2.0],
+      [7.2, 2.6],
+    ]) {
+      ctx.fillRect(fx, fy, 1, 1);
+    }
+  }
+  ctx.restore();
+
+  // front arm with spiked knuckles
+  sleeve(J.shR, J.elR, J.hdR, 10.5, true);
+  spikes(J.hdR, J.foreR);
 }
 
 function drawNinjabot(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: DrawOpts): void {
@@ -971,7 +1037,7 @@ const PAINTERS: Record<Archetype, (ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal:
 
 const TRAIL_TINT: Record<Archetype, string> = {
   ninja: '#6a2fd6',
-  brawler: '#ff6a2a',
+  brawler: '#b0102c',
   ninjabot: '#39f3ff',
   frecklebot: '#ffd21f',
 };
@@ -1062,7 +1128,7 @@ export class SpriteRenderer {
 
     if (f.variant === 'boss' && f.state !== FState.DEAD) {
       ctx.globalCompositeOperation = 'lighter';
-      const col = arch === 'ninja' ? 'rgba(140,70,255,0.28)' : 'rgba(255,110,40,0.26)';
+      const col = arch === 'ninja' ? 'rgba(140,70,255,0.28)' : 'rgba(255,40,80,0.26)';
       const g = ctx.createRadialGradient(sx, sy - 48, 4, sx, sy - 48, 70);
       g.addColorStop(0, col);
       g.addColorStop(1, 'rgba(0,0,0,0)');
@@ -1128,7 +1194,7 @@ export class SpriteRenderer {
     const buf = (this.portraitBuf ??= document.createElement('canvas'));
     if (buf.width < bw) buf.width = bw;
     if (buf.height < bh) buf.height = bh;
-    const b = buf.getContext('2d')!;
+    const b = buf.getContext('2d', { willReadFrequently: true })!;
     b.setTransform(1, 0, 0, 1, 0, 0);
     b.clearRect(0, 0, bw, bh);
     b.setTransform(0.5, 0, 0, 0.5, 0, 0);
@@ -1136,6 +1202,9 @@ export class SpriteRenderer {
     const scale = (h / 60) * 1.35;
     const pose = idlePose(arch, time);
     this.drawBody(b, arch, variant, { ...pose, lean: 0.05, head: 0 }, w / 2 - facing * 6 * scale, h * 0.36 + 88 * scale, facing, scale, time);
+    const img = b.getImageData(0, 0, bw, bh);
+    pixelize(img);
+    b.putImageData(img, 0, 0);
     ctx.save();
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(buf, 0, 0, bw, bh, x, y, bw * 2, bh * 2);

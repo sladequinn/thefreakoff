@@ -5,7 +5,7 @@ Frecklebot and Ninjabot armies flood the streets while the two real figureheads 
 A 2.5D arcade beat 'em up and 1v1 versus fighter built in TypeScript on a plain Canvas 2D renderer. Every sprite, background, sound effect, voice grunt and music track is generated procedurally at runtime; there are no image or audio assets.
 
 - **Slade, the Magick Ninja**: fast arcane zoner with a ninjato, smoke teleports and sigil eruptions.
-- **Freckles, the Street Brawler**: armored infighter with brass-knuckle strings, tackles and seismic slams.
+- **Freckles, the Gothic Jester**: a black-and-crimson harlequin in a corset, striped stockings and a belled cap, with spiked-knuckle strings, armored tackles and seismic slams.
 
 ## Run it
 
@@ -65,7 +65,7 @@ src/
   scenes/     title, character select, story, versus, results
 ```
 
-- **Pixel look**: the world is painted into a 480x270 buffer, reduced to a 7-level-per-channel palette with 4x4 ordered (Bayer) dithering, and scaled up with nearest-neighbour. The HUD is drawn on top at 960x540 in pixel fonts (Press Start 2P and VT323, bundled via Fontsource), and the browser scales the whole frame with `image-rendering: pixelated`.
+- **Pixel look**: the world is painted into a 480x270 buffer, reduced to an 8-level-per-channel palette with 4x4 ordered (Bayer) dithering, and scaled up with nearest-neighbour. Fighters, projectiles and particles go through a separate sprite pass (`rendering/Pixelize.ts`): colours snap to flat palette levels, partial alpha becomes a Bayer mesh (the 16-bit way to fake transparency, used for trails, fades and glows) and every solid pixel touching empty space becomes a dark outline, so the vector-drawn rigs come out as outlined cel sprites. Portraits run through the same pass. The camera snaps to whole world pixels. The HUD is drawn on top at 960x540 in pixel fonts (Press Start 2P snapped to its 8px grid, plus VT323, bundled via Fontsource), and the browser scales the whole frame with `image-rendering: pixelated`.
 - **Projection**: `screenX = x - cam.x`, `screenY = z - y - cam.y`. Entities are sorted by `z` before drawing, and shadows are drawn at `(screenX, z - cam.y)`.
 - **Hit test**: X overlap, Y overlap, and `|dz| <= zRange` (default 14). Hits trigger 4 to 6 frames of hitstop and a camera shake in the direction of the hit.
 - **Fighter states**: IDLE, WALK, RUN, PREJUMP, JUMP, LAND, ATTACK, HURT, KNOCKDOWN, WAKEUP, plus BLOCK, SUBSTITUTE, DEAD, INTRO and VICTORY.

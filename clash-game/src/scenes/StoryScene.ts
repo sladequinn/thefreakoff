@@ -151,7 +151,7 @@ const STORY: Record<CharId, { pre: Page[][]; boss: string[]; ending: Page[] }> =
   slade: {
     pre: [
       [
-        { speaker: 'NEO-KASAI, 2089', arch: null, text: 'Hydraulic boxers stalk the Outskirts: Frecklebots, forged by the Iron Syndicate from the fight data of one legendary street brawler.' },
+        { speaker: 'NEO-KASAI, 2089', arch: null, text: 'Hydraulic boxers stalk the Outskirts: Frecklebots, forged by the Iron Syndicate from the fight data of one legendary carnival brawler.' },
         { speaker: 'SLADE', arch: 'ninja', text: 'Their pistons shake the old shrine every night. Someone taught iron to throw punches. I will unmake the lesson, one sigil at a time.' },
       ],
       [
@@ -159,7 +159,7 @@ const STORY: Record<CharId, { pre: Page[][]; boss: string[]; ending: Page[] }> =
         { speaker: 'SYNDICATE PA', arch: null, text: 'PIER 9 ALERT. FOREMAN MK-II ONLINE. SECURE THE SHIPMENT. THE NINJA IS NOT TO REACH THE CORE.' },
       ],
       [
-        { speaker: 'SLADE', arch: 'ninja', text: "Each unit carries the same signature: a four-strike rhythm, a shoulder tackle, brass on the knuckles. This is a living fighter's style." },
+        { speaker: 'SLADE', arch: 'ninja', text: "Each unit carries the same signature: a four-strike rhythm, a shoulder tackle, spikes on the knuckles. This is a living fighter's style — and the bells are a nice touch." },
         { speaker: 'SYNDICATE PA', arch: null, text: 'CORE FACILITY LOCKDOWN. MOTION TEMPLATE "FRECKLES" LICENSED TO ALL UNITS. INTRUDER: SLADE. PRIORITY: TERMINATE.' },
       ],
       [
