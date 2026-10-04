@@ -12,8 +12,8 @@ import {
   TEAM_PLAYER,
   font,
 } from '../config/constants';
-import { FRECKLES } from '../characters/Freckles';
-import { SLADE } from '../characters/Slade';
+import { charDef } from '../characters';
+import { ROUTES, type RouteDef } from '../config/routes';
 import type { MusicTrack } from '../core/AudioEngine';
 import type { GameContext, SceneMap } from '../core/StateManager';
 import { Boss } from '../entities/Boss';
@@ -24,9 +24,12 @@ import { FState, type Archetype, type Bounds, type StoryCharId, type Variant } f
 import type { StageTheme } from '../rendering/Renderer';
 import { CombatScene } from './Scene';
 
+/** A plain variant spawns the route's main bot line; `mix` spawns the route's secondary line. */
+type Spawn = Variant | { mix: Variant };
+
 interface WaveDef {
   at: number;
-  enemies: Variant[];
+  enemies: Spawn[];
 }
 
 interface StageDef {
@@ -39,8 +42,9 @@ interface StageDef {
   boss?: boolean;
 }
 
-function stagesFor(kind: EnemyKind): StageDef[] {
-  const mix: Variant = kind === 'ninjabot' ? 'alt' : 'heavy';
+function stagesFor(route: RouteDef): StageDef[] {
+  // Same-faction routes mix in that line's tough variant; cross-faction routes bring in the other bots.
+  const mix: Spawn = route.mix === route.foes ? (route.foes === 'ninjabot' ? 'alt' : 'heavy') : { mix: route.mix === 'ninjabot' ? 'alt' : 'heavy' };
   return [
     {
       label: 'STAGE 1',
@@ -180,14 +184,96 @@ const STORY: Record<StoryCharId, { pre: Page[][]; boss: string[]; ending: Page[]
       { speaker: 'SLADE', arch: 'ninja', text: 'And you hit harder than every copy combined. The vault lies beneath this shrine. Shall we return what was stolen from us both?' },
     ],
   },
+  whitelie: {
+    pre: [
+      [
+        { speaker: 'NEO-KASAI, 2089', arch: null, text: 'At midnight the Iron Syndicate foreclosed on every venue carrying the Platinum label. By one a.m. there were Clownbots on the doors and a repo notice on the marquee.' },
+        { speaker: 'WHITE LIE', arch: 'kingpin', text: "Twenty years building this label and some tin-can consortium thinks it can take my block with a form letter. Nah. Tonight I collect. Cane first." },
+      ],
+      [
+        { speaker: 'WHITE LIE', arch: 'kingpin', text: "Pier 9. My own shipping lane, and they're using it to bring in bots by the crate. Somebody at the docks forgot whose name is painted on the cranes." },
+        { speaker: 'SYNDICATE PA', arch: null, text: 'PIER 9 ALERT. FOREMAN MK-II ONLINE. ASSET "WHITE LIE" IN DEFAULT. REPOSSESS ON SIGHT.' },
+      ],
+      [
+        { speaker: 'WHITE LIE', arch: 'kingpin', text: "Listen to them move. Every bot in this plant steps on the same beat — four on the floor, swing on the back half. That's a fiddle line. I'd know that fiddle anywhere." },
+        { speaker: 'SYNDICATE PA', arch: null, text: 'CORE FACILITY LOCKDOWN. RHYTHM TEMPLATE "HOEDOWN" ACTIVE ON ALL UNITS. NINJABOT ENFORCERS: ESCORT THE ASSET OUT.' },
+      ],
+      [
+        { speaker: 'WHITE LIE', arch: 'kingpin', text: "Up on the roof the billboards are still running my ads with a Syndicate watermark. They didn't just take the clubs. They took the brand. Cute." },
+      ],
+      [
+        { speaker: 'WHITE LIE', arch: 'kingpin', text: 'The Foundry. This is where the beat gets poured into iron. The Foreman is back on his feet and the crucible is running hot. Time to drop the whole label on it.' },
+        { speaker: 'SYNDICATE PA', arch: null, text: 'FOUNDRY BREACH. FOREMAN MK-II REBUILT. ALL LINES: THE ASSET DOES NOT LEAVE WITH THE MASTER TAPE.' },
+      ],
+      [
+        { speaker: 'WHITE LIE', arch: 'kingpin', text: "Signal ends at a mountain shrine. And wouldn't you know it: the one man in this city who plays that fiddle is sitting on the gate, tuning up." },
+        { speaker: 'FIDDLE JAY', arch: 'fiddler', text: "Evening, Mr. Lie. Funny thing: your label pressed the record that's got every bot in town dancing. I was coming to ask you about it. Guess you saved me the walk." },
+      ],
+    ],
+    boss: ["FIDDLE JAY: That's my tune they stole, and your name on the sleeve.", 'WHITE LIE: Then let the court hear the case. Cane versus bow. Right now.'],
+    ending: [
+      { speaker: 'FIDDLE JAY', arch: 'fiddler', text: "Hoo. All right, big man. Nobody who hits that honest is hiding a Syndicate contract. Somebody forged your signature same as they sampled my strings." },
+      { speaker: 'WHITE LIE', arch: 'kingpin', text: "Then we got a shared grievance and a vault full of evidence under this shrine. Partner up, fiddler. Fifty-fifty on the settlement." },
+    ],
+  },
+  fiddlejay: {
+    pre: [
+      [
+        { speaker: 'NEO-KASAI, 2089', arch: null, text: 'The night the Ninjabots came to the Outskirts, they moved in time. Not with each other. With a fiddle reel that only one man in the city ever played.' },
+        { speaker: 'FIDDLE JAY', arch: 'fiddler', text: "That's my Hellfire Hoedown coming out of a tin chest. Somebody bootlegged my set and taught machines to kill to it. I aim to take the record back, one bar at a time." },
+      ],
+      [
+        { speaker: 'FIDDLE JAY', arch: 'fiddler', text: 'Pier 9. The bots come in on barges stamped with a platinum logo I have seen on every billboard downtown. A record label running guns. Imagine that.' },
+        { speaker: 'SYNDICATE PA', arch: null, text: 'PIER 9 ALERT. SHOGUN-X COMMAND UNIT ACTIVATED. UNLICENSED PERFORMER ON THE DOCKS. SILENCE HIM.' },
+      ],
+      [
+        { speaker: 'FIDDLE JAY', arch: 'fiddler', text: "In here they press the chassis to a click track. My click track. There are Clownbot heavies on the line too, and they swing on the two and the four like they learned it from the same tape." },
+        { speaker: 'SYNDICATE PA', arch: null, text: 'CORE FACILITY LOCKDOWN. RHYTHM TEMPLATE "HOEDOWN" LICENSED FROM PLATINUM RECORDS. INTRUDER: FIDDLE JAY. PRIORITY: TERMINATE.' },
+      ],
+      [
+        { speaker: 'FIDDLE JAY', arch: 'fiddler', text: 'Up on the rooftops the whole skyline is one big ad for Platinum Records. The man who owns it is a three-hundred-pound rap mogul named White Lie. Figures.' },
+      ],
+      [
+        { speaker: 'FIDDLE JAY', arch: 'fiddler', text: 'The Foundry. The Shogun is rebuilt and standing on the catwalk like a conductor. Smash the forge and nobody plays my tune in iron ever again.' },
+        { speaker: 'SYNDICATE PA', arch: null, text: 'FOUNDRY BREACH. SHOGUN-X REBUILD COMPLETE. ALL LINES: PROTECT THE MASTER TAPE.' },
+      ],
+      [
+        { speaker: 'FIDDLE JAY', arch: 'fiddler', text: 'The signal climbs to a mountain shrine, and on the steps sits the biggest white suit I ever saw, swinging a cane like a baton.' },
+        { speaker: 'WHITE LIE', arch: 'kingpin', text: "Fiddle Jay. Your bootleg is running through every bot that took my clubs. You here to apologise, or you here to get featured on the pavement?" },
+      ],
+    ],
+    boss: ['WHITE LIE: Your name is on the tape that broke my city.', "FIDDLE JAY: And yours is on the sleeve. Let's settle it in four-four."],
+    ending: [
+      { speaker: 'WHITE LIE', arch: 'kingpin', text: '…All right. You play too clean to be in bed with the Syndicate. They sampled you and forged me. Somebody built an empire on both our names.' },
+      { speaker: 'FIDDLE JAY', arch: 'fiddler', text: "Then let's go find out whose. The vault is under this shrine. You bring the bass, mogul. I'll bring the strings." },
+    ],
+  },
 };
 
 type Phase = 'card' | 'play' | 'clear' | 'bossIntro' | 'bossDown' | 'ending' | 'gameover';
+
+const ARCH_COLOR: Record<Archetype, string> = {
+  ninja: '#c79bff',
+  brawler: '#ece8f0',
+  kingpin: '#ffd21f',
+  fiddler: '#ffb13b',
+  ninjabot: '#9fe8ff',
+  clownbot: '#ff9a5a',
+};
+const ARCH_BG: Record<Archetype, string> = {
+  ninja: '#2a1450',
+  brawler: '#1a1620',
+  kingpin: '#3a2a08',
+  fiddler: '#4a1c0a',
+  ninjabot: '#0a2a3a',
+  clownbot: '#4a1c0a',
+};
 
 export class StoryScene extends CombatScene {
   readonly mode = 'story' as const;
   private readonly params: SceneMap['story'];
   private readonly player: Player;
+  private readonly route: RouteDef;
   private readonly enemyKind: EnemyKind;
   private readonly stages: StageDef[];
   private stageIndex: number;
@@ -215,12 +301,13 @@ export class StoryScene extends CombatScene {
   constructor(game: GameContext, params: SceneMap['story']) {
     super(game);
     this.params = params;
-    const def = params.char === 'slade' ? SLADE : FRECKLES;
+    const def = charDef(params.char);
     this.player = new Player(def, game.input, 0, TEAM_PLAYER);
     this.player.score = params.score;
     this.player.lives = params.lives;
-    this.enemyKind = params.char === 'slade' ? 'clownbot' : 'ninjabot';
-    this.stages = stagesFor(this.enemyKind);
+    this.route = ROUTES[params.char];
+    this.enemyKind = this.route.foes;
+    this.stages = stagesFor(this.route);
     this.stageIndex = Math.max(0, Math.min(this.stages.length - 1, params.stage));
     this.setupStage(this.stageIndex);
     this.openCard(STORY[params.char].pre[this.stageIndex]);
@@ -272,8 +359,7 @@ export class StoryScene extends CombatScene {
     this.startFrame = this.frame;
 
     if (this.stage.boss) {
-      const bossDef = this.params.char === 'slade' ? FRECKLES : SLADE;
-      const boss = new Boss(bossDef, { team: TEAM_ENEMY, hpMult: BOSS_HP_MULT, versus: false, difficulty: 1 });
+      const boss = new Boss(charDef(this.route.boss), { team: TEAM_ENEMY, hpMult: BOSS_HP_MULT, versus: false, difficulty: 1 });
       boss.x = 780;
       boss.z = 430;
       boss.setState(FState.INTRO);
@@ -352,11 +438,13 @@ export class StoryScene extends CombatScene {
 
   private spawnWave(w: WaveDef): void {
     const lockX = this.camera.lockedAt;
-    w.enemies.forEach((variant, i) => {
+    w.enemies.forEach((spawn, i) => {
       const right = i % 2 === 0;
       const x = right ? lockX + CANVAS_WIDTH + 60 + i * 34 : lockX - 60 - i * 26;
+      const variant = typeof spawn === 'string' ? spawn : spawn.mix;
+      const kind = typeof spawn === 'string' ? this.enemyKind : this.route.mix;
       const z = variant === 'boss' ? (STAGE_MIN_Z + STAGE_MAX_Z) / 2 : STAGE_MIN_Z + 20 + Math.random() * (STAGE_MAX_Z - STAGE_MIN_Z - 40);
-      const e = new Enemy(this.enemyKind, variant, x, z);
+      const e = new Enemy(kind, variant, x, z);
       e.facing = right ? -1 : 1;
       this.fighters.push(e);
       if (variant === 'boss') {
@@ -618,7 +706,7 @@ export class StoryScene extends CombatScene {
     ctx.fillRect(0, CANVAS_HEIGHT - 100, CANVAS_WIDTH, 100);
     ctx.restore();
     ui.text(ctx, 'WARNING', CANVAS_WIDTH / 2, 48, 30, Math.floor(t / 8) % 2 ? '#ff3b3b' : '#ffd21f', { stroke: '#000', strokeWidth: 5 });
-    if (t > 30) ui.banner(ctx, boss.name, `${boss.def.title.toUpperCase()}  ·  AI MASTER`, t - 30, boss.def.archetype === 'ninja' ? '#b98aff' : '#ece8f0', 200);
+    if (t > 30) ui.banner(ctx, boss.name, `${boss.def.title.toUpperCase()}  ·  AI MASTER`, t - 30, ARCH_COLOR[boss.def.archetype], 200);
     const lines = STORY[this.params.char].boss;
     lines.forEach((line, i) => {
       if (t > 70 + i * 60) ui.text(ctx, line, CANVAS_WIDTH / 2, CANVAS_HEIGHT - 62 + i * 26, 15, i === 0 ? '#ffd6a8' : '#d6c4ff', { template: FONT_UI, stroke: '#000', strokeWidth: 3 });
@@ -635,8 +723,7 @@ export class StoryScene extends CombatScene {
     ctx.restore();
     const title = this.epilogue ? 'EPILOGUE' : `${this.stage.label}  ·  ${this.stage.name}`;
     ui.text(ctx, title, CANVAS_WIDTH / 2, 90, 30, '#ffffff', { stroke: '#000', strokeWidth: 5, shadow: 'rgba(138,77,255,0.8)' });
-    const route = this.params.char === 'slade' ? 'SLADE ROUTE · CLOWNBOT UPRISING' : 'FRECKLES ROUTE · NINJABOT PURGE';
-    ui.text(ctx, route, CANVAS_WIDTH / 2, 118, 12, 'rgba(255,255,255,0.55)', { template: FONT_UI });
+    ui.text(ctx, this.route.label, CANVAS_WIDTH / 2, 118, 12, 'rgba(255,255,255,0.55)', { template: FONT_UI });
 
     const px = 90;
     const py = 250;
@@ -645,15 +732,15 @@ export class StoryScene extends CombatScene {
     ui.panel(ctx, px, py, pw, ph, 'rgba(14,10,28,0.92)', 'rgba(185,138,255,0.5)');
     let tx = px + 40;
     if (page.arch) {
-      const variant = page.arch === (this.params.char === 'slade' ? 'ninja' : 'brawler') ? 'normal' : 'boss';
+      const variant = page.arch === this.player.def.archetype ? 'normal' : 'boss';
       ctx.save();
-      ctx.fillStyle = page.arch === 'ninja' ? '#2a1450' : '#4a1c0a';
+      ctx.fillStyle = ARCH_BG[page.arch];
       ctx.fillRect(px + 24, py + 24, 130, 140);
       ctx.restore();
       this.game.sprites.drawPortrait(ctx, page.arch, variant, px + 24, py + 24, 130, 140, 1, this.game.time, 'bust');
       tx = px + 180;
     }
-    ui.text(ctx, page.speaker, tx, py + 46, 18, page.arch === 'ninja' ? '#c79bff' : page.arch === 'brawler' ? '#ffb13b' : '#9fe8ff', { align: 'left', stroke: '#000', strokeWidth: 3 });
+    ui.text(ctx, page.speaker, tx, py + 46, 18, page.arch ? ARCH_COLOR[page.arch] : '#9fe8ff', { align: 'left', stroke: '#000', strokeWidth: 3 });
     const shown = page.text.slice(0, Math.floor(this.typed));
     this.wrapText(ctx, shown, tx, py + 78, px + pw - tx - 30, 22);
     if (this.typed >= page.text.length && Math.floor(this.game.time / 20) % 2 === 0) {

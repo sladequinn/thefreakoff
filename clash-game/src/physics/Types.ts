@@ -115,7 +115,8 @@ export interface CharacterStats {
 
 export type CharId = 'slade' | 'freckles' | 'whitelie' | 'fiddlejay';
 /** Only the two protagonists have story campaigns; the rest of the roster is VS-only. */
-export type StoryCharId = 'slade' | 'freckles';
+/** Every fighter now has a campaign; the alias is kept for the save file and scene params. */
+export type StoryCharId = CharId;
 export type Archetype = 'ninja' | 'brawler' | 'kingpin' | 'fiddler' | 'ninjabot' | 'clownbot';
 export type Variant = 'normal' | 'alt' | 'elite' | 'heavy' | 'boss';
 export type VoiceId = 'slade' | 'freckles' | 'whitelie' | 'fiddlejay' | 'ninjabot' | 'clownbot';

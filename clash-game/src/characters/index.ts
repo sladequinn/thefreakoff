@@ -11,9 +11,9 @@ export const CHARACTERS: Record<CharId, CharacterDef> = {
   fiddlejay: FIDDLE_JAY,
 };
 
-export const STORY_ROSTER: StoryCharId[] = ['slade', 'freckles'];
+export const STORY_ROSTER: StoryCharId[] = ['slade', 'freckles', 'whitelie', 'fiddlejay'];
 export const VS_ROSTER: CharId[] = ['slade', 'freckles', 'whitelie', 'fiddlejay'];
 
 export const charDef = (id: CharId): CharacterDef => CHARACTERS[id];
 
-export const isStoryChar = (id: CharId): id is StoryCharId => id === 'slade' || id === 'freckles';
+export const isStoryChar = (id: CharId): id is StoryCharId => id in CHARACTERS;

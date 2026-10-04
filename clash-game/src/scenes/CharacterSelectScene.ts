@@ -1,9 +1,10 @@
 import { CANVAS_HEIGHT, CANVAS_WIDTH, COLORS, FONT_UI, STORY_LIVES, font } from '../config/constants';
 import { CPU_DIFFICULTIES, CPU_DIFFICULTY, STAGE_INFO, STAGE_ORDER, resolveStage, type StagePick } from '../config/stages';
-import { CHARACTERS, STORY_ROSTER, VS_ROSTER, isStoryChar } from '../characters';
+import { CHARACTERS, VS_ROSTER } from '../characters';
 import { ARCADE_RUNG_LABEL, newArcadeRun, type ArcadeRun } from '../config/arcade';
+import { ROUTES } from '../config/routes';
 import type { GameContext, SceneMap } from '../core/StateManager';
-import type { CharId, CharacterDef, StoryCharId } from '../physics/Types';
+import type { CharId, CharacterDef } from '../physics/Types';
 import type { StageTheme } from '../rendering/Renderer';
 import { idlePose } from '../rendering/SpriteRenderer';
 import { Scene } from './Scene';
@@ -25,21 +26,8 @@ const STYLE: Record<CharId, { accent: string; glow: string }> = {
 };
 
 const entry = (id: CharId): RosterEntry => ({ id, def: CHARACTERS[id], ...STYLE[id] });
-const STORY_CARDS: RosterEntry[] = STORY_ROSTER.map(entry);
 const VS_CARDS: RosterEntry[] = VS_ROSTER.map(entry);
 
-const ROUTES: Record<StoryCharId, { foes: string; boss: string; story: string }> = {
-  slade: {
-    foes: 'CLOWNBOTS',
-    boss: 'FRECKLES',
-    story: 'The Iron Syndicate cloned Freckles into an army of spike-fisted Clownbots. Cut through them and reach the real one.',
-  },
-  freckles: {
-    foes: 'NINJABOTS',
-    boss: 'SLADE',
-    story: 'Slade\'s stolen ninpo powers a swarm of shuriken-throwing Ninjabots. Smash the factory line and drag him out of the Sanctuary.',
-  },
-};
 
 const SPLASH_FRAMES = 110;
 const TILE_X0 = 36;
@@ -81,7 +69,7 @@ export class CharacterSelectScene extends Scene {
 
   constructor(game: GameContext, private readonly params: SceneMap['select']) {
     super(game);
-    this.roster = params.mode === 'story' ? STORY_CARDS : VS_CARDS;
+    this.roster = VS_CARDS;
     const p1: Cursor = { who: 'P1', slot: 0, index: 0, locked: false, lockT: 0, color: COLORS.voidGlow, costume: 'normal' };
     if (params.mode === 'story' || params.mode === 'arcade') this.cursors = [p1];
     else if (params.mode === 'training') this.cursors = [p1, { who: 'DUMMY', slot: 0, index: 1, locked: false, lockT: 0, color: '#b8c0cc', costume: 'normal' }];
@@ -163,7 +151,7 @@ export class CharacterSelectScene extends Scene {
     if (this.phase === 'story') {
       if (++this.phaseT >= STORY_CONFIRM_FRAMES || (this.phaseT > 20 && input.menu().confirm)) {
         const id = this.roster[this.cursors[0].index].id;
-        this.game.scenes.go('story', { char: isStoryChar(id) ? id : 'slade', stage: 0, score: 0, lives: STORY_LIVES });
+        this.game.scenes.go('story', { char: id, stage: 0, score: 0, lives: STORY_LIVES });
       }
       return;
     }
@@ -276,8 +264,7 @@ export class CharacterSelectScene extends Scene {
       g.renderer.drawStage(story ? 'facility' : 'rooftop', 0, 0, time, CANVAS_WIDTH);
       w.fillStyle = 'rgba(5,3,12,0.72)';
       w.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-      if (story) this.roster.forEach((_, i) => this.drawCardBack(w, i, 60 + i * 430, 76, 410, 392, time));
-      else this.roster.forEach((_, i) => this.drawTileBack(w, i, TILE_X0 + i * TILE_STEP, TILE_Y, TILE_W, TILE_H, time));
+      this.roster.forEach((_, i) => this.drawTileBack(w, i, TILE_X0 + i * TILE_STEP, TILE_Y, TILE_W, TILE_H, time));
     }
     g.renderer.drawVignette();
     g.renderer.endWorld();
@@ -307,11 +294,11 @@ export class CharacterSelectScene extends Scene {
 
     if (stagePhase) {
       if (this.phase === 'stage') this.drawStageCards(ctx, time);
-    } else if (story) this.roster.forEach((_, i) => this.drawCardFront(ctx, i, 60 + i * 430, 76, 410, 392, time));
-    else {
+    } else {
       this.roster.forEach((_, i) => this.drawTileFront(ctx, i, TILE_X0 + i * TILE_STEP, TILE_Y, TILE_W, TILE_H, time));
       this.cursors.forEach((c, k) => this.drawDetail(ctx, c, 36 + k * 452, 268, 436, 202));
       if (this.mode === 'arcade') this.drawLadderCard(ctx, 488, 268, 436, 202, time);
+      if (story) this.drawRouteCard(ctx, 488, 268, 436, 202, time);
     }
     this.drawFooter(ctx, time);
 
@@ -323,120 +310,6 @@ export class CharacterSelectScene extends Scene {
       ctx.restore();
     }
     if (this.phase === 'splash') this.drawSplash(ctx, time);
-  }
-
-  private drawCardBack(ctx: CanvasRenderingContext2D, i: number, x: number, y: number, w: number, h: number, time: number): void {
-    const r = this.roster[i];
-    const def = r.def;
-    const here = this.cursors.filter((c) => c.index === i);
-    const hovered = here.length > 0;
-    const lockedHere = here.filter((c) => c.locked);
-
-    ctx.save();
-    const bg = ctx.createLinearGradient(x, y, x, y + h);
-    bg.addColorStop(0, hovered ? 'rgba(30,18,52,0.95)' : 'rgba(14,10,24,0.88)');
-    bg.addColorStop(1, 'rgba(6,4,12,0.95)');
-    ctx.fillStyle = bg;
-    ctx.fillRect(x, y, w, h);
-    const glow = ctx.createRadialGradient(x + 95, y + 230, 10, x + 95, y + 230, 190);
-    glow.addColorStop(0, hovered ? `${r.accent}66` : `${r.accent}22`);
-    glow.addColorStop(1, 'rgba(0,0,0,0)');
-    ctx.fillStyle = glow;
-    ctx.fillRect(x, y, w, h);
-    ctx.restore();
-
-    const feetY = y + 268;
-    const locked = lockedHere.length > 0;
-    const pose = idlePose(def.archetype, time + i * 37);
-    const bounce = locked ? Math.max(0, 6 - lockedHere[0].lockT) * 1.5 : 0;
-    this.game.renderer.withSprites((s) => {
-      s.fillStyle = 'rgba(0,0,0,0.5)';
-      s.beginPath();
-      s.ellipse(x + 95, feetY, 62, 11, 0, 0, Math.PI * 2);
-      s.fill();
-      this.game.sprites.drawBody(s, def.archetype, 'normal', pose, x + 95, feetY - bounce, 1, 1.75, time, null);
-      if (lockedHere.length > 1) {
-        s.globalAlpha = 0.85;
-        this.game.sprites.drawBody(s, def.archetype, 'alt', idlePose(def.archetype, time + 20), x + 150, feetY + 6, -1, 1.3, time, null);
-      }
-    });
-  }
-
-  private drawCardFront(ctx: CanvasRenderingContext2D, i: number, x: number, y: number, w: number, h: number, time: number): void {
-    const ui = this.game.ui;
-    const r = this.roster[i];
-    const def = r.def;
-    const here = this.cursors.filter((c) => c.index === i);
-    const hovered = here.length > 0;
-    const lockedHere = here.filter((c) => c.locked);
-
-    ctx.save();
-    ctx.lineWidth = hovered ? 3 : 1;
-    ctx.strokeStyle = hovered ? r.accent : 'rgba(255,255,255,0.14)';
-    if (hovered) {
-      ctx.shadowColor = r.accent;
-      ctx.shadowBlur = 18 + 6 * Math.sin(time * 0.1);
-    }
-    ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
-    ctx.restore();
-
-    const tx = x + 196;
-    ui.text(ctx, def.name, tx, y + 44, 30, '#ffffff', { align: 'left', stroke: '#000', strokeWidth: 5 });
-    ui.text(ctx, def.title.toUpperCase(), tx, y + 64, 12, r.glow, { align: 'left', template: FONT_UI });
-    const s = def.stats;
-    ui.text(ctx, `HP ${s.maxHp}   SPD ${s.speed}   DEF ${s.defense}   JMP ${s.jumpPower}`, tx, y + 82, 10, 'rgba(255,255,255,0.5)', {
-      align: 'left',
-      template: FONT_UI,
-    });
-    const rt = def.ratings ?? { power: 3, speed: 3, range: 3, defense: 3 };
-    ui.statBar(ctx, 'POWER', rt.power, tx, y + 94, r.accent);
-    ui.statBar(ctx, 'SPEED', rt.speed, tx, y + 110, r.accent);
-    ui.statBar(ctx, 'RANGE', rt.range, tx, y + 126, r.accent);
-    ui.statBar(ctx, 'DEFENSE', rt.defense, tx, y + 142, r.accent);
-    this.wrap(ctx, def.blurb ?? '', tx, y + 172, w - 212, 15, 12, 'rgba(255,255,255,0.78)');
-
-    const my = y + 292;
-    ctx.save();
-    ctx.fillStyle = 'rgba(255,255,255,0.08)';
-    ctx.fillRect(x + 12, my - 14, w - 24, 1);
-    ctx.restore();
-    const moves = def.moveList ?? [];
-    const step = moves.length > 4 ? 20 : 24;
-    moves.forEach((m, k) => {
-      const yy = my + 6 + k * step;
-      ui.text(ctx, m.name, x + 18, yy, 12, '#ffffff', { align: 'left', template: FONT_UI });
-      ui.text(ctx, m.input, x + w - 18, yy, 12, COLORS.hazard, { align: 'right', template: FONT_UI });
-      ui.text(ctx, m.desc, x + 18, yy + 12, 10, 'rgba(255,255,255,0.5)', { align: 'left', template: FONT_UI });
-    });
-
-    here.forEach((c, k) => {
-      const bx = x + 14 + k * 58;
-      const by = y + 12;
-      const bob = c.locked ? 0 : Math.sin(time * 0.15 + k) * 2;
-      ctx.save();
-      ctx.fillStyle = c.color;
-      ctx.beginPath();
-      ctx.moveTo(bx, by + bob);
-      ctx.lineTo(bx + 50, by + bob);
-      ctx.lineTo(bx + 44, by + 22 + bob);
-      ctx.lineTo(bx - 6, by + 22 + bob);
-      ctx.closePath();
-      ctx.fill();
-      ctx.restore();
-      ui.text(ctx, c.who, bx + 22, by + 17 + bob, 14, '#0a0612');
-    });
-
-    lockedHere.forEach((c, k) => {
-      const pop = Math.min(1, c.lockT / 8);
-      const sc = 1.6 - 0.6 * pop;
-      ctx.save();
-      ctx.translate(x + 95, y + 150 + k * 44);
-      ctx.rotate(-0.12);
-      ctx.scale(sc, sc);
-      ctx.globalAlpha = pop;
-      ui.text(ctx, c.who === 'CPU' ? 'CPU READY' : `${c.who} READY`, 0, 0, 24, c.color, { stroke: '#000', strokeWidth: 6 });
-      ctx.restore();
-    });
   }
 
   private drawTileBack(ctx: CanvasRenderingContext2D, i: number, x: number, y: number, w: number, h: number, time: number): void {
@@ -573,6 +446,44 @@ export class CharacterSelectScene extends Scene {
       if (dense) ui.text(ctx, this.ellipsis(ctx, m.desc, w - 232 - 14, 9), mx, yy + 13, 9, 'rgba(255,255,255,0.5)', { align: 'left', template: FONT_UI });
       else this.wrap(ctx, m.desc, mx, yy + 13, w - 232 - 14, 11, 9, 'rgba(255,255,255,0.5)');
     });
+  }
+
+  /** Story: who the hovered fighter cuts through and who waits at the end. */
+  private drawRouteCard(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, time: number): void {
+    const ui = this.game.ui;
+    const id = this.roster[this.cursors[0].index].id;
+    const route = ROUTES[id];
+    const boss = CHARACTERS[route.boss];
+    const accent = STYLE[id].glow;
+    ui.panel(ctx, x, y, w, h, 'rgba(8,6,18,0.9)');
+    ctx.save();
+    ctx.strokeStyle = `${accent}80`;
+    ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+    ctx.fillStyle = accent;
+    ctx.fillRect(x, y, 6, h);
+    ctx.restore();
+    ui.text(ctx, 'THE ROUTE', x + 20, y + 30, 24, '#ffffff', { align: 'left', stroke: '#000', strokeWidth: 4 });
+    ui.text(ctx, route.label, x + 20, y + 48, 11, accent, { align: 'left', template: FONT_UI });
+    this.wrap(ctx, route.story, x + 20, y + 72, w - 170, 15, 11, 'rgba(255,255,255,0.78)');
+    const high = this.game.save.records.storyHigh[id] ?? 0;
+    const clears = this.game.save.records.storyClears[id] ?? 0;
+    ui.text(ctx, `FOES: ${route.foesLabel}`, x + 20, y + 150, 10, COLORS.hazard, { align: 'left', template: FONT_UI });
+    ui.text(ctx, `CLEARS: ${clears}${high > 0 ? `   ·   BEST: ${String(high).padStart(7, '0')}` : ''}`, x + 20, y + 166, 10, 'rgba(255,255,255,0.55)', { align: 'left', template: FONT_UI });
+    ui.text(ctx, 'OUTSKIRTS › HARBOR › FACILITY › SKYLINE › FOUNDRY › SANCTUARY', x + 20, y + 184, 9, 'rgba(255,255,255,0.4)', { align: 'left', template: FONT_UI });
+
+    // Final boss bust in the corner.
+    const bs = 104;
+    const bx = x + w - bs - 18;
+    const by = y + 58;
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.05)';
+    ctx.fillRect(bx, by, bs, bs);
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.strokeRect(bx + 0.5, by + 0.5, bs - 1, bs - 1);
+    ctx.restore();
+    this.game.sprites.drawBust(ctx, boss.archetype, 'boss', bx, by, bs, -1, time);
+    ui.text(ctx, 'FINAL BOSS', bx + bs / 2, y + 50, 9, 'rgba(255,255,255,0.5)', { template: FONT_UI });
+    ui.text(ctx, boss.name, bx + bs / 2, by + bs + 14, 12, STYLE[route.boss].glow, { stroke: '#000', strokeWidth: 3 });
   }
 
   /** Arcade: the rungs ahead, revealed once Player 1 has locked in. */
@@ -743,20 +654,13 @@ export class CharacterSelectScene extends Scene {
       return;
     }
     if (this.mode === 'story') {
-      const c = this.cursors[0];
-      const id = this.roster[c.index].id;
-      const storyId = isStoryChar(id) ? id : 'slade';
-      const route = ROUTES[storyId];
-      const high = this.game.save.records.storyHigh[storyId] ?? 0;
-      const best = high > 0 ? `   BEST: ${String(high).padStart(7, '0')}` : '';
-      ui.text(ctx, `OUTSKIRTS > HARBOR > FACILITY > SKYLINE > FOUNDRY > SANCTUARY   FOES: ${route.foes}   BOSS: ${route.boss}${best}`, CANVAS_WIDTH / 2, y + 18, 12, COLORS.hazard, {
-        template: FONT_UI,
-      });
+      const help = this.game.input.touchMode ? 'Stick left / right to choose   ·   ATK to lock   ·   II to go back' : 'A / D choose your fighter   ·   J confirm   ·   Esc back';
+      ui.text(ctx, help, CANVAS_WIDTH / 2, y + 20, 13, '#ffffff', { template: FONT_UI });
       if (this.phase === 'story') {
         const a = 0.5 + 0.5 * Math.sin(time * 0.3);
-        ui.text(ctx, 'ENTERING THE OUTSKIRTS...', CANVAS_WIDTH / 2, y + 36, 12, '#ffffff', { template: FONT_UI, alpha: a });
+        ui.text(ctx, 'ENTERING THE OUTSKIRTS...', CANVAS_WIDTH / 2, y + 37, 12, '#ffffff', { template: FONT_UI, alpha: a });
       } else {
-        this.wrapCentered(ctx, route.story, CANVAS_WIDTH / 2, y + 36, 11, 'rgba(255,255,255,0.7)');
+        ui.text(ctx, `Six stages  ·  ${STORY_LIVES} lives  ·  a rival waits at the Sanctuary`, CANVAS_WIDTH / 2, y + 37, 11, 'rgba(255,255,255,0.55)', { template: FONT_UI });
       }
       return;
     }
@@ -872,13 +776,5 @@ export class CharacterSelectScene extends Scene {
     return str === text ? text : `${str}…`;
   }
 
-  private wrapCentered(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, size: number, color: string): void {
-    ctx.save();
-    ctx.font = font(FONT_UI, size);
-    let str = text;
-    while (ctx.measureText(str).width > CANVAS_WIDTH - 160 && str.length > 4) str = `${str.slice(0, str.lastIndexOf(' '))}`;
-    if (str !== text) str += '...';
-    ctx.restore();
-    this.game.ui.text(ctx, str, x, y, size, color, { template: FONT_UI });
-  }
+
 }
