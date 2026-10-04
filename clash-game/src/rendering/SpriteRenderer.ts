@@ -615,7 +615,7 @@ const DIMS: Record<Archetype, Dims> = {
   kingpin: { thigh: 22, shin: 21, torso: 36, upper: 16, fore: 16, headR: 10, neck: 8, hipW: 15, chestW: 20, blade: 7 },
   fiddler: { thigh: 23, shin: 23, torso: 29, upper: 15, fore: 15, headR: 8.5, neck: 10, hipW: 7.5, chestW: 10, blade: 32 },
   bat: { thigh: 26, shin: 26, torso: 34, upper: 17, fore: 17, headR: 8, neck: 10, hipW: 6.5, chestW: 9.5, blade: 0 },
-  bishop: { thigh: 23, shin: 22, torso: 34, upper: 16, fore: 16, headR: 8.5, neck: 9, hipW: 10, chestW: 13, blade: 42 },
+  bishop: { thigh: 23, shin: 22, torso: 34, upper: 16, fore: 16, headR: 7.2, neck: 10, hipW: 9, chestW: 11.5, blade: 42 },
   ninjabot: { thigh: 22, shin: 23, torso: 29, upper: 16, fore: 15, headR: 8.5, neck: 11, hipW: 7, chestW: 11, blade: 28 },
   clownbot: { thigh: 19, shin: 20, torso: 34, upper: 16, fore: 17, headR: 8, neck: 10, hipW: 12, chestW: 17, blade: 0 },
 };
@@ -718,10 +718,10 @@ const PALETTES: Record<Archetype, Partial<Record<Variant, Palette>> & { normal: 
     boss: { suit: '#2a1740', suit2: '#160b26', trunks: '#0b090e', cowl: '#0b090e', cowl2: '#2a1740', cape: '#160b26', capeIn: '#07050a', belt: '#b066ff', emblem: '#b066ff', emblemBat: '#0b090e', skin: '#c9a890', mouth: '#5a2a2a', eye: '#ff4dff', glow: '#b066ff' },
   },
   bishop: {
-    // Street bishop: violet-black cassock, gold sash and pectoral cross, cream mitre with a gold band, oak crozier.
-    normal: { robe: '#2a1a3a', robe2: '#1a1026', sash: '#c9a227', mitre: '#f3ead2', mitreBand: '#c9a227', skin: '#f0d2bc', skinDark: '#d2b09a', hair: '#3a2a22', gold: '#ffd21f', wood: '#6a3a18', woodDark: '#3a1e0c', shoe: '#15121a', mouth: '#7a3a38', eye: '#2a1a10', glow: '#ffd21f' },
-    // Alt: cream cassock, purple sash, dark mitre.
-    alt: { robe: '#efe6d2', robe2: '#cfc4aa', sash: '#5a2aa0', mitre: '#2a1a3a', mitreBand: '#ffd21f', skin: '#f0d2bc', skinDark: '#d2b09a', hair: '#3a2a22', gold: '#ffd21f', wood: '#6a3a18', woodDark: '#3a1e0c', shoe: '#15121a', mouth: '#7a3a38', eye: '#2a1a10', glow: '#c79bff' },
+    // Street bishop: cream cassock, gold sash and pectoral cross, cream mitre with a gold band, oak crozier.
+    normal: { robe: '#f4ead0', robe2: '#d8cbb0', sash: '#c9a227', mitre: '#fff8e6', mitreBand: '#c9a227', skin: '#f6dcc8', skinDark: '#d8b8a2', hair: '#4a3428', gold: '#ffd21f', wood: '#8a4e22', woodDark: '#5a2e10', shoe: '#3a2a20', mouth: '#8a4a46', eye: '#2a1a10', glow: '#ffd21f' },
+    // Alt: the old dark cassock, cream mitre.
+    alt: { robe: '#2a1a3a', robe2: '#1a1026', sash: '#c9a227', mitre: '#f3ead2', mitreBand: '#c9a227', skin: '#f6dcc8', skinDark: '#d8b8a2', hair: '#4a3428', gold: '#ffd21f', wood: '#8a4e22', woodDark: '#5a2e10', shoe: '#15121a', mouth: '#8a4a46', eye: '#2a1a10', glow: '#c79bff' },
     // Shadow bishop: ash-black vestments, a crozier that glows like a relic.
     boss: { robe: '#160b26', robe2: '#07050a', sash: '#b066ff', mitre: '#2a1740', mitreBand: '#b066ff', skin: '#d8c2b4', skinDark: '#b89a8a', hair: '#1a1018', gold: '#dfe6f0', wood: '#e0c4ff', woodDark: '#8a4dc0', shoe: '#0b090e', mouth: '#5a2a2a', eye: '#ff4dff', glow: '#b066ff' },
   },
@@ -1864,17 +1864,17 @@ function drawBishop(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: Dr
     dot(ctx, add(foot, fwd, 6), w * 0.3, T(pal.shoe));
   };
   const arm = (sh: V, el: V, hd: V, col: string): void => {
-    dot(ctx, add(sh, up, 1), 5.5, T(col));
-    seg(ctx, sh, el, 8.5, T(col));
-    seg(ctx, el, hd, 7.5, T(col));
-    dot(ctx, hd, 4.4, T(pal.skin));
+    dot(ctx, add(sh, up, 1), 4.6, T(col));
+    seg(ctx, sh, el, 7.2, T(col));
+    seg(ctx, el, hd, 6.4, T(col));
+    dot(ctx, hd, 3.8, T(pal.skin));
   };
 
   // cassock hem behind the legs
   const hem = add(J.hip, up, -(d.thigh + 6));
   poly([add(J.hip, perp, -d.hipW - 2), add(J.hip, perp, d.hipW + 2), add(hem, perp, d.hipW + 6), add(hem, perp, -d.hipW - 8)], pal.robe2);
 
-  leg(J.kneeL, J.footL, 10, pal.robe2);
+  leg(J.kneeL, J.footL, 8.5, pal.robe2);
   arm(J.shL, J.elL, J.hdL, pal.robe2);
 
   torsoQuad(ctx, J, d.hipW, d.chestW, o.tint ?? perpGradient(ctx, J, d.chestW, [[0, pal.robe2], [0.5, pal.robe], [1, pal.robe]]));
@@ -1888,31 +1888,32 @@ function drawBishop(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: Dr
     dot(ctx, add(xc, up, 4.2), 1.6, pal.gold);
   }
 
-  leg(J.kneeR, J.footR, 11, pal.robe);
+  leg(J.kneeR, J.footR, 9, pal.robe);
 
-  // neck and head under the mitre
-  seg(ctx, add(J.neck, perp, 0.5), J.head, 8, T(pal.skin));
+  // longer neck, narrower head: oval jaw instead of a circle
+  seg(ctx, add(J.neck, perp, 0.5), J.head, 6.5, T(pal.skin));
   const ang = p.lean + p.head;
   ctx.save();
   ctx.translate(J.head.x, J.head.y);
   ctx.rotate(ang);
   const r = d.headR;
-  dot(ctx, { x: 0, y: 0 }, r, T(pal.skin));
-  dot(ctx, { x: 1.2, y: 3.2 }, r * 0.7, T(pal.skin));
-  // cropped dark hair at the temples
+  ctx.fillStyle = T(pal.skin);
+  ctx.beginPath();
+  ctx.ellipse(0.4, 0.6, r * 0.82, r * 1.08, 0, 0, Math.PI * 2);
+  ctx.fill();
+  // cropped dark hair at the temples, kept off the cheeks
   ctx.fillStyle = T(pal.hair);
   ctx.beginPath();
-  ctx.arc(0, -1, r + 0.2, Math.PI + 0.15, -0.15);
-  ctx.closePath();
+  ctx.ellipse(0, -1.6, r * 0.78, r * 0.62, 0, Math.PI, 0);
   ctx.fill();
-  // mitre: two tall panels with a gold band
-  poly([{ x: -6.4, y: -2 }, { x: -5.2, y: -r - 11 }, { x: 0.4, y: -r - 7 }, { x: 0.6, y: -2 }], pal.mitre);
-  poly([{ x: 0.2, y: -2 }, { x: 0.6, y: -r - 7 }, { x: 6.2, y: -r - 10 }, { x: 6.6, y: -2 }], pal.mitre);
-  seg(ctx, { x: -6.2, y: -2.4 }, { x: 6.4, y: -2.4 }, 2.4, T(pal.mitreBand));
+  // taller, narrower mitre
+  poly([{ x: -5.2, y: -2.6 }, { x: -3.6, y: -r - 13 }, { x: 0.2, y: -r - 8.5 }, { x: 0.4, y: -2.6 }], pal.mitre);
+  poly([{ x: 0.0, y: -2.6 }, { x: 0.4, y: -r - 8.5 }, { x: 4.4, y: -r - 12 }, { x: 5.4, y: -2.6 }], pal.mitre);
+  seg(ctx, { x: -5.0, y: -2.8 }, { x: 5.2, y: -2.8 }, 2.0, T(pal.mitreBand));
   if (!o.tint) {
-    dot(ctx, { x: 0.2, y: -r - 4 }, 1.3, pal.gold);
-    dot(ctx, { x: 3.6, y: -1.6 }, 0.9, pal.eye);
-    seg(ctx, { x: 3.8, y: 4.4 }, { x: 6.4, y: 4.0 }, 1.2, pal.mouth);
+    dot(ctx, { x: 0.2, y: -r - 5 }, 1.1, pal.gold);
+    dot(ctx, { x: 2.8, y: -1.4 }, 0.8, pal.eye);
+    seg(ctx, { x: 2.6, y: 4.8 }, { x: 4.8, y: 4.5 }, 1.1, pal.mouth);
   }
   ctx.restore();
 
