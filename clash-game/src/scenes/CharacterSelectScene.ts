@@ -1,17 +1,29 @@
 import { CANVAS_HEIGHT, CANVAS_WIDTH, COLORS, FONT_UI, STORY_LIVES, font } from '../config/constants';
-import { FRECKLES } from '../characters/Freckles';
-import { SLADE } from '../characters/Slade';
+import { CHARACTERS, STORY_ROSTER, VS_ROSTER, isStoryChar } from '../characters';
 import type { GameContext, SceneMap } from '../core/StateManager';
-import type { CharId, CharacterDef } from '../physics/Types';
+import type { CharId, CharacterDef, StoryCharId } from '../physics/Types';
 import { idlePose } from '../rendering/SpriteRenderer';
 import { Scene } from './Scene';
 
-const ROSTER: { id: CharId; def: CharacterDef; accent: string; glow: string }[] = [
-  { id: 'slade', def: SLADE, accent: COLORS.void, glow: COLORS.voidGlow },
-  { id: 'freckles', def: FRECKLES, accent: COLORS.bone, glow: COLORS.silver },
-];
+interface RosterEntry {
+  id: CharId;
+  def: CharacterDef;
+  accent: string;
+  glow: string;
+}
 
-const ROUTES: Record<CharId, { foes: string; boss: string; story: string }> = {
+const STYLE: Record<CharId, { accent: string; glow: string }> = {
+  slade: { accent: COLORS.void, glow: COLORS.voidGlow },
+  freckles: { accent: COLORS.bone, glow: COLORS.silver },
+  whitelie: { accent: '#ffd21f', glow: '#ffe38a' },
+  fiddlejay: { accent: '#ffb13b', glow: '#ffd27a' },
+};
+
+const entry = (id: CharId): RosterEntry => ({ id, def: CHARACTERS[id], ...STYLE[id] });
+const STORY_CARDS: RosterEntry[] = STORY_ROSTER.map(entry);
+const VS_CARDS: RosterEntry[] = VS_ROSTER.map(entry);
+
+const ROUTES: Record<StoryCharId, { foes: string; boss: string; story: string }> = {
   slade: {
     foes: 'CLOWNBOTS',
     boss: 'FRECKLES',
@@ -25,6 +37,11 @@ const ROUTES: Record<CharId, { foes: string; boss: string; story: string }> = {
 };
 
 const SPLASH_FRAMES = 110;
+const TILE_X0 = 36;
+const TILE_STEP = 226;
+const TILE_Y = 66;
+const TILE_W = 210;
+const TILE_H = 190;
 const STORY_CONFIRM_FRAMES = 70;
 
 type Who = 'P1' | 'P2' | 'CPU';
@@ -46,9 +63,12 @@ export class CharacterSelectScene extends Scene {
   private phaseT = 0;
   private t = 0;
   private flash = 0;
+  /** Story mode offers the two protagonists; versus opens the full roster. */
+  private readonly roster: RosterEntry[];
 
   constructor(game: GameContext, private readonly params: SceneMap['select']) {
     super(game);
+    this.roster = params.mode === 'story' ? STORY_CARDS : VS_CARDS;
     const p1: Cursor = { who: 'P1', slot: 0, index: 0, locked: false, lockT: 0, color: COLORS.voidGlow };
     if (params.mode === 'story') this.cursors = [p1];
     else if (params.cpu) this.cursors = [p1, { who: 'CPU', slot: 0, index: 1, locked: false, lockT: 0, color: '#b8c0cc' }];
@@ -78,13 +98,14 @@ export class CharacterSelectScene extends Scene {
 
     if (this.phase === 'splash') {
       if (++this.phaseT >= SPLASH_FRAMES || (this.phaseT > 30 && input.menu().confirm)) {
-        this.game.scenes.go('vs', { p1: ROSTER[this.cursors[0].index].id, p2: ROSTER[this.cursors[1].index].id, cpu: this.params.cpu });
+        this.game.scenes.go('vs', { p1: this.roster[this.cursors[0].index].id, p2: this.roster[this.cursors[1].index].id, cpu: this.params.cpu });
       }
       return;
     }
     if (this.phase === 'story') {
       if (++this.phaseT >= STORY_CONFIRM_FRAMES || (this.phaseT > 20 && input.menu().confirm)) {
-        this.game.scenes.go('story', { char: ROSTER[this.cursors[0].index].id, stage: 0, score: 0, lives: STORY_LIVES });
+        const id = this.roster[this.cursors[0].index].id;
+        this.game.scenes.go('story', { char: isStoryChar(id) ? id : 'slade', stage: 0, score: 0, lives: STORY_LIVES });
       }
       return;
     }
@@ -93,7 +114,7 @@ export class CharacterSelectScene extends Scene {
       const left = input.slotPressed(c.slot, 'left');
       const right = input.slotPressed(c.slot, 'right');
       if (left || right) {
-        c.index = (c.index + (right ? 1 : ROSTER.length - 1)) % ROSTER.length;
+        c.index = (c.index + (right ? 1 : this.roster.length - 1)) % this.roster.length;
         audio.playSelect();
       }
       if (input.slotConfirm(c.slot)) {
@@ -101,7 +122,7 @@ export class CharacterSelectScene extends Scene {
         c.lockT = 0;
         this.flash = 10;
         audio.playConfirm();
-        audio.playVoiceGrunt(ROSTER[c.index].def.voice, 'hah');
+        audio.playVoiceGrunt(this.roster[c.index].def.voice, 'hah');
         if (c.who === 'CPU') return;
       }
     }
@@ -138,7 +159,9 @@ export class CharacterSelectScene extends Scene {
     g.renderer.drawStage(this.params.mode === 'story' ? 'facility' : 'rooftop', 0, 0, time, CANVAS_WIDTH);
     w.fillStyle = 'rgba(5,3,12,0.72)';
     w.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
-    ROSTER.forEach((_, i) => this.drawCardBack(w, i, 60 + i * 430, 76, 410, 392, time));
+    const story = this.params.mode === 'story';
+    if (story) this.roster.forEach((_, i) => this.drawCardBack(w, i, 60 + i * 430, 76, 410, 392, time));
+    else this.roster.forEach((_, i) => this.drawTileBack(w, i, TILE_X0 + i * TILE_STEP, TILE_Y, TILE_W, TILE_H, time));
     g.renderer.drawVignette();
     g.renderer.endWorld();
 
@@ -152,7 +175,11 @@ export class CharacterSelectScene extends Scene {
           : 'VERSUS  —  BOTH PLAYERS CHOOSE';
     g.ui.text(ctx, heading, CANVAS_WIDTH / 2, 48, 26, '#ffffff', { stroke: '#000', strokeWidth: 5, shadow: 'rgba(138,77,255,0.7)' });
 
-    ROSTER.forEach((_, i) => this.drawCardFront(ctx, i, 60 + i * 430, 76, 410, 392, time));
+    if (story) this.roster.forEach((_, i) => this.drawCardFront(ctx, i, 60 + i * 430, 76, 410, 392, time));
+    else {
+      this.roster.forEach((_, i) => this.drawTileFront(ctx, i, TILE_X0 + i * TILE_STEP, TILE_Y, TILE_W, TILE_H, time));
+      this.cursors.forEach((c, k) => this.drawDetail(ctx, c, 36 + k * 452, 268, 436, 202));
+    }
     this.drawFooter(ctx, time);
 
     if (this.flash > 0) {
@@ -166,7 +193,7 @@ export class CharacterSelectScene extends Scene {
   }
 
   private drawCardBack(ctx: CanvasRenderingContext2D, i: number, x: number, y: number, w: number, h: number, time: number): void {
-    const r = ROSTER[i];
+    const r = this.roster[i];
     const def = r.def;
     const here = this.cursors.filter((c) => c.index === i);
     const hovered = here.length > 0;
@@ -204,7 +231,7 @@ export class CharacterSelectScene extends Scene {
 
   private drawCardFront(ctx: CanvasRenderingContext2D, i: number, x: number, y: number, w: number, h: number, time: number): void {
     const ui = this.game.ui;
-    const r = ROSTER[i];
+    const r = this.roster[i];
     const def = r.def;
     const here = this.cursors.filter((c) => c.index === i);
     const hovered = here.length > 0;
@@ -277,14 +304,141 @@ export class CharacterSelectScene extends Scene {
     });
   }
 
+  private drawTileBack(ctx: CanvasRenderingContext2D, i: number, x: number, y: number, w: number, h: number, time: number): void {
+    const r = this.roster[i];
+    const def = r.def;
+    const here = this.cursors.filter((c) => c.index === i);
+    const hovered = here.length > 0;
+    const lockedHere = here.filter((c) => c.locked);
+
+    ctx.save();
+    const bg = ctx.createLinearGradient(x, y, x, y + h);
+    bg.addColorStop(0, hovered ? 'rgba(30,18,52,0.95)' : 'rgba(14,10,24,0.88)');
+    bg.addColorStop(1, 'rgba(6,4,12,0.95)');
+    ctx.fillStyle = bg;
+    ctx.fillRect(x, y, w, h);
+    const glow = ctx.createRadialGradient(x + w / 2, y + h - 40, 6, x + w / 2, y + h - 40, 120);
+    glow.addColorStop(0, hovered ? `${r.accent}66` : `${r.accent}22`);
+    glow.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = glow;
+    ctx.fillRect(x, y, w, h);
+    ctx.restore();
+
+    const feetY = y + 150;
+    const pose = idlePose(def.archetype, time + i * 37);
+    const bounce = lockedHere.length > 0 ? Math.max(0, 6 - lockedHere[0].lockT) * 1.5 : 0;
+    this.game.renderer.withSprites((s) => {
+      s.fillStyle = 'rgba(0,0,0,0.5)';
+      s.beginPath();
+      s.ellipse(x + w / 2, feetY, 46, 8, 0, 0, Math.PI * 2);
+      s.fill();
+      this.game.sprites.drawBody(s, def.archetype, 'normal', pose, x + w / 2 - 6, feetY - bounce, 1, 1.25, time, null);
+      if (lockedHere.length > 1) {
+        s.globalAlpha = 0.85;
+        this.game.sprites.drawBody(s, def.archetype, 'alt', idlePose(def.archetype, time + 20), x + w / 2 + 40, feetY + 4, -1, 0.95, time, null);
+      }
+    });
+  }
+
+  private drawTileFront(ctx: CanvasRenderingContext2D, i: number, x: number, y: number, w: number, h: number, time: number): void {
+    const ui = this.game.ui;
+    const r = this.roster[i];
+    const def = r.def;
+    const here = this.cursors.filter((c) => c.index === i);
+    const hovered = here.length > 0;
+    const lockedHere = here.filter((c) => c.locked);
+
+    ctx.save();
+    ctx.lineWidth = hovered ? 3 : 1;
+    ctx.strokeStyle = hovered ? r.accent : 'rgba(255,255,255,0.14)';
+    if (hovered) {
+      ctx.shadowColor = r.accent;
+      ctx.shadowBlur = 18 + 6 * Math.sin(time * 0.1);
+    }
+    ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+    ctx.restore();
+
+    ui.text(ctx, def.name, x + w / 2, y + h - 22, 18, '#ffffff', { stroke: '#000', strokeWidth: 4 });
+    ui.text(ctx, def.title.toUpperCase(), x + w / 2, y + h - 8, 10, r.glow, { template: FONT_UI });
+
+    here.forEach((c, k) => {
+      const bx = x + 10 + k * 56;
+      const by = y + 10;
+      const bob = c.locked ? 0 : Math.sin(time * 0.15 + k) * 2;
+      ctx.save();
+      ctx.fillStyle = c.color;
+      ctx.beginPath();
+      ctx.moveTo(bx, by + bob);
+      ctx.lineTo(bx + 48, by + bob);
+      ctx.lineTo(bx + 42, by + 20 + bob);
+      ctx.lineTo(bx - 6, by + 20 + bob);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+      ui.text(ctx, c.who, bx + 21, by + 15 + bob, 13, '#0a0612');
+    });
+
+    lockedHere.forEach((c, k) => {
+      const pop = Math.min(1, c.lockT / 8);
+      const sc = 1.6 - 0.6 * pop;
+      ctx.save();
+      ctx.translate(x + w / 2, y + 70 + k * 30);
+      ctx.rotate(-0.12);
+      ctx.scale(sc, sc);
+      ctx.globalAlpha = pop;
+      ui.text(ctx, c.who === 'CPU' ? 'CPU READY' : `${c.who} READY`, 0, 0, 20, c.color, { stroke: '#000', strokeWidth: 5 });
+      ctx.restore();
+    });
+  }
+
+  /** Versus-mode detail panel for one cursor's hovered fighter: stats on the left, move list on the right. */
+  private drawDetail(ctx: CanvasRenderingContext2D, c: Cursor, x: number, y: number, w: number, h: number): void {
+    const ui = this.game.ui;
+    const r = this.roster[c.index];
+    const def = r.def;
+    ui.panel(ctx, x, y, w, h, 'rgba(8,6,18,0.9)');
+    ctx.save();
+    ctx.strokeStyle = c.locked ? c.color : `${c.color}66`;
+    ctx.lineWidth = c.locked ? 2 : 1;
+    ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+    ctx.fillStyle = c.color;
+    ctx.fillRect(x, y, 6, h);
+    ctx.restore();
+
+    const tx = x + 20;
+    ui.text(ctx, c.who, x + 214, y + 22, 13, c.color, { align: 'right', template: FONT_UI });
+    ui.text(ctx, def.name, tx, y + 30, 24, '#ffffff', { align: 'left', stroke: '#000', strokeWidth: 4 });
+    ui.text(ctx, def.title.toUpperCase(), tx, y + 46, 11, r.glow, { align: 'left', template: FONT_UI });
+    const s = def.stats;
+    ui.text(ctx, `HP ${s.maxHp}   SPD ${s.speed}   DEF ${s.defense}   JMP ${s.jumpPower}`, tx, y + 62, 10, 'rgba(255,255,255,0.5)', { align: 'left', template: FONT_UI });
+    const rt = def.ratings ?? { power: 3, speed: 3, range: 3, defense: 3 };
+    ui.statBar(ctx, 'POWER', rt.power, tx, y + 74, r.accent);
+    ui.statBar(ctx, 'SPEED', rt.speed, tx, y + 90, r.accent);
+    ui.statBar(ctx, 'RANGE', rt.range, tx, y + 106, r.accent);
+    ui.statBar(ctx, 'DEFENSE', rt.defense, tx, y + 122, r.accent);
+    this.wrap(ctx, def.blurb ?? '', tx, y + 146, 196, 12, 10, 'rgba(255,255,255,0.72)');
+
+    const mx = x + 232;
+    ctx.save();
+    ctx.fillStyle = 'rgba(255,255,255,0.08)';
+    ctx.fillRect(mx - 12, y + 14, 1, h - 28);
+    ctx.restore();
+    (def.moveList ?? []).forEach((m, k) => {
+      const yy = y + 30 + k * 42;
+      ui.text(ctx, m.name, mx, yy, 12, '#ffffff', { align: 'left', template: FONT_UI });
+      ui.text(ctx, m.input, x + w - 14, yy, 11, COLORS.hazard, { align: 'right', template: FONT_UI });
+      this.wrap(ctx, m.desc, mx, yy + 13, w - 232 - 14, 11, 9, 'rgba(255,255,255,0.5)');
+    });
+  }
+
   private drawFooter(ctx: CanvasRenderingContext2D, time: number): void {
     const ui = this.game.ui;
     const y = 480;
     ui.panel(ctx, 60, y, CANVAS_WIDTH - 120, 44, 'rgba(8,6,18,0.9)');
     if (this.params.mode === 'story') {
       const c = this.cursors[0];
-      const id = ROSTER[c.index].id;
-      const route = ROUTES[id];
+      const id = this.roster[c.index].id;
+      const route = ROUTES[isStoryChar(id) ? id : 'slade'];
       ui.text(ctx, `OUTSKIRTS > HARBOR > FACILITY > SKYLINE > FOUNDRY > SANCTUARY   FOES: ${route.foes}   BOSS: ${route.boss}`, CANVAS_WIDTH / 2, y + 18, 12, COLORS.hazard, {
         template: FONT_UI,
       });
@@ -315,8 +469,8 @@ export class CharacterSelectScene extends Scene {
     const t = this.phaseT;
     const ui = this.game.ui;
     const sprites = this.game.sprites;
-    const a = ROSTER[this.cursors[0].index];
-    const b = ROSTER[this.cursors[1].index];
+    const a = this.roster[this.cursors[0].index];
+    const b = this.roster[this.cursors[1].index];
     const mirror = a.id === b.id;
     const slideIn = Math.min(1, t / 16);
     const ease = 1 - (1 - slideIn) ** 3;

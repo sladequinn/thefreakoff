@@ -43,6 +43,11 @@ export class BossAI implements Controller {
     private readonly opts: BossAIOptions,
   ) {}
 
+  /** Grappler-style brains (Freckles, White Lie) pressure and punish dashes; the rest zone and rush like Slade. */
+  private get heavy(): boolean {
+    return this.char === 'freckles' || this.char === 'whitelie';
+  }
+
   private get reaction(): number {
     return Math.round((this.opts.versus ? 14 : 9) / this.opts.difficulty);
   }
@@ -81,7 +86,7 @@ export class BossAI implements Controller {
     const diff = this.opts.difficulty * (phase2 ? 1.15 : 1);
 
     if (self.state === FState.JUMP) {
-      if (this.char === 'slade') {
+      if (!this.heavy) {
         if (self.vy < 2.5 && adx < 210 && adx > 20 && Math.sign(dx) === self.facing) o.attackPressed = true;
       } else if (self.vy < 1 && adx < 50) {
         o.attackPressed = true;
@@ -94,7 +99,7 @@ export class BossAI implements Controller {
       this.comboPressTimer--;
       const m = self.move;
       if (m?.kind === 'combo' && this.comboPressTimer <= 0) {
-        const cornerLoop = this.char === 'freckles' && targetWallDist < 120;
+        const cornerLoop = this.heavy && targetWallDist < 120;
         if (self.moveConnected || cornerLoop || Math.random() < 0.15 * diff) o.attackPressed = true;
         this.comboPressTimer = 3;
       }
@@ -139,8 +144,8 @@ export class BossAI implements Controller {
           o.specialPressed = true;
           return o;
         }
-        if (act === 'charge' && adx < 320 && Math.abs(dz) < 18) {
-          o.moveRequest = 'f_dash';
+        if (act === 'charge' && adx < 320 && Math.abs(dz) < 18 && self.def.dashAttack) {
+          o.moveRequest = self.def.dashAttack;
           return o;
         }
       }
@@ -155,9 +160,9 @@ export class BossAI implements Controller {
       return o;
     }
 
-    return this.char === 'slade'
-      ? this.sladeBrain(self, target, o, dx, adx, dz, dir, diff)
-      : this.frecklesBrain(self, target, o, dx, adx, dz, dir, diff, targetDashing, targetWallDist);
+    return this.heavy
+      ? this.frecklesBrain(self, target, o, dx, adx, dz, dir, diff, targetDashing, targetWallDist)
+      : this.sladeBrain(self, target, o, dx, adx, dz, dir, diff);
   }
 
   private sladeBrain(self: Fighter, target: Fighter, o: InputFrame, dx: number, adx: number, dz: number, dir: number, diff: number): InputFrame {
@@ -172,9 +177,9 @@ export class BossAI implements Controller {
     }
 
     const aligned = Math.abs(dz) < 12;
-    if (aligned && adx > 105 && adx < 220 && this.cd.dash <= 0 && target.isHittable() && Math.random() < 0.35 * diff) {
+    if (aligned && adx > 105 && adx < 220 && this.cd.dash <= 0 && target.isHittable() && self.def.dashAttack && Math.random() < 0.35 * diff) {
       this.cd.dash = rand(90, 170) / diff;
-      o.moveRequest = 's_dash';
+      o.moveRequest = self.def.dashAttack;
       return o;
     }
 
@@ -237,9 +242,9 @@ export class BossAI implements Controller {
       }
     }
 
-    if (aligned && adx > 150 && adx < 320 && this.cd.charge <= 0 && target.isHittable() && Math.random() < 0.25 * diff) {
+    if (aligned && adx > 150 && adx < 320 && this.cd.charge <= 0 && target.isHittable() && self.def.dashAttack && Math.random() < 0.25 * diff) {
       this.cd.charge = rand(150, 260) / diff;
-      o.moveRequest = 'f_dash';
+      o.moveRequest = self.def.dashAttack;
       return o;
     }
 
@@ -283,9 +288,9 @@ export class BossAI implements Controller {
   }
 
   onWakeup(self: Fighter): void {
-    if (this.char === 'freckles' && !this.opts.versus) {
+    if (this.heavy && !this.opts.versus) {
       self.hyperArmor = 45;
-    } else if (this.char === 'freckles') {
+    } else if (this.heavy) {
       self.hyperArmor = 20;
     }
     this.cd.dash = Math.min(this.cd.dash, 20);

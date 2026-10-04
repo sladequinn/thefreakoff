@@ -20,7 +20,7 @@ import { Boss } from '../entities/Boss';
 import { Enemy, type EnemyKind } from '../entities/Enemy';
 import type { Fighter } from '../entities/Fighter';
 import { Player } from '../entities/Player';
-import { FState, type Archetype, type Bounds, type CharId, type Variant } from '../physics/Types';
+import { FState, type Archetype, type Bounds, type StoryCharId, type Variant } from '../physics/Types';
 import type { StageTheme } from '../rendering/Renderer';
 import { CombatScene } from './Scene';
 
@@ -115,7 +115,7 @@ interface Page {
   text: string;
 }
 
-const STORY: Record<CharId, { pre: Page[][]; boss: string[]; ending: Page[] }> = {
+const STORY: Record<StoryCharId, { pre: Page[][]; boss: string[]; ending: Page[] }> = {
   freckles: {
     pre: [
       [

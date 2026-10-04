@@ -5,7 +5,9 @@ Clownbot and Ninjabot armies flood the streets while the two real figureheads te
 A 2.5D arcade beat 'em up and 1v1 versus fighter built in TypeScript on a plain Canvas 2D renderer. Every sprite, background, sound effect, voice grunt and music track is generated procedurally at runtime; there are no image or audio assets.
 
 - **Slade, the Magick Ninja**: fast arcane zoner with a ninjato, smoke teleports and sigil eruptions.
-- **Freckles, the Gothic Jester**: a black-and-crimson harlequin with a belled hood, dark twin-tails, a laced corset, striped stockings and spiked knuckles, fighting with four-hit strings, armored tackles and seismic slams.
+- **Freckles, Sad Clowngirl**: a black-and-white harlequin with a belled hood, one black and one white twin-tail, a laced corset, striped stockings and spiked knuckles, fighting with four-hit strings, armored tackles and seismic slams.
+- **White Lie, the Platinum Kingpin** (versus only): a three-hundred-pound rap mogul in a white suit with a gold chain and a cane. Slow and heavily armored; backhands, cane hooks, wall-bouncing belly bumps, an elbow drop and the two-ring Mic Drop shockwave.
+- **Fiddle Jay, the Rosin Fist** (versus only): a fiddle virtuoso and karate master. Whips his bow like a blade, chains snap kicks and spinning hook kicks, slides and dive-kicks, and plays the Hellfire Hoedown, a sonic riff that launches everyone around him.
 
 ## Run it
 
@@ -28,7 +30,7 @@ Click or press any key once to enable sound (browsers block audio until then).
 ## Modes
 
 - **Story Mode**: six stages, each with its own look and music: The Outskirts, Pier 9 Harbor, The Core Facility, Neon Skyline, The Iron Foundry and The Sanctuary. Playing as Freckles you fight Ninjabots and then Slade. Playing as Slade you fight Clownbots and then Freckles. The Harbor and Foundry end with a Warden mid-boss (SHOGUN-X or FOREMAN MK-II). You start with three lives and earn an extra one after stages 3 and 5. Each cleared stage restores some health.
-- **Versus: 1P vs 2P**: local head-to-head, best of three rounds with a 99-second timer. Combo damage scales down the longer a combo runs.
+- **Versus: 1P vs 2P**: local head-to-head from the full four-fighter roster, best of three rounds with a 99-second timer. Combo damage scales down the longer a combo runs.
 - **Versus: 1P vs CPU**: pick your fighter, then pick the CPU's. The CPU blocks, punishes and uses specials.
 
 ## Controls

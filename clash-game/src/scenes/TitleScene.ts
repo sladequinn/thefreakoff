@@ -253,7 +253,7 @@ export class TitleScene extends Scene {
     ui.text(ctx, 'SLADE', 150, 505, 20, COLORS.voidGlow, { stroke: '#000', strokeWidth: 5, align: 'left' });
     ui.text(ctx, 'The Magick Ninja', 150, 522, 11, 'rgba(255,255,255,0.6)', { template: FONT_UI, align: 'left' });
     ui.text(ctx, 'FRECKLES', 810, 505, 20, COLORS.bone, { stroke: '#000', strokeWidth: 5, align: 'right' });
-    ui.text(ctx, 'The Gothic Jester', 810, 522, 11, 'rgba(255,255,255,0.6)', { template: FONT_UI, align: 'right' });
+    ui.text(ctx, 'Sad Clowngirl', 810, 522, 11, 'rgba(255,255,255,0.6)', { template: FONT_UI, align: 'right' });
   }
 
   private shadow(ctx: CanvasRenderingContext2D, x: number, y: number, w: number): void {

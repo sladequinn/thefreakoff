@@ -908,6 +908,86 @@ export class Fighter extends Entity {
         a.playJump();
         p.dust(this.x, this.z, 5);
         break;
+      // ---- White Lie
+      case 'belly':
+        a.playHitHeavy();
+        world.camera.shake(5, this.facing, 0, 8);
+        p.ring(this.x + this.facing * 20, this.z, 8, 60, '#ffd21f', 14);
+        p.dust(this.x, this.z, 6, this.facing);
+        break;
+      case 'beat_land':
+        p.debris(this.x + this.facing * 10, this.z, 12);
+        p.dust(this.x, this.z, 14);
+        p.ring(this.x, this.z, 10, 95, '#ffd21f', 18);
+        p.text(this.x, this.y + 118 * this.scale, this.z, 'BOOM', '#ffd21f', 16);
+        world.camera.shake(9, 0, 1, 14);
+        a.playHitHeavy();
+        a.playDebris();
+        break;
+      case 'mic_raise':
+        a.playCharge();
+        p.spawn('flash', this.x + this.facing * 10, this.y + 118 * this.scale, this.z + 1, 0, 0, 0, 12, 10, '#ffd21f', { size2: 40 });
+        for (let i = 0; i < 6; i++) p.spawn('spark', this.x + (Math.random() - 0.5) * 30, this.y + 100 * this.scale, this.z + 1, (Math.random() - 0.5) * 2, 2 + Math.random() * 3, 0, 24, 3, '#ffe38a', { gravity: 0.05 });
+        break;
+      case 'mic_drop':
+        a.playSpecial();
+        a.playDebris();
+        a.playHitHeavy();
+        world.camera.shake(13, 0, 1, 24);
+        p.debris(this.x - 24, this.z, 14, -1);
+        p.debris(this.x + 24, this.z, 14, 1);
+        p.dust(this.x - 40, this.z, 10, 1);
+        p.dust(this.x + 40, this.z, 10, -1);
+        p.ring(this.x, this.z, 20, 150, '#ffd21f', 26);
+        p.ring(this.x, this.z, 10, 110, '#ffffff', 20);
+        p.spawn('flash', this.x + this.facing * 16, 10, this.z + 1, 0, 0, 0, 14, 20, '#ffe38a', { size2: 120 });
+        p.text(this.x, this.y + 124 * this.scale, this.z, 'MIC DROP', '#ffd21f', 18);
+        break;
+      case 'mic_echo':
+        a.playShock();
+        world.camera.shake(6, 0, 1, 12);
+        p.ring(this.x, this.z, 60, 200, 'rgba(255,210,31,0.7)', 22);
+        p.ring(this.x, this.z, 30, 160, 'rgba(255,255,255,0.5)', 18);
+        break;
+      // ---- Fiddle Jay
+      case 'bow_whip':
+        a.playSlash();
+        for (let i = 0; i < 4; i++) p.spawn('spark', hx + (Math.random() - 0.5) * 20, hy + (Math.random() - 0.5) * 20, this.z + 1, this.facing * (1 + Math.random() * 2), 1 + Math.random() * 2, 0, 16, 2.5, '#ffb13b', { gravity: 0.08 });
+        break;
+      case 'rosin':
+        a.playMagic();
+        p.kinetic(hx + this.facing * 10, hy, this.z + 1, this.facing, '#ffb13b', 46);
+        break;
+      case 'riff_start':
+        a.playVoiceGrunt(this.def.voice, 'hah');
+        a.playMagic();
+        p.ring(this.x, this.z, 10, 60, '#ffb13b', 18);
+        break;
+      case 'riff': {
+        a.playMagic();
+        a.playShock();
+        world.camera.shake(4, 0, 1, 8);
+        p.ring(this.x, this.z, 16, 120, 'rgba(255,177,59,0.85)', 18);
+        p.ring(this.x, this.z, 10, 90, 'rgba(255,255,255,0.5)', 14);
+        const notes = ['♪', '♫', '♩', '♬'];
+        for (let i = 0; i < 5; i++) {
+          const ang = Math.random() * Math.PI * 2;
+          p.text(this.x + Math.cos(ang) * (30 + Math.random() * 40), this.y + 50 + Math.random() * 60, this.z + Math.sin(ang) * 14, notes[i % notes.length], i % 2 ? '#ffb13b' : '#fff3c8', 14 + Math.random() * 8);
+        }
+        break;
+      }
+      case 'sonic_boom':
+        a.playSpecial();
+        a.playShock();
+        world.camera.shake(11, 0, 1, 20);
+        p.ring(this.x, this.z, 20, 160, '#ffb13b', 26);
+        p.ring(this.x, this.z, 10, 120, '#ffffff', 20);
+        p.spawn('flash', this.x, this.y + 50, this.z + 1, 0, 0, 0, 14, 20, '#ffd27a', { size2: 120 });
+        for (let i = 0; i < 12; i++) {
+          const ang = Math.random() * Math.PI * 2;
+          p.text(this.x + Math.cos(ang) * 60, this.y + 30 + Math.random() * 80, this.z + Math.sin(ang) * 18, i % 2 ? '♪' : '♫', '#ffb13b', 16 + Math.random() * 10);
+        }
+        break;
       default:
         break;
     }

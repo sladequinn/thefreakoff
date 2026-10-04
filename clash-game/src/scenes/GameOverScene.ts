@@ -1,6 +1,5 @@
 import { CANVAS_HEIGHT, CANVAS_WIDTH, FONT_UI } from '../config/constants';
-import { FRECKLES } from '../characters/Freckles';
-import { SLADE } from '../characters/Slade';
+import { charDef } from '../characters';
 import type { GameContext, GameOverParams } from '../core/StateManager';
 import { idlePose } from '../rendering/SpriteRenderer';
 import { Scene } from './Scene';
@@ -86,7 +85,7 @@ export class GameOverScene extends Scene {
     const cx = hasPortrait ? 600 : CANVAS_WIDTH / 2;
 
     if (p.portrait) {
-      const def = p.portrait === 'slade' ? SLADE : FRECKLES;
+      const def = charDef(p.portrait);
       const slide = Math.min(1, this.t / 20);
       const px = 210 - 260 * (1 - slide) ** 2;
       ctx.save();

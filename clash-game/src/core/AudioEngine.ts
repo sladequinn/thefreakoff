@@ -14,6 +14,8 @@ const VOWELS: Record<string, Formant> = {
 const VOICE_PITCH: Record<VoiceId, number> = {
   slade: 150,
   freckles: 190,
+  whitelie: 92,
+  fiddlejay: 168,
   ninjabot: 210,
   clownbot: 78,
 };

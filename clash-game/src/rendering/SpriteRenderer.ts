@@ -67,6 +67,10 @@ function sample(keys: Keys, f: number): Pose {
 const IDLE: Record<Archetype, Pose> = {
   ninja: P(0.18, -0.1, -0.5, 1.4, 1.0, 0.7, -0.35, -0.12, 0.45, -0.5, 0, 0.7),
   brawler: P(0.12, 0.04, -0.6, 0.5, 0.3, 0.9, -0.4, -0.15, 0.4, -0.4),
+  // White Lie plants wide, hands low, cane resting straight down from the right fist.
+  kingpin: P(0.05, 0.05, 0.4, 0.6, 0.5, 1.2, -0.38, -0.1, 0.38, -0.3, 0, -1.6),
+  // Fiddle Jay holds the fiddle up at the chin with the far arm and rests the bow across the strings.
+  fiddler: P(0.15, -0.05, 1.45, 0.75, 0.75, 1.97, -0.4, -0.12, 0.45, -0.5, 0, 0.18),
   ninjabot: P(0.15, 0, -0.2, 1.1, 0.8, 0.9, -0.3, -0.1, 0.35, -0.4, 0, 0.9),
   clownbot: P(0.08, 0, 0.3, 1.5, 0.5, 1.4, -0.25, -0.1, 0.25, -0.2),
 };
@@ -79,12 +83,16 @@ const HURT_POSE = P(-0.35, -0.4, -1.2, 0.8, -0.9, 0.6, -0.2, -0.2, 0.35, -0.3, 0
 const GUARD: Record<Archetype, Pose> = {
   ninja: P(-0.05, 0.1, 1.2, 1.8, 1.0, 1.6, -0.4, -0.2, 0.4, -0.4, 0, 1.4),
   brawler: P(0.1, 0.2, 1.0, 2.3, 1.2, 2.2, -0.45, -0.2, 0.4, -0.4),
+  kingpin: P(0.05, 0.1, 1.0, 2.0, 1.1, 2.0, -0.38, -0.1, 0.38, -0.3, 0, -1.6),
+  fiddler: P(-0.05, 0.1, 1.2, 1.8, 1.0, 1.6, -0.4, -0.2, 0.4, -0.4, 0, -1.0),
   ninjabot: P(-0.05, 0.1, 1.2, 1.6, 1.0, 1.6, -0.4, -0.2, 0.4, -0.4, 0, 1.4),
   clownbot: P(0.05, 0.1, 1.0, 2.0, 1.2, 1.9, -0.3, -0.1, 0.3, -0.2),
 };
 const VICTORY: Record<Archetype, Pose> = {
   ninja: P(-0.05, -0.15, -0.4, 1.2, 3.0, 0, -0.3, -0.05, 0.3, -0.05, 0, 0),
   brawler: P(-0.05, -0.2, 0.5, 2.0, 3.0, 0.3, -0.3, -0.05, 0.3, -0.05),
+  kingpin: P(-0.05, -0.1, -0.6, 0.3, 2.6, 0.3, -0.3, -0.05, 0.3, -0.05, 0, -1.6),
+  fiddler: P(0.05, -0.25, 1.45, 0.75, 0.75, 1.97, -0.3, -0.05, 0.3, -0.05, 0, 0.18),
   ninjabot: IDLE.ninjabot,
   clownbot: IDLE.clownbot,
 };
@@ -93,6 +101,8 @@ const NI = IDLE.ninja;
 const BI = IDLE.brawler;
 const NB = IDLE.ninjabot;
 const FB = IDLE.clownbot;
+const KI = IDLE.kingpin;
+const JI = IDLE.fiddler;
 
 const MOVE_KEYS: Record<string, Keys> = {
   slade_slash: [
@@ -239,11 +249,103 @@ const MOVE_KEYS: Record<string, Keys> = {
     [50, P(0.5, 0.3, 0.9, 0.1, 0.9, 0.1, 0.8, -1.5, 0.9, -1.4)],
     [62, FB],
   ],
+  wl_slap: [
+    [0, KI],
+    [2, P(-0.05, 0, 0.4, 0.6, -0.6, 0.8, -0.38, -0.1, 0.38, -0.3, 0, -1.6)],
+    [4, P(0.3, 0.05, 0.4, 0.6, 1.7, 0.1, -0.5, -0.1, 0.5, -0.3, 0, -1.6)],
+    [9, P(0.3, 0.05, 0.4, 0.6, 1.65, 0.15, -0.5, -0.1, 0.5, -0.3, 0, -1.6)],
+    [18, KI],
+  ],
+  wl_hook: [
+    [0, KI],
+    [3, P(-0.1, 0, 0.4, 0.6, -0.9, 1.4, -0.4, -0.1, 0.4, -0.3, 0, -1.6)],
+    [6, P(0.5, 0.15, 0.4, 0.6, 1.6, 0.2, -0.7, -0.05, 0.8, -0.5, 0, -0.2)],
+    [12, P(0.45, 0.15, 0.4, 0.6, 1.5, 0.3, -0.7, -0.05, 0.8, -0.5, 0, -0.3)],
+    [24, KI],
+  ],
+  wl_bump: [
+    [0, KI],
+    [5, P(-0.3, -0.1, -0.6, 0.4, -0.5, 0.4, -0.3, -0.1, 0.4, -0.3, 0, -1.6)],
+    [8, P(0.55, 0.15, -0.9, 0.3, -0.8, 0.3, -0.7, -0.05, 0.9, -0.5, 0, -1.6)],
+    [15, P(0.5, 0.15, -0.9, 0.3, -0.8, 0.3, -0.7, -0.05, 0.9, -0.5, 0, -1.6)],
+    [32, KI],
+  ],
+  wl_rush: [
+    [0, P(0.4, 0.1, -0.4, 1.0, 0.2, 1.6, -0.5, -0.2, 0.6, -0.6, 0, -1.6)],
+    [5, P(0.75, 0.25, -0.7, 0.9, 0.2, 1.5, -0.8, -0.3, 0.9, -0.9, 0, -1.6)],
+    [26, P(0.75, 0.25, -0.7, 0.9, 0.2, 1.5, -0.8, -0.3, 0.9, -0.9, 0, -1.6)],
+    [40, KI],
+  ],
+  wl_drop: [
+    [0, P(-0.1, -0.2, 3.0, 0.2, 2.8, 0.3, 0.8, -1.5, 1.0, -1.4, 0, -1.6)],
+    [8, P(0.6, 0.3, 1.2, 0.1, 1.3, 0.1, 0.5, -0.7, 0.6, -0.6, 0, -1.6)],
+    [70, P(0.6, 0.3, 1.2, 0.1, 1.3, 0.1, 0.5, -0.7, 0.6, -0.6, 0, -1.6)],
+  ],
+  wl_mic: [
+    [0, KI],
+    [10, P(-0.15, -0.2, 0.4, 0.6, 3.0, 0.1, -0.35, -0.1, 0.35, -0.3, 0, -1.4)],
+    [20, P(-0.15, -0.2, 0.4, 0.6, 3.05, 0.1, -0.35, -0.1, 0.35, -0.3, 0, -1.4)],
+    [24, P(0.7, 0.35, 0.4, 0.6, 1.1, 0.1, 0.8, -1.5, 0.9, -1.4, 0, -1.2)],
+    [50, P(0.7, 0.35, 0.4, 0.6, 1.1, 0.1, 0.8, -1.5, 0.9, -1.4, 0, -1.2)],
+    [72, KI],
+  ],
+  jay_lash: [
+    [0, JI],
+    [3, P(0.3, 0.05, 1.3, 1.0, 2.6, 0.3, -0.5, -0.1, 0.5, -0.4, 0, -1.3)],
+    [7, P(0.3, 0.05, 1.3, 1.0, 2.5, 0.35, -0.5, -0.1, 0.5, -0.4, 0, -1.4)],
+    [16, JI],
+  ],
+  jay_kick: [
+    [0, JI],
+    [4, P(-0.1, -0.05, 1.45, 0.75, 0.75, 1.97, -0.2, -0.1, 1.6, -0.1, 0, 0.18)],
+    [8, P(-0.1, -0.05, 1.45, 0.75, 0.75, 1.97, -0.2, -0.1, 1.55, -0.15, 0, 0.18)],
+    [18, JI],
+  ],
+  jay_hook: [
+    [0, JI],
+    [4, P(0.2, 0, 1.45, 0.75, 0.75, 1.97, 0.6, -1.4, 0.9, -1.2, 0, 0.18)],
+    [7, P(-0.3, -0.2, 0.6, 1.2, 0.3, 1.0, -0.5, -0.1, 2.4, -0.3, 0, -1.6)],
+    [12, P(-0.3, -0.2, 0.6, 1.2, 0.3, 1.0, -0.5, -0.1, 2.3, -0.35, 0, -1.6)],
+    [24, JI],
+  ],
+  jay_thrust: [
+    [0, JI],
+    [4, P(-0.15, 0, 1.45, 0.75, -0.6, 1.2, -0.4, -0.1, 0.4, -0.5, 0, 0.6)],
+    [7, P(0.5, 0.1, 1.3, 1.0, 1.6, 0.0, -0.7, -0.05, 0.9, -0.4, 0, -0.05)],
+    [14, P(0.45, 0.1, 1.3, 1.0, 1.55, 0.05, -0.7, -0.05, 0.9, -0.4, 0, -0.05)],
+    [30, JI],
+  ],
+  jay_slide: [
+    [0, P(0.3, 0.1, 1.45, 0.75, 0.6, 0.8, 0.6, -1.4, 0.9, -1.4, 0, 0.18)],
+    [3, P(-0.5, -0.2, -0.8, 0.5, 0.6, 0.8, 1.6, -0.05, 0.7, -1.6, 0, 0.18)],
+    [16, P(-0.5, -0.2, -0.8, 0.5, 0.6, 0.8, 1.6, -0.05, 0.7, -1.6, 0, 0.18)],
+    [32, JI],
+  ],
+  jay_dive: [
+    [0, P(0.1, 0, 1.45, 0.75, 0.75, 1.97, 1.0, -1.8, 1.2, -1.6, 0, 0.18)],
+    [4, P(0.4, 0.2, -1.4, 0.4, -1.0, 0.5, 0.8, -1.6, 1.7, -0.05, 0.45, -1.2)],
+    [70, P(0.4, 0.2, -1.4, 0.4, -1.0, 0.5, 0.8, -1.6, 1.7, -0.05, 0.45, -1.2)],
+  ],
+  jay_solo: [
+    [0, JI],
+    [8, P(0.0, -0.15, 1.45, 0.75, 0.75, 1.97, -0.45, -0.15, 0.45, -0.5, 0, 0.18)],
+    [12, P(0.0, -0.15, 1.45, 0.75, 0.85, 2.3, -0.45, -0.15, 0.45, -0.5, 0, 0.0)],
+    [18, P(0.0, -0.15, 1.45, 0.75, 0.65, 1.7, -0.45, -0.15, 0.45, -0.5, 0, 0.4)],
+    [24, P(0.0, -0.15, 1.45, 0.75, 0.85, 2.3, -0.45, -0.15, 0.45, -0.5, 0, 0.0)],
+    [30, P(0.0, -0.15, 1.45, 0.75, 0.65, 1.7, -0.45, -0.15, 0.45, -0.5, 0, 0.4)],
+    [36, P(0.0, -0.15, 1.45, 0.75, 0.85, 2.3, -0.45, -0.15, 0.45, -0.5, 0, 0.0)],
+    [42, P(0.0, -0.15, 1.45, 0.75, 0.65, 1.7, -0.45, -0.15, 0.45, -0.5, 0, 0.4)],
+    [48, P(-0.2, -0.3, 2.2, 0.4, 2.6, 0.2, -0.5, -0.1, 0.5, -0.1, 0, -0.6)],
+    [52, P(0.4, 0.2, 1.45, 0.75, 0.6, 0.6, 0.7, -1.5, 2.3, -0.2, 0, -1.2)],
+    [62, P(0.4, 0.2, 1.45, 0.75, 0.6, 0.6, 0.7, -1.5, 2.2, -0.25, 0, -1.2)],
+    [78, JI],
+  ],
 };
 
 const RUN_LEG_MOVES: Record<string, [number, number]> = {
   fr_charge: [4, 26],
   fb_tackle: [14, 42],
+  wl_rush: [5, 26],
 };
 
 function walkLegs(p: Pose, ph: number, amp: number, knee: number): Pose {
@@ -261,6 +363,15 @@ export function idlePose(a: Archetype, t: number): Pose {
   if (a === 'brawler') {
     const bounce = Math.abs(Math.sin(t * 0.13));
     return { ...b, kL: b.kL - bounce * 0.3, kR: b.kR - bounce * 0.3, hL: b.hL + bounce * 0.1, hR: b.hR + bounce * 0.12, eR: b.eR + breathe * 0.06 };
+  }
+  if (a === 'kingpin') {
+    const heave = Math.sin(t * 0.05);
+    return { ...b, lean: b.lean + heave * 0.02, head: b.head - heave * 0.03, sL: b.sL + heave * 0.04, sR: b.sR - heave * 0.03 };
+  }
+  if (a === 'fiddler') {
+    // idly bowing the fiddle
+    const stroke = Math.sin(t * 0.11);
+    return { ...b, sR: b.sR + stroke * 0.1, eR: b.eR + stroke * 0.22, weapon: b.weapon - stroke * 0.2, head: b.head + breathe * 0.04 };
   }
   return { ...b, lean: b.lean + breathe * 0.03, sR: b.sR + breathe * 0.04, kR: b.kR - breathe * 0.05 };
 }
@@ -290,6 +401,12 @@ export function poseFor(f: Fighter): Pose {
         p.sR = -1.0;
         p.eR = 0.4;
         p.weapon = -1.2;
+      } else if (a === 'fiddler') {
+        p.sL = 1.3;
+        p.eL = 0.9;
+        p.sR = -1.0;
+        p.eR = 0.5;
+        p.weapon = -0.6;
       } else {
         p.sR = 0.3 + Math.sin(f.walkPhase) * 0.8;
         p.sL = 0.3 - Math.sin(f.walkPhase) * 0.8;
@@ -363,6 +480,8 @@ interface Dims {
 const DIMS: Record<Archetype, Dims> = {
   ninja: { thigh: 22, shin: 22, torso: 30, upper: 16, fore: 16, headR: 9, neck: 11, hipW: 8, chestW: 10, blade: 46 },
   brawler: { thigh: 24, shin: 24, torso: 31, upper: 15, fore: 15, headR: 8, neck: 10, hipW: 9.5, chestW: 10, blade: 0 },
+  kingpin: { thigh: 22, shin: 21, torso: 36, upper: 16, fore: 16, headR: 9, neck: 6, hipW: 15, chestW: 20, blade: 34 },
+  fiddler: { thigh: 23, shin: 23, torso: 29, upper: 15, fore: 15, headR: 8.5, neck: 10, hipW: 7.5, chestW: 10, blade: 32 },
   ninjabot: { thigh: 22, shin: 23, torso: 29, upper: 16, fore: 15, headR: 8.5, neck: 11, hipW: 7, chestW: 11, blade: 28 },
   clownbot: { thigh: 19, shin: 20, torso: 34, upper: 16, fore: 17, headR: 8, neck: 10, hipW: 12, chestW: 17, blade: 0 },
 };
@@ -436,6 +555,18 @@ const PALETTES: Record<Archetype, Partial<Record<Variant, Palette>> & { normal: 
     normal: { dark: '#15121a', dark2: '#2a2630', white: '#f2eff5', white2: '#cfc9d6', skin: '#dfd8de', skinDark: '#c4bcc4', stock1: '#15121a', stock2: '#f2eff5', boots: '#0d0b10', bell: '#d8dde6', hair1: '#15121a', hair2: '#f2eff5', lace: '#f2eff5', knuckle: '#d8dde6', paint: '#0b090e', lips: '#15121a', glow: '#dfe6ff', buckle: '#c0c8d4' },
     alt: { dark: '#f2eff5', dark2: '#cfc9d6', white: '#15121a', white2: '#2a2630', skin: '#dfd8de', skinDark: '#c4bcc4', stock1: '#f2eff5', stock2: '#15121a', boots: '#15121a', bell: '#9fe8ff', hair1: '#f2eff5', hair2: '#15121a', lace: '#15121a', knuckle: '#9fe8ff', paint: '#0b090e', lips: '#15121a', glow: '#9fe8ff', buckle: '#9fe8ff' },
     boss: { dark: '#15121a', dark2: '#2a2630', white: '#f2eff5', white2: '#cfc9d6', skin: '#dfd8de', skinDark: '#c4bcc4', stock1: '#15121a', stock2: '#f2eff5', boots: '#0d0b10', bell: '#ffd21f', hair1: '#15121a', hair2: '#f2eff5', lace: '#ffd21f', knuckle: '#ffd86a', paint: '#0b090e', lips: '#15121a', glow: '#ffb13b', buckle: '#ffd21f' },
+  },
+  kingpin: {
+    // White three-piece suit over a black shirt, gold chain and rings, white cane with a gold head.
+    normal: { suit: '#f4f4f6', suit2: '#d8d8dc', shirt: '#15121a', tie: '#b8102e', skin: '#efd6c3', skinDark: '#cfae95', shades: '#0b090e', gold: '#ffd21f', shoe: '#15121a', shoeShine: '#ffffff', cane: '#f6f2f8', mouth: '#5a2a2a', beard: '#6a4a3a', glow: '#ffd21f' },
+    alt: { suit: '#1a1620', suit2: '#0d0b10', shirt: '#f4f4f6', tie: '#ffd21f', skin: '#efd6c3', skinDark: '#cfae95', shades: '#0b090e', gold: '#dfe6f0', shoe: '#f4f4f6', shoeShine: '#ffffff', cane: '#15121a', mouth: '#5a2a2a', beard: '#6a4a3a', glow: '#dfe6f0' },
+    boss: { suit: '#f4f4f6', suit2: '#d8d8dc', shirt: '#15121a', tie: '#8a2be2', skin: '#efd6c3', skinDark: '#cfae95', shades: '#0b090e', gold: '#ffd21f', shoe: '#15121a', shoeShine: '#ffffff', cane: '#f6f2f8', mouth: '#5a2a2a', beard: '#6a4a3a', glow: '#b066ff' },
+  },
+  fiddler: {
+    // Cream karate gi, indigo pants, black belt, red headband, chestnut ponytail, a maple fiddle and a rosin-glowing bow.
+    normal: { gi: '#e9e2cc', giDark: '#bfb496', pants: '#2b3f5c', pants2: '#1c2a3e', belt: '#15121a', skin: '#d9a06c', skinDark: '#b07a4c', hair: '#4a2410', band: '#b8102e', wood: '#9a4e1c', woodDark: '#5c2a0e', strings: '#f3e9cc', bow: '#efe3c8', bowHair: '#fff8e0', frog: '#15121a', eye: '#2a1a10', mouth: '#6b3a2a', glow: '#ffb13b' },
+    alt: { gi: '#1a1620', giDark: '#0d0b10', pants: '#1a1620', pants2: '#0d0b10', belt: '#ffd21f', skin: '#d9a06c', skinDark: '#b07a4c', hair: '#1a1010', band: '#f2eff5', wood: '#2a1a10', woodDark: '#0d0b10', strings: '#ffd21f', bow: '#d8d0c0', bowHair: '#ffffff', frog: '#ffd21f', eye: '#2a1a10', mouth: '#6b3a2a', glow: '#39f3ff' },
+    boss: { gi: '#e9e2cc', giDark: '#bfb496', pants: '#2b3f5c', pants2: '#1c2a3e', belt: '#15121a', skin: '#d9a06c', skinDark: '#b07a4c', hair: '#4a2410', band: '#b8102e', wood: '#9a4e1c', woodDark: '#5c2a0e', strings: '#f3e9cc', bow: '#efe3c8', bowHair: '#fff8e0', frog: '#15121a', eye: '#2a1a10', mouth: '#6b3a2a', glow: '#ff4d6d' },
   },
   ninjabot: {
     normal: { chrome1: '#eef3f8', chrome2: '#7d8896', dark: '#1b2129', mesh: '#2a3440', visor: '#39f3ff', blade: '#c9fbff', joint: '#39f3ff' },
@@ -1092,9 +1223,262 @@ function drawClownbot(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: 
   glove(J.elR, J.hdR, J.foreR, 14, 12.5, true);
 }
 
+function drawKingpin(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: DrawOpts): void {
+  const T = (c: string): string => o.tint ?? c;
+  const up = J.up;
+  const perp = J.perp;
+  const fwd: V = { x: 1, y: 0 };
+  ctx.lineCap = 'round';
+  const poly = (pts: V[], color: string): void => {
+    ctx.fillStyle = T(color);
+    ctx.beginPath();
+    pts.forEach((q, i) => (i === 0 ? ctx.moveTo(q.x, q.y) : ctx.lineTo(q.x, q.y)));
+    ctx.closePath();
+    ctx.fill();
+  };
+  const leg = (knee: V, foot: V, w1: number, w2: number, col: string): void => {
+    seg(ctx, J.hip, knee, w1, T(col));
+    seg(ctx, knee, foot, w2, T(col));
+    dot(ctx, knee, w2 / 2, T(col));
+    seg(ctx, mix(knee, foot, 0.82), foot, w2 * 0.9, T(pal.shoe));
+    seg(ctx, add(foot, fwd, -3), add(foot, fwd, 8), w2 * 0.7, T(pal.shoe));
+    dot(ctx, add(foot, fwd, 8), w2 * 0.35, T(pal.shoe));
+    if (!o.tint) seg(ctx, add(foot, fwd, -1), add(foot, fwd, 5), 1.2, pal.shoeShine);
+  };
+  const arm = (sh: V, el: V, hd: V, col: string): void => {
+    dot(ctx, add(sh, up, 1), 7, T(col));
+    seg(ctx, sh, el, 11, T(col));
+    seg(ctx, el, hd, 9.5, T(col));
+    seg(ctx, mix(el, hd, 0.78), mix(el, hd, 0.86), 10, T(pal.shirt));
+    dot(ctx, hd, 5.5, T(pal.skin));
+    if (!o.tint) {
+      dot(ctx, add(hd, fwd, 2.2), 1.4, pal.gold);
+      dot(ctx, add(hd, fwd, -1.6), 1.2, pal.gold);
+    }
+  };
+
+  // back limbs
+  leg(J.kneeL, J.footL, 15, 13, pal.suit2);
+  arm(J.shL, J.elL, J.hdL, pal.suit2);
+
+  // barrel torso with a heavy gut and broad back
+  torsoQuad(ctx, J, d.hipW, d.chestW, o.tint ?? perpGradient(ctx, J, d.chestW, [[0, pal.suit2], [0.45, pal.suit], [1, pal.suit]]));
+  dot(ctx, add(mix(J.hip, J.neck, 0.35), perp, d.hipW - 3), 13, T(pal.suit));
+  const vTop = J.neck;
+  const vBot = mix(J.hip, J.neck, 0.42);
+  poly([add(vTop, perp, -13), add(vTop, perp, 14), add(vBot, perp, 4)], pal.shirt);
+  seg(ctx, add(vTop, perp, -13), add(vBot, perp, 4), 3.2, T(pal.suit2));
+  seg(ctx, add(vTop, perp, 14), add(vBot, perp, 4), 3.2, T(pal.suit2));
+  if (!o.tint) {
+    seg(ctx, add(vTop, perp, 1), add(mix(vTop, vBot, 0.8), perp, 3.5), 4, pal.tie);
+    const c0 = add(vTop, perp, -6);
+    const c1 = add(vTop, perp, 9);
+    const cm = add(mix(c0, c1, 0.5), up, -11);
+    ctx.strokeStyle = pal.gold;
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(c0.x, c0.y);
+    ctx.quadraticCurveTo(cm.x, cm.y + 4, c1.x, c1.y);
+    ctx.stroke();
+    dot(ctx, add(mix(c0, c1, 0.5), up, -9.5), 2.4, pal.gold);
+    dot(ctx, add(vBot, perp, 4), 1.3, pal.gold);
+    dot(ctx, add(mix(J.hip, J.neck, 0.35), perp, 4.5), 1.2, pal.gold);
+    seg(ctx, add(mix(vTop, vBot, 0.25), perp, -15), add(mix(vTop, vBot, 0.25), perp, -11), 1.8, pal.tie);
+  }
+
+  // front leg
+  leg(J.kneeR, J.footR, 16, 14, pal.suit);
+
+  // bald head on a bull neck: heavy jaw, wraparound shades, gold grill, goatee
+  seg(ctx, add(J.neck, perp, 1), J.head, 11, T(pal.skin));
+  const ang = p.lean + p.head;
+  ctx.save();
+  ctx.translate(J.head.x, J.head.y);
+  ctx.rotate(ang);
+  const r = d.headR;
+  dot(ctx, { x: 0, y: 0 }, r, T(pal.skin));
+  dot(ctx, { x: 1.5, y: 3.5 }, r * 0.8, T(pal.skin));
+  dot(ctx, { x: -r + 1.5, y: 1 }, 2, T(pal.skinDark));
+  if (!o.tint) {
+    ctx.fillStyle = pal.shades;
+    ctx.fillRect(-1, -3.4, r + 2.6, 4.6);
+    seg(ctx, { x: -r + 1, y: -1.6 }, { x: -1, y: -1.2 }, 1.4, pal.shades);
+    dot(ctx, { x: r - 1.2, y: -1.8 }, 0.8, '#ffffff');
+    seg(ctx, { x: 0.5, y: -4.6 }, { x: r - 0.5, y: -4.9 }, 1.2, pal.skinDark);
+    seg(ctx, { x: 4, y: 5 }, { x: 7.8, y: 4.6 }, 1.3, pal.mouth);
+    dot(ctx, { x: 6.4, y: 4.8 }, 0.6, pal.gold);
+    dot(ctx, { x: 5, y: 7.2 }, 1.7, pal.beard);
+    dot(ctx, { x: -1, y: -r + 2.5 }, 1.6, 'rgba(255,255,255,0.5)');
+  }
+  ctx.restore();
+
+  // front arm with the cane
+  arm(J.shR, J.elR, J.hdR, pal.suit);
+  const cd = dirv(J.foreR + p.weapon);
+  const top = add(J.hdR, cd, -4);
+  const tip = add(J.hdR, cd, d.blade);
+  if (!o.tint && o.motion > 0.3) {
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = 0.3;
+    seg(ctx, top, tip, 6, pal.glow);
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  seg(ctx, top, tip, 2.6, T(pal.cane));
+  dot(ctx, top, 3, T(pal.gold));
+  dot(ctx, tip, 1.6, T(pal.gold));
+  if (o.blade && o.toScreen) o.blade(o.toScreen(tip), o.toScreen(add(J.hdR, cd, d.blade * 0.5)));
+}
+
+function drawFiddler(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: DrawOpts): void {
+  const T = (c: string): string => o.tint ?? c;
+  const t = o.time;
+  const up = J.up;
+  const perp = J.perp;
+  const fwd: V = { x: 1, y: 0 };
+  ctx.lineCap = 'round';
+  const poly = (pts: V[], color: string): void => {
+    ctx.fillStyle = T(color);
+    ctx.beginPath();
+    pts.forEach((q, i) => (i === 0 ? ctx.moveTo(q.x, q.y) : ctx.lineTo(q.x, q.y)));
+    ctx.closePath();
+    ctx.fill();
+  };
+
+  // ponytail and headband tails trail behind the head
+  let prev = add(J.head, perp, -d.headR + 1);
+  for (let i = 1; i <= 6; i++) {
+    const wave = Math.sin(t * 0.2 + i * 0.9) * i * (0.5 + o.motion * 0.5);
+    const pt = { x: prev.x - 4.5 - o.motion * 2.5, y: prev.y + 3.2 - o.motion * 1.4 + wave * 0.3 };
+    seg(ctx, prev, pt, Math.max(1.6, 5 - i * 0.5), T(pal.hair));
+    prev = pt;
+  }
+  const bandKnot = add(J.head, perp, -d.headR - 0.5);
+  for (const k of [0, 1]) {
+    const tail = { x: bandKnot.x - 9 - o.motion * 5 - k * 2, y: bandKnot.y + 2 + k * 4 + Math.sin(t * 0.3 + k) * 2 };
+    seg(ctx, bandKnot, tail, 1.8, T(pal.band));
+  }
+
+  // back leg (pants) and bare foot
+  seg(ctx, J.hip, J.kneeL, 10, T(pal.pants2));
+  seg(ctx, J.kneeL, J.footL, 8.5, T(pal.pants2));
+  seg(ctx, J.footL, add(J.footL, fwd, 6), 5, T(pal.skinDark));
+
+  // far arm holds the fiddle: gi sleeve to the elbow, bare forearm
+  seg(ctx, J.shL, J.elL, 8, T(pal.giDark));
+  seg(ctx, J.elL, J.hdL, 6.5, T(pal.skinDark));
+  dot(ctx, J.hdL, 3.4, T(pal.skinDark));
+
+  // fiddle spans from under the chin to the far hand
+  const anchor = add(add(J.neck, perp, 5), up, 7);
+  const fx = J.hdL.x - anchor.x;
+  const fy = J.hdL.y - anchor.y;
+  const fl = Math.hypot(fx, fy) || 1;
+  const fd = { x: fx / fl, y: fy / fl };
+  const fa = Math.atan2(fd.y, fd.x);
+  const bout = (c: V, rx: number, ry: number, col: string): void => {
+    ctx.fillStyle = T(col);
+    ctx.beginPath();
+    ctx.ellipse(c.x, c.y, rx, ry, fa, 0, Math.PI * 2);
+    ctx.fill();
+  };
+  bout(add(anchor, fd, 5), 6.5, 5, pal.wood);
+  bout(add(anchor, fd, 12.5), 5.5, 4.2, pal.wood);
+  seg(ctx, add(anchor, fd, 14), J.hdL, 2.2, T(pal.woodDark));
+  dot(ctx, add(J.hdL, fd, 2.5), 2, T(pal.woodDark));
+  dot(ctx, add(anchor, fd, 0.5), 2.2, T(pal.belt));
+  if (!o.tint) {
+    const side = { x: -fd.y, y: fd.x };
+    const mid = add(anchor, fd, 8.5);
+    seg(ctx, add(add(mid, side, 2.6), fd, -2), add(add(mid, side, 2.6), fd, 2), 0.9, pal.woodDark);
+    seg(ctx, add(add(mid, side, -2.6), fd, -2), add(add(mid, side, -2.6), fd, 2), 0.9, pal.woodDark);
+    seg(ctx, add(anchor, fd, 2), J.hdL, 0.8, pal.strings);
+    seg(ctx, add(mid, side, -1.2), add(mid, side, 1.2), 1.2, pal.woodDark);
+  }
+
+  // gi torso with a V-neck, lapels and a black belt
+  torsoQuad(ctx, J, d.hipW, d.chestW, o.tint ?? perpGradient(ctx, J, d.chestW, [[0, pal.giDark], [0.5, pal.gi], [1, pal.gi]]));
+  poly([add(J.neck, perp, -5), add(J.neck, perp, 7), add(mix(J.hip, J.neck, 0.6), perp, 2)], pal.skin);
+  seg(ctx, add(J.neck, perp, -5), add(mix(J.hip, J.neck, 0.6), perp, 2), 2.2, T(pal.giDark));
+  seg(ctx, add(J.neck, perp, 7), add(mix(J.hip, J.neck, 0.6), perp, 2), 2.2, T(pal.giDark));
+  seg(ctx, add(J.hip, perp, -d.hipW - 1), add(J.hip, perp, d.hipW + 1), 4.5, T(pal.belt));
+  const knot = add(J.hip, perp, 2);
+  dot(ctx, knot, 2.6, T(pal.belt));
+  seg(ctx, knot, { x: knot.x + 2, y: knot.y + 10 }, 2.2, T(pal.belt));
+  seg(ctx, knot, { x: knot.x - 3 - o.motion * 3, y: knot.y + 9 }, 2.2, T(pal.belt));
+
+  // front leg and bare foot
+  seg(ctx, J.hip, J.kneeR, 11, T(pal.pants));
+  seg(ctx, J.kneeR, J.footR, 9.5, T(pal.pants));
+  seg(ctx, mix(J.kneeR, J.footR, 0.85), J.footR, 8.5, T(pal.pants2));
+  seg(ctx, J.footR, add(J.footR, fwd, 7), 5.5, T(pal.skin));
+  dot(ctx, add(J.footR, fwd, 7), 2.4, T(pal.skin));
+
+  // head: tan skin, swept hair, red headband, sharp eye, confident grin
+  seg(ctx, J.neck, J.head, 5.5, T(pal.skin));
+  const ang = p.lean + p.head;
+  ctx.save();
+  ctx.translate(J.head.x, J.head.y);
+  ctx.rotate(ang);
+  const r = d.headR;
+  dot(ctx, { x: 0, y: 0 }, r, T(pal.skin));
+  dot(ctx, { x: 2, y: 3 }, r * 0.72, T(pal.skin));
+  ctx.fillStyle = T(pal.hair);
+  ctx.beginPath();
+  ctx.arc(0, 0, r + 1.5, Math.PI * 0.95, Math.PI * 1.92);
+  ctx.closePath();
+  ctx.fill();
+  poly(
+    [
+      { x: 2, y: -r + 1 },
+      { x: r + 1.5, y: -4.5 },
+      { x: r + 0.5, y: -1.5 },
+      { x: 5, y: -3 },
+    ],
+    pal.hair,
+  );
+  seg(ctx, { x: -r - 1.5, y: -1.5 }, { x: r + 1, y: -4 }, 2.6, T(pal.band));
+  dot(ctx, { x: -r - 0.5, y: -1.5 }, 2, T(pal.band));
+  if (!o.tint) {
+    seg(ctx, { x: -r + 2, y: -0.5 }, { x: -r + 2.5, y: 4 }, 2, pal.hair);
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.ellipse(4.6, 0.8, 1.8, 1.15, 0, 0, Math.PI * 2);
+    ctx.fill();
+    dot(ctx, { x: 5.1, y: 0.9 }, 0.9, pal.eye);
+    seg(ctx, { x: 3, y: -1.6 }, { x: 6.9, y: -1 }, 1.1, pal.hair);
+    seg(ctx, { x: 7.6, y: 1.6 }, { x: 8.4, y: 2.6 }, 1, pal.skinDark);
+    seg(ctx, { x: 5.6, y: 4.6 }, { x: 7.8, y: 4.1 }, 1, pal.mouth);
+  }
+  ctx.restore();
+
+  // front arm: sleeve, bare forearm, bow with rosin glow
+  dot(ctx, add(J.shR, up, 1), 5, T(pal.gi));
+  seg(ctx, J.shR, J.elR, 8.5, T(pal.gi));
+  seg(ctx, J.elR, J.hdR, 7, T(pal.skin));
+  dot(ctx, J.hdR, 3.6, T(pal.skin));
+  const bd = dirv(J.foreR + p.weapon);
+  const bn = { x: -bd.y, y: bd.x };
+  const frog = add(J.hdR, bd, -4);
+  const tip = add(J.hdR, bd, d.blade);
+  if (!o.tint) {
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = 0.22 + 0.1 * Math.sin(t * 0.3) + o.motion * 0.25;
+    seg(ctx, frog, tip, 6, pal.glow);
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  seg(ctx, frog, tip, 1.6, T(pal.bow));
+  seg(ctx, add(frog, bn, 1.4), add(tip, bn, 1.4), 0.8, T(pal.bowHair));
+  dot(ctx, frog, 1.7, T(pal.frog));
+  if (o.blade && o.toScreen) o.blade(o.toScreen(tip), o.toScreen(add(J.hdR, bd, d.blade * 0.45)));
+}
+
 const PAINTERS: Record<Archetype, (ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: DrawOpts) => void> = {
   ninja: drawNinja,
   brawler: drawBrawler,
+  kingpin: drawKingpin,
+  fiddler: drawFiddler,
   ninjabot: drawNinjabot,
   clownbot: drawClownbot,
 };
@@ -1102,6 +1486,8 @@ const PAINTERS: Record<Archetype, (ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal:
 const TRAIL_TINT: Record<Archetype, string> = {
   ninja: '#6a2fd6',
   brawler: '#d8d0e0',
+  kingpin: '#f0e6b0',
+  fiddler: '#e8c080',
   ninjabot: '#39f3ff',
   clownbot: '#ffd21f',
 };
@@ -1212,7 +1598,7 @@ export class SpriteRenderer {
     if (f.invulnTimer > 0 && Math.floor(view.time / 3) % 2 === 0) ctx.globalAlpha = 0.35;
     if (f.state === FState.DEAD && f.deathFade > 0) ctx.globalAlpha = Math.max(0, 1 - f.deathFade);
 
-    const record = f.state === FState.ATTACK && (arch === 'ninja' || arch === 'ninjabot');
+    const record = f.state === FState.ATTACK && (arch === 'ninja' || arch === 'ninjabot' || arch === 'fiddler');
     const motion = Math.min(1, Math.abs(f.vx) / 7);
     this.drawBody(ctx, arch, f.variant, pose, sx + jx, sy, f.facing, f.scale, view.time, tint, motion, record
       ? (tip, mid) => {
@@ -1230,7 +1616,18 @@ export class SpriteRenderer {
       if (tr[i].life <= 0) tr.splice(i, 1);
     }
     if (tr.length < 2) return;
-    const col = f.def.archetype === 'ninja' ? (f.variant === 'alt' ? '255,60,110' : '157,92,255') : f.variant === 'elite' ? '255,77,109' : '57,243,255';
+    const col =
+      f.def.archetype === 'ninja'
+        ? f.variant === 'alt'
+          ? '255,60,110'
+          : '157,92,255'
+        : f.def.archetype === 'fiddler'
+          ? f.variant === 'alt'
+            ? '57,243,255'
+            : '255,177,59'
+          : f.variant === 'elite'
+            ? '255,77,109'
+            : '57,243,255';
     ctx.globalCompositeOperation = 'lighter';
     for (let i = 1; i < tr.length; i++) {
       const a = tr[i - 1];

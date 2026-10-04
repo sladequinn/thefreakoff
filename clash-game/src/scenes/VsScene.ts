@@ -1,6 +1,5 @@
 import { CANVAS_WIDTH, FONT_UI, TEAM_ENEMY, TEAM_PLAYER, VS_ARENA_MARGIN, VS_ROUNDS_TO_WIN, VS_ROUND_SECONDS } from '../config/constants';
-import { FRECKLES } from '../characters/Freckles';
-import { SLADE } from '../characters/Slade';
+import { charDef } from '../characters';
 import type { GameContext, SceneMap } from '../core/StateManager';
 import { Boss } from '../entities/Boss';
 import type { Fighter } from '../entities/Fighter';
@@ -10,7 +9,7 @@ import { CombatScene } from './Scene';
 
 type RoundPhase = 'intro' | 'fight' | 'ko' | 'timeup' | 'roundEnd' | 'matchEnd';
 
-const defOf = (id: CharId) => (id === 'slade' ? SLADE : FRECKLES);
+const defOf = charDef;
 
 export class VsScene extends CombatScene {
   readonly mode = 'versus' as const;

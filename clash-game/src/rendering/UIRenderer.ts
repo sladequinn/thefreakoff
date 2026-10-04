@@ -1,9 +1,19 @@
 import { CANVAS_HEIGHT, CANVAS_WIDTH, COLORS, FONT_DISPLAY, FONT_MONO, FONT_UI, font } from '../config/constants';
 import type { Fighter } from '../entities/Fighter';
 import type { Player } from '../entities/Player';
+import type { Archetype } from '../physics/Types';
 import type { SpriteRenderer } from './SpriteRenderer';
 
 type Ctx = CanvasRenderingContext2D;
+
+const HUD_ACCENT: Record<Archetype, string> = {
+  ninja: '#5a2aa0',
+  brawler: '#5a5664',
+  kingpin: '#6b5a1e',
+  fiddler: '#2a5a48',
+  ninjabot: '#1a5a66',
+  clownbot: '#6b3a1a',
+};
 
 export interface TextOpts {
   align?: CanvasTextAlign;
@@ -130,7 +140,7 @@ export class UIRenderer {
   // ------------------------------------------------------------------ story HUD
 
   storyHud(ctx: Ctx, p: Player, focus: Fighter | null, time: number, stageLabel: string): void {
-    const accent = p.def.archetype === 'ninja' ? '#5a2aa0' : '#5a5664';
+    const accent = HUD_ACCENT[p.def.archetype];
     this.panel(ctx, 10, 10, 360, 78);
     this.portraitFrame(ctx, p, 20, 18, 60, 1, time, accent);
     this.text(ctx, p.name, 92, 34, 18, '#ffffff', { align: 'left', stroke: '#000', strokeWidth: 3 });
@@ -285,8 +295,8 @@ export class UIRenderer {
     ctx.fillStyle = 'rgba(6,4,12,0.7)';
     ctx.fillRect(0, 0, CANVAS_WIDTH, 78);
     ctx.restore();
-    this.portraitFrame(ctx, p1, 12, 12, 54, 1, time, p1.def.archetype === 'ninja' ? '#5a2aa0' : '#5a5664');
-    this.portraitFrame(ctx, p2, CANVAS_WIDTH - 66, 12, 54, -1, time, p2.def.archetype === 'ninja' ? '#5a2aa0' : '#5a5664');
+    this.portraitFrame(ctx, p1, 12, 12, 54, 1, time, HUD_ACCENT[p1.def.archetype]);
+    this.portraitFrame(ctx, p2, CANVAS_WIDTH - 66, 12, 54, -1, time, HUD_ACCENT[p2.def.archetype]);
     this.healthBar(ctx, 76, y, barW, 18, p1, time, { showSpecial: true });
     this.healthBar(ctx, CANVAS_WIDTH - 76 - barW, y, barW, 18, p2, time, { flip: true, showSpecial: true });
     this.text(ctx, p1.name, 78, 64, 15, '#fff', { align: 'left', stroke: '#000', strokeWidth: 3 });

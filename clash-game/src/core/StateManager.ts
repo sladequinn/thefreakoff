@@ -2,7 +2,7 @@ import type { Renderer } from '../rendering/Renderer';
 import type { SpriteRenderer } from '../rendering/SpriteRenderer';
 import type { UIRenderer } from '../rendering/UIRenderer';
 import type { Scene } from '../scenes/Scene';
-import type { CharId, GameMode } from '../physics/Types';
+import type { CharId, GameMode, StoryCharId } from '../physics/Types';
 import type { AudioEngine } from './AudioEngine';
 import type { InputManager } from './InputManager';
 import type { GameLoop } from './GameLoop';
@@ -26,7 +26,7 @@ export interface GameOverParams {
 export interface SceneMap {
   title: Record<string, never>;
   select: { mode: GameMode; cpu: boolean };
-  story: { char: CharId; stage: number; score: number; lives: number };
+  story: { char: StoryCharId; stage: number; score: number; lives: number };
   vs: { p1: CharId; p2: CharId; cpu: boolean };
   gameover: GameOverParams;
 }
