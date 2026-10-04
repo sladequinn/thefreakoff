@@ -176,6 +176,18 @@ const moves: Record<string, MoveData> = {
       { frame: -1, fx: 'runic_land' },
     ],
   },
+  j_note: {
+    id: 'j_note',
+    name: "Devil's Trill",
+    kind: 'special',
+    pose: 'jay_pluck',
+    duration: 30,
+    hits: [],
+    events: [
+      { frame: 2, fx: 'rosin' },
+      { frame: 8, fx: 'note' },
+    ],
+  },
   j_special: {
     id: 'j_special',
     name: 'Hellfire Hoedown',
@@ -249,6 +261,7 @@ export const FIDDLE_JAY: CharacterDef = {
   dashAttack: 'j_dash',
   airAttack: 'j_air',
   special: 'j_special',
+  backAttack: 'j_note',
   moves,
   hurtbox: { offsetX: 0, offsetY: 46, width: 30, height: 92, zDepth: 14 },
   scale: 1,
@@ -271,5 +284,6 @@ export const FIDDLE_JAY: CharacterDef = {
     { name: 'Devil Went Down', input: 'Run + J', desc: 'Sliding sweep kick that trips' },
     { name: 'Reel Dive', input: 'Air + J', desc: 'Flying side kick that knocks down' },
     { name: 'Hellfire Hoedown', input: 'U  /  J+K', desc: 'Three sonic riffs and a launching finale (costs 8% HP)' },
+    { name: "Devil's Trill", input: 'Away + J', desc: 'Pluck a travelling ♪ note that drifts across the screen' },
   ],
 };

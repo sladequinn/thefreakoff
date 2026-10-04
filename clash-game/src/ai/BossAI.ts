@@ -27,7 +27,7 @@ export interface BossAIOptions {
 export class BossAI implements Controller {
   private out: InputFrame = emptyInput();
   private think = 0;
-  private cd = { special: 180, dash: 60, dive: 90, sub: 120, block: 0, charge: 90, hammer: 120 };
+  private cd = { special: 180, dash: 60, dive: 90, sub: 120, block: 0, charge: 90, hammer: 120, grab: 150, note: 90 };
   private blockTimer = 0;
   private reactTimer = 0;
   private reactAction: string | null = null;
@@ -177,6 +177,12 @@ export class BossAI implements Controller {
     }
 
     const aligned = Math.abs(dz) < 12;
+    // Zoning: fire a note when the foe hangs back out of dash range.
+    if (self.def.backAttack && Math.abs(dz) < 20 && adx > 190 && this.cd.note <= 0 && target.isHittable() && Math.random() < 0.3 * diff) {
+      this.cd.note = rand(110, 200) / diff;
+      o.moveRequest = self.def.backAttack;
+      return o;
+    }
     if (aligned && adx > 105 && adx < 220 && this.cd.dash <= 0 && target.isHittable() && self.def.dashAttack && Math.random() < 0.35 * diff) {
       this.cd.dash = rand(90, 170) / diff;
       o.moveRequest = self.def.dashAttack;
@@ -233,6 +239,15 @@ export class BossAI implements Controller {
 
     const aligned = Math.abs(dz) < 12;
     const cornerLoop = targetWallDist < 120 && adx < 110;
+
+    // Command grab: punish blockers and cornered foes at point-blank range.
+    const grabbable = target.isHittable() && !target.isAirborne() && target.state !== FState.KNOCKDOWN && target.state !== FState.WAKEUP;
+    const blocking = target.state === FState.BLOCK;
+    if (self.def.commandGrab && aligned && adx < 62 && grabbable && this.cd.grab <= 0 && Math.random() < (blocking ? 0.6 : 0.12) * diff) {
+      this.cd.grab = rand(180, 320) / diff;
+      o.moveRequest = self.def.commandGrab;
+      return o;
+    }
 
     if (aligned && adx < 70 && target.isHittable()) {
       if (cornerLoop || Math.random() < 0.34 * diff) {

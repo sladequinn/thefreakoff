@@ -119,6 +119,8 @@ export class Fighter extends Entity {
   input: InputFrame = emptyInput();
   canBlock = false;
   autoFace: Fighter | null = null;
+  /** Attacker currently holding this fighter in a command grab. */
+  grabbedBy: Fighter | null = null;
   lastAttacker: Fighter | null = null;
   damageMult = 1;
   speedMult = 1;
@@ -173,6 +175,7 @@ export class Fighter extends Entity {
     return (
       this.y < 1 &&
       !this.hidden &&
+      !this.grabbedBy &&
       this.state !== FState.JUGGLE &&
       this.state !== FState.KNOCKDOWN &&
       this.state !== FState.DEAD &&
@@ -275,6 +278,7 @@ export class Fighter extends Entity {
     this.hp = this.displayHp = this.maxHp;
     this.move = null;
     this.hidden = false;
+    this.grabbedBy = null;
     this.hitstop = this.invulnTimer = this.hyperArmor = 0;
     this.koNotified = false;
     this.lastAttacker = null;
@@ -342,6 +346,10 @@ export class Fighter extends Entity {
         this.tickMove(inp, world);
         break;
       case FState.HURT:
+        if (this.grabbedBy) {
+          this.followGrab();
+          return;
+        }
         if (this.stateFrame >= this.hitstun) this.setState(FState.IDLE);
         break;
       case FState.BLOCK:
@@ -382,9 +390,20 @@ export class Fighter extends Entity {
 
     if (inp.moveRequest && this.def.moves[inp.moveRequest]) {
       const req = this.def.moves[inp.moveRequest];
-      if (req.kind !== 'special' || this.canAffordSpecial()) {
+      if (!req.hpCost || this.canAffordSpecial()) {
         if (this.startMove(inp.moveRequest, world)) return;
       }
+    }
+    // Command inputs are read relative to the nearest foe so they work in story mode, where facing follows movement.
+    const ref = (this.def.commandGrab || this.def.backAttack) && inp.moveX !== 0 ? (opp ?? nearestOpponent(this, world)) : null;
+    const refDir = ref ? Math.sign(ref.x - this.x) || this.facing : 0;
+    const towardOpp = ref !== null && inp.moveX === refDir;
+    const awayFromOpp = ref !== null && inp.moveX === -refDir;
+    if ((inp.specialPressed || this.bufferedSpecial) && this.def.commandGrab && towardOpp && this.state !== FState.RUN) {
+      this.bufferedSpecial = false;
+      this.startMove(this.def.commandGrab, world);
+      this.facing = refDir as 1 | -1;
+      return;
     }
     if ((inp.specialPressed || this.bufferedSpecial) && this.def.special && this.canAffordSpecial()) {
       this.startMove(this.def.special, world);
@@ -395,6 +414,9 @@ export class Fighter extends Entity {
       if (this.state === FState.RUN && this.def.dashAttack) {
         if (this.input.moveX !== 0 && !this.autoFace) this.facing = this.input.moveX > 0 ? 1 : -1;
         this.startMove(this.def.dashAttack, world);
+      } else if (this.def.backAttack && awayFromOpp) {
+        this.startMove(this.def.backAttack, world);
+        this.facing = refDir as 1 | -1;
       } else if (this.def.combo.length) {
         this.startMove(this.def.combo[0], world);
       }
@@ -651,6 +673,8 @@ export class Fighter extends Entity {
       return 'miss';
     }
 
+    if (hb.effect === 'grab') return this.receiveGrab(attacker, hb, world);
+
     const attackerInFront = Math.sign(attacker.x - this.x) === this.facing || Math.abs(attacker.x - this.x) < 4;
     if ((this.guarding || this.state === FState.BLOCK) && attackerInFront && !this.isAirborne()) {
       const chip = (hb.damage * CHIP_DAMAGE) / this.def.stats.defense;
@@ -690,6 +714,7 @@ export class Fighter extends Entity {
     if (this.move) this.endMove(world);
     this.hidden = false;
     this.noGravity = false;
+    this.grabbedBy = null;
     this.flash = 8;
 
     const kdir = hb.radial ? Math.sign(this.x - attacker.x) || attacker.facing : attacker.facing;
@@ -732,6 +757,49 @@ export class Fighter extends Entity {
     }
     this.hitstop = hb.hitstop;
     return 'hit';
+  }
+
+  /** Command grabs ignore guard but whiff on airborne, armoured or already-held targets. */
+  private receiveGrab(attacker: Fighter, hb: Hitbox, world: World): HitResult {
+    if (this.isAirborne() || this.hyperArmor > 0 || this.grabbedBy || this.state === FState.KNOCKDOWN || this.state === FState.WAKEUP) return 'miss';
+    if (this.move) this.endMove(world);
+    this.hidden = false;
+    this.noGravity = false;
+    this.guarding = false;
+    this.lastHitFrame = world.frame;
+    this.lastAttacker = attacker;
+    this.hp = Math.max(1, this.hp - hb.damage / this.def.stats.defense);
+    this.hpLagDelay = 30;
+    this.comboTaken++;
+    this.grabbedBy = attacker;
+    this.facing = attacker.facing > 0 ? -1 : 1;
+    this.vx = this.vy = this.vz = 0;
+    this.y = 0;
+    this.flash = 6;
+    this.hitstop = hb.hitstop;
+    this.setState(FState.HURT);
+    this.hitstun = hb.hitstun;
+    world.particles.text(this.x, this.y + 110 * this.scale, this.z, 'GRABBED', COLORS.hazard, 13);
+    return 'hit';
+  }
+
+  /** Tracks the grabbing attacker's hands while held; releases if the grab move is interrupted. */
+  private followGrab(): void {
+    const g = this.grabbedBy;
+    const spec = g?.move?.grab;
+    if (!g || !spec || g.state !== FState.ATTACK || g.moveFrame > spec.to + 2) {
+      this.grabbedBy = null;
+      this.hitstun = Math.min(this.hitstun, this.stateFrame + 8);
+      return;
+    }
+    const f = g.moveFrame;
+    const t = Math.max(0, Math.min(1, (f - spec.from) / Math.max(1, spec.to - spec.from)));
+    const ease = t * t * (3 - 2 * t);
+    this.x = g.x + g.facing * spec.x * g.scale;
+    this.z = g.z + 1;
+    this.y = spec.lift * ease;
+    this.vx = this.vy = this.vz = 0;
+    this.facing = g.facing > 0 ? -1 : 1;
   }
 
   doSubstitute(world: World, attacker: Fighter): void {
@@ -949,6 +1017,32 @@ export class Fighter extends Entity {
         p.ring(this.x, this.z, 60, 200, 'rgba(255,210,31,0.7)', 22);
         p.ring(this.x, this.z, 30, 160, 'rgba(255,255,255,0.5)', 18);
         break;
+      case 'grab_reach':
+        a.playWhiff();
+        a.playVoiceGrunt(this.def.voice, 'hah');
+        break;
+      case 'grab_lift':
+        a.playVoiceGrunt(this.def.voice, 'take');
+        a.playCharge();
+        p.dust(this.x, this.z, 8, this.facing);
+        p.spawn('flash', this.x + this.facing * 20, this.y + 100 * this.scale, this.z + 1, 0, 0, 0, 10, 8, '#ffd21f', { size2: 36 });
+        break;
+      case 'grab_slam':
+        a.playSpecial();
+        a.playDebris();
+        a.playHitHeavy();
+        world.camera.shake(14, this.facing, 1, 24);
+        p.debris(this.x + this.facing * 40, this.z, 18, this.facing);
+        p.dust(this.x + this.facing * 30, this.z, 14, this.facing);
+        p.dust(this.x + this.facing * 60, this.z, 8, this.facing);
+        p.ring(this.x + this.facing * 44, this.z, 16, 130, '#ffd21f', 22);
+        p.ring(this.x + this.facing * 44, this.z, 8, 90, '#ffffff', 16);
+        p.spawn('flash', this.x + this.facing * 44, 10, this.z + 1, 0, 0, 0, 12, 18, '#fff3c8', { size2: 100 });
+        p.text(this.x + this.facing * 30, this.y + 128 * this.scale, this.z, 'TAKEOVER', '#ffd21f', 18);
+        break;
+      case 'note':
+        this.throwNote(world);
+        break;
       // ---- Fiddle Jay
       case 'bow_whip':
         a.playSlash();
@@ -1005,6 +1099,26 @@ export class Fighter extends Entity {
       world.spawnProjectile(pr);
     }
     world.audio.playShuriken();
+  }
+
+  /** Fiddle Jay's travelling note: slow, non-homing, bobs along the string line and staggers on hit. */
+  private throwNote(world: World): void {
+    const angle = this.facing > 0 ? 0 : Math.PI;
+    const note = new Projectile(this, null, this.x + this.facing * 30, this.y + 62 * this.scale, this.z, angle, 4.4, '#ffb13b');
+    note.kind = 'note';
+    note.homingFrames = 0;
+    note.life = 110;
+    note.hitbox.damage = 6;
+    note.hitbox.knockbackX = 3;
+    note.hitbox.hitstun = 18;
+    note.hitbox.hitstop = 4;
+    note.hitbox.spark = 'arcane';
+    note.hitbox.sfx = 'magic';
+    note.hitbox.width = 22;
+    note.hitbox.height = 22;
+    world.spawnProjectile(note);
+    world.audio.playMagic();
+    world.particles.text(this.x + this.facing * 24, this.y + 96 * this.scale, this.z, '♪', '#fff3c8', 14);
   }
 
   // ------------------------------------------------------------------ render

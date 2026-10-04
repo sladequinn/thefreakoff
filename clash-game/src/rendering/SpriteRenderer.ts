@@ -291,6 +291,25 @@ const MOVE_KEYS: Record<string, Keys> = {
     [50, P(0.7, 0.35, 0.4, 0.6, 1.1, 0.1, 0.8, -1.5, 0.9, -1.4, 0, -1.2)],
     [72, KI],
   ],
+  wl_grab: [
+    [0, KI],
+    [2, P(0.1, 0.05, 0.6, 0.9, 1.3, 0.4, -0.4, -0.1, 0.4, -0.3, 0, -1.6)],
+    [6, P(0.45, 0.15, 1.4, 0.3, 1.7, 0.1, -0.6, -0.05, 0.8, -0.5, 0, -1.6)],
+    [11, P(0.45, 0.15, 1.4, 0.3, 1.7, 0.1, -0.6, -0.05, 0.8, -0.5, 0, -1.6)],
+    [16, P(0.0, -0.1, 2.3, 0.2, 2.5, 0.1, -0.4, -0.1, 0.4, -0.3, 0, -1.6)],
+    [22, P(-0.25, -0.25, 3.0, 0.1, 3.1, 0.05, -0.35, -0.1, 0.35, -0.3, 0, -1.6)],
+    [34, P(-0.3, -0.3, 3.05, 0.1, 3.15, 0.05, -0.35, -0.1, 0.35, -0.3, 0, -1.6)],
+    [37, P(0.7, 0.35, 1.3, 0.2, 1.4, 0.1, 0.8, -1.5, 0.9, -1.4, 0, -1.2)],
+    [48, P(0.7, 0.35, 1.3, 0.2, 1.4, 0.1, 0.8, -1.5, 0.9, -1.4, 0, -1.2)],
+    [64, KI],
+  ],
+  jay_pluck: [
+    [0, JI],
+    [3, P(-0.1, -0.1, 1.45, 0.75, 0.9, 2.4, -0.45, -0.15, 0.45, -0.5, 0, 0.0)],
+    [8, P(0.15, 0.0, 1.45, 0.75, 0.55, 1.5, -0.45, -0.15, 0.45, -0.5, 0, 0.5)],
+    [14, P(0.1, 0.0, 1.45, 0.75, 0.6, 1.6, -0.45, -0.15, 0.45, -0.5, 0, 0.4)],
+    [30, JI],
+  ],
   jay_lash: [
     [0, JI],
     [3, P(0.3, 0.05, 1.3, 1.0, 2.6, 0.3, -0.5, -0.1, 0.5, -0.4, 0, -1.3)],
@@ -1755,6 +1774,38 @@ export class SpriteRenderer {
     ctx.fillStyle = '#20262e';
     ctx.beginPath();
     ctx.arc(0, 0, 1.8, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.restore();
+  }
+
+  /** Fiddle Jay's travelling quaver: a glowing note head with a stem and flag, drawn as shapes so it pixelizes cleanly. */
+  drawNote(ctx: Ctx, x: number, y: number, age: number, color: string): void {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.globalCompositeOperation = 'lighter';
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 16);
+    g.addColorStop(0, color);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.fillRect(-16, -16, 32, 32);
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.rotate(Math.sin(age * 0.2) * 0.25 - 0.3);
+    ctx.fillStyle = '#fff6dc';
+    ctx.strokeStyle = '#fff6dc';
+    ctx.lineWidth = 2.2;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.ellipse(-3, 5, 5, 3.6, -0.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(1.5, 4);
+    ctx.lineTo(1.5, -10);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(1.5, -10);
+    ctx.quadraticCurveTo(8, -7, 7, 0);
+    ctx.quadraticCurveTo(6, -4, 1.5, -5);
+    ctx.closePath();
     ctx.fill();
     ctx.restore();
   }

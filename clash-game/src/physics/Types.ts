@@ -25,7 +25,8 @@ export enum FState {
   VICTORY = 'VICTORY',
 }
 
-export type HitEffect = 'none' | 'launch' | 'trip' | 'knockdown' | 'hardKnockdown' | 'groundBounce' | 'wallBounce';
+/** `grab` is unblockable, whiffs on airborne or armoured targets, and holds the victim until the move's follow-up hit lands. */
+export type HitEffect = 'none' | 'launch' | 'trip' | 'knockdown' | 'hardKnockdown' | 'groundBounce' | 'wallBounce' | 'grab';
 export type SparkType = 'slash' | 'arcane' | 'void' | 'impact' | 'red' | 'shock' | 'blade';
 export type HitSfx = 'light' | 'heavy' | 'slash' | 'magic';
 
@@ -101,6 +102,8 @@ export interface MoveData {
   onHitBounce?: { vx: number; vy: number };
   friction?: number;
   tokenRequired?: boolean;
+  /** Where a grabbed victim is held, relative to the attacker, between `from` and `to`; `lift` is the peak altitude. */
+  grab?: { from: number; to: number; x: number; lift: number };
 }
 
 export interface CharacterStats {
@@ -128,6 +131,10 @@ export interface CharacterDef {
   dashAttack?: string;
   airAttack?: string;
   special?: string;
+  /** Hold away from the opponent + attack while grounded. */
+  backAttack?: string;
+  /** Hold toward the opponent + special while grounded; costs no HP. */
+  commandGrab?: string;
   moves: Record<string, MoveData>;
   hurtbox: Hurtbox;
   scale: number;
