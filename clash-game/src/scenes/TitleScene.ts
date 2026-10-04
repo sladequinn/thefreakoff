@@ -227,13 +227,12 @@ export class TitleScene extends Scene {
     const sprites = this.game.sprites;
     const floorY = 520;
     const sway = Math.sin(time * 0.02) * 6;
-    ctx.save();
-    ctx.globalAlpha = 0.95;
-    this.shadow(ctx, 220 + sway, floorY, 90);
-    this.shadow(ctx, 740 - sway, floorY, 110);
-    sprites.drawBody(ctx, 'ninja', 'normal', idlePose('ninja', time), 220 + sway, floorY, 1, 2.35, time);
-    sprites.drawBody(ctx, 'brawler', 'normal', idlePose('brawler', time), 740 - sway, floorY, -1, 2.35, time);
-    ctx.restore();
+    this.game.renderer.withSprites((s) => {
+      this.shadow(s, 220 + sway, floorY, 90);
+      this.shadow(s, 740 - sway, floorY, 110);
+      sprites.drawBody(s, 'ninja', 'normal', idlePose('ninja', time), 220 + sway, floorY, 1, 2.35, time);
+      sprites.drawBody(s, 'brawler', 'normal', idlePose('brawler', time), 740 - sway, floorY, -1, 2.35, time);
+    });
 
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
@@ -254,7 +253,7 @@ export class TitleScene extends Scene {
     ui.text(ctx, 'SLADE', 150, 505, 20, COLORS.voidGlow, { stroke: '#000', strokeWidth: 5, align: 'left' });
     ui.text(ctx, 'The Magick Ninja', 150, 522, 11, 'rgba(255,255,255,0.6)', { template: FONT_UI, align: 'left' });
     ui.text(ctx, 'FRECKLES', 810, 505, 20, COLORS.ember, { stroke: '#000', strokeWidth: 5, align: 'right' });
-    ui.text(ctx, 'The Street Brawler', 810, 522, 11, 'rgba(255,255,255,0.6)', { template: FONT_UI, align: 'right' });
+    ui.text(ctx, 'The Gothic Jester', 810, 522, 11, 'rgba(255,255,255,0.6)', { template: FONT_UI, align: 'right' });
   }
 
   private shadow(ctx: CanvasRenderingContext2D, x: number, y: number, w: number): void {

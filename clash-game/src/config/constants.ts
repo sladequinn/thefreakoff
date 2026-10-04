@@ -80,9 +80,18 @@ const FONT_SCALE = new Map<string, number>([
   [FONT_MONO, 1.3],
 ]);
 
+/** Press Start 2P is an 8x8 bitmap face; sizes off its grid render with blurred half-pixels. */
+const FONT_GRID = new Map<string, number>([[FONT_DISPLAY, 8]]);
+
 export function font(template: string, size: number): string {
-  return template.replace('{size}', String(Math.max(6, Math.round(size * (FONT_SCALE.get(template) ?? 1)))));
+  let px = size * (FONT_SCALE.get(template) ?? 1);
+  const grid = FONT_GRID.get(template);
+  px = grid ? Math.max(grid, Math.round(px / grid) * grid) : Math.max(6, Math.round(px));
+  return template.replace('{size}', String(px));
 }
+
+/** World pixel size in screen units (960 / 480). */
+export const PIXEL_SIZE = 2;
 
 /** Internal resolution of the pixelated world layer (UI stays at CANVAS_WIDTH x CANVAS_HEIGHT). */
 export const PIXEL_WIDTH = 480;

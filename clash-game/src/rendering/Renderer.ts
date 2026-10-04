@@ -13,6 +13,7 @@ import {
 import { hitboxWorld, hurtboxWorld } from '../physics/Collision';
 import type { Projectile } from '../entities/Entity';
 import type { Fighter } from '../entities/Fighter';
+import { BAYER4, DITHER_STRENGTH, PALETTE_LEVELS, pixelize } from './Pixelize';
 
 export type StageTheme = 'outskirts' | 'harbor' | 'facility' | 'rooftop' | 'foundry' | 'sanctuary';
 
@@ -51,9 +52,6 @@ function makeLayer(width: number, height: number, factor: number, y: number, pai
   return { canvas: c, factor, y, q: LAYER_Q };
 }
 
-/** 4x4 Bayer matrix, normalised to [-0.5, 0.5). */
-const BAYER4 = [0, 8, 2, 10, 12, 4, 14, 6, 3, 11, 1, 9, 15, 7, 13, 5].map((v) => (v + 0.5) / 16 - 0.5);
-const PALETTE_LEVELS = 7;
 
 /**
  * Presentation pipeline: the world is painted into a 480x270 buffer, reduced to a limited palette with ordered
@@ -68,6 +66,8 @@ export class Renderer {
   private readonly world: HTMLCanvasElement;
   private readonly worldCtx: CanvasRenderingContext2D;
   private readonly lut: Uint8ClampedArray;
+  private readonly sprites: HTMLCanvasElement;
+  private readonly spritesCtx: CanvasRenderingContext2D;
   scale = 1;
   pixelArt = true;
   private layers = new Map<string, Layer[]>();
@@ -87,13 +87,17 @@ export class Renderer {
     this.world.width = PIXEL_WIDTH;
     this.world.height = PIXEL_HEIGHT;
     this.worldCtx = this.world.getContext('2d', { alpha: false, willReadFrequently: true })!;
+    this.sprites = document.createElement('canvas');
+    this.sprites.width = PIXEL_WIDTH;
+    this.sprites.height = PIXEL_HEIGHT;
+    this.spritesCtx = this.sprites.getContext('2d', { willReadFrequently: true })!;
 
     // lut[bayerIndex * 256 + value] -> quantised channel value
     this.lut = new Uint8ClampedArray(16 * 256);
     const step = 255 / (PALETTE_LEVELS - 1);
     for (let b = 0; b < 16; b++) {
       for (let v = 0; v < 256; v++) {
-        this.lut[b * 256 + v] = Math.round(Math.round(v / step + BAYER4[b] * 0.85) * step);
+        this.lut[b * 256 + v] = Math.round(Math.round(v / step + BAYER4[b] * DITHER_STRENGTH) * step);
       }
     }
 
@@ -140,6 +144,48 @@ export class Renderer {
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     ctx.lineCap = 'round';
     return ctx;
+  }
+
+  /**
+   * Redirects drawing to a transparent sprite layer. On endSprites() the layer is turned into hard-edged pixel art:
+   * partial alpha becomes an ordered-dither mesh (the way 16-bit hardware faked transparency), every solid pixel
+   * bordering empty space becomes a dark outline, and the result is stamped onto the world buffer.
+   */
+  beginSprites(): CanvasRenderingContext2D {
+    if (!this.pixelArt) return this.ctx;
+    const ctx = this.spritesCtx;
+    this.ctx = ctx;
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.clearRect(0, 0, PIXEL_WIDTH, PIXEL_HEIGHT);
+    ctx.setTransform(PIXEL_WIDTH / CANVAS_WIDTH, 0, 0, PIXEL_HEIGHT / CANVAS_HEIGHT, 0, 0);
+    ctx.lineCap = 'round';
+    return ctx;
+  }
+
+  endSprites(): void {
+    if (!this.pixelArt) return;
+    const img = this.spritesCtx.getImageData(0, 0, PIXEL_WIDTH, PIXEL_HEIGHT);
+    pixelize(img);
+    this.spritesCtx.putImageData(img, 0, 0);
+    const w = this.worldCtx;
+    w.save();
+    w.setTransform(1, 0, 0, 1, 0, 0);
+    w.globalAlpha = 1;
+    w.globalCompositeOperation = 'source-over';
+    w.drawImage(this.sprites, 0, 0);
+    w.restore();
+    this.ctx = w;
+  }
+
+  /** Runs `paint` inside a sprite pass. */
+  withSprites(paint: (ctx: CanvasRenderingContext2D) => void): void {
+    const ctx = this.beginSprites();
+    ctx.save();
+    paint(ctx);
+    ctx.restore();
+    this.endSprites();
   }
 
   /** Palette-reduces the world buffer and blits it to the screen with hard pixel edges. */

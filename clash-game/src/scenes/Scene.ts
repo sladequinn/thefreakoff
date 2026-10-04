@@ -1,4 +1,4 @@
-import { COLORS, LIGHT_HIT_THRESHOLD, STAGE_MAX_Z, STAGE_MIN_Z } from '../config/constants';
+import { COLORS, LIGHT_HIT_THRESHOLD, PIXEL_SIZE, STAGE_MAX_Z, STAGE_MIN_Z } from '../config/constants';
 import { Camera } from '../core/Camera';
 import type { AudioEngine } from '../core/AudioEngine';
 import type { GameContext } from '../core/StateManager';
@@ -304,18 +304,20 @@ export abstract class CombatScene extends Scene implements World {
 
   protected renderWorld(screen: CanvasRenderingContext2D): void {
     const game = this.game;
+    // Camera snaps to whole world pixels so sprites and parallax never land on half-pixel seams.
     const view: RenderView = {
-      camX: this.camera.viewX,
-      camY: this.camera.viewY,
+      camX: Math.round(this.camera.viewX / PIXEL_SIZE) * PIXEL_SIZE,
+      camY: Math.round(this.camera.viewY / PIXEL_SIZE) * PIXEL_SIZE,
       time: game.time,
       sprites: game.sprites,
       debug: game.settings.debug,
     };
-    const ctx = game.renderer.beginWorld();
+    game.renderer.beginWorld();
     game.renderer.drawStage(this.theme, view.camX, view.camY, game.time, this.stageWidth);
+
+    const ctx = game.renderer.beginSprites();
     for (const f of this.fighters) f.drawShadow(ctx, view);
     for (const p of this.projectiles) p.drawShadow(ctx, view);
-
     const list = this.drawList;
     list.length = 0;
     for (const f of this.fighters) list.push(f);
@@ -323,6 +325,7 @@ export abstract class CombatScene extends Scene implements World {
     for (const p of this.particles.active) if (p.kind !== 'text') list.push(p);
     list.sort((a, b) => a.sortZ - b.sortZ);
     for (const e of list) e.draw(ctx, view);
+    game.renderer.endSprites();
     game.renderer.drawVignette();
     game.renderer.endWorld();
 

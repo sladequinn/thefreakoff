@@ -15,7 +15,7 @@ const ROUTES: Record<CharId, { foes: string; boss: string; story: string }> = {
   slade: {
     foes: 'FRECKLEBOTS',
     boss: 'FRECKLES',
-    story: 'The Iron Syndicate cloned Freckles into an army of brass-fisted Frecklebots. Cut through them and reach the real one.',
+    story: 'The Iron Syndicate cloned Freckles into an army of spike-fisted Frecklebots. Cut through them and reach the real one.',
   },
   freckles: {
     foes: 'NINJABOTS',
@@ -186,22 +186,20 @@ export class CharacterSelectScene extends Scene {
     ctx.restore();
 
     const feetY = y + 268;
-    ctx.save();
-    ctx.fillStyle = 'rgba(0,0,0,0.5)';
-    ctx.beginPath();
-    ctx.ellipse(x + 95, feetY, 62, 11, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.restore();
     const locked = lockedHere.length > 0;
     const pose = idlePose(def.archetype, time + i * 37);
     const bounce = locked ? Math.max(0, 6 - lockedHere[0].lockT) * 1.5 : 0;
-    this.game.sprites.drawBody(ctx, def.archetype, 'normal', pose, x + 95, feetY - bounce, 1, 1.75, time, null);
-    if (lockedHere.length > 1) {
-      ctx.save();
-      ctx.globalAlpha = 0.85;
-      this.game.sprites.drawBody(ctx, def.archetype, 'alt', idlePose(def.archetype, time + 20), x + 150, feetY + 6, -1, 1.3, time, null);
-      ctx.restore();
-    }
+    this.game.renderer.withSprites((s) => {
+      s.fillStyle = 'rgba(0,0,0,0.5)';
+      s.beginPath();
+      s.ellipse(x + 95, feetY, 62, 11, 0, 0, Math.PI * 2);
+      s.fill();
+      this.game.sprites.drawBody(s, def.archetype, 'normal', pose, x + 95, feetY - bounce, 1, 1.75, time, null);
+      if (lockedHere.length > 1) {
+        s.globalAlpha = 0.85;
+        this.game.sprites.drawBody(s, def.archetype, 'alt', idlePose(def.archetype, time + 20), x + 150, feetY + 6, -1, 1.3, time, null);
+      }
+    });
   }
 
   private drawCardFront(ctx: CanvasRenderingContext2D, i: number, x: number, y: number, w: number, h: number, time: number): void {

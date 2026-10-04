@@ -95,13 +95,15 @@ export class GameOverScene extends Scene {
       gl.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = gl;
       ctx.fillRect(0, 0, 480, CANVAS_HEIGHT);
-      ctx.fillStyle = 'rgba(0,0,0,0.5)';
-      ctx.beginPath();
-      ctx.ellipse(px, 470, 80, 13, 0, 0, Math.PI * 2);
-      ctx.fill();
-      if (!p.victory) ctx.globalAlpha = 0.75;
-      g.sprites.drawBody(ctx, def.archetype, 'normal', idlePose(def.archetype, p.victory ? time : time * 0.4), px, 470, 1, 2.1, time);
       ctx.restore();
+      g.renderer.withSprites((s) => {
+        s.fillStyle = 'rgba(0,0,0,0.5)';
+        s.beginPath();
+        s.ellipse(px, 470, 80, 13, 0, 0, Math.PI * 2);
+        s.fill();
+        if (!p.victory) s.globalAlpha = 0.75;
+        g.sprites.drawBody(s, def.archetype, 'normal', idlePose(def.archetype, p.victory ? time : time * 0.4), px, 470, 1, 2.1, time);
+      });
     }
     this.drawConfetti(ctx);
     g.renderer.drawVignette();
