@@ -10,16 +10,26 @@ interface ButtonDef {
   sub: string;
   color: string;
   size: number;
+  /** Centre offset from the cluster anchor (the ATK button), in layout units. */
+  dx: number;
+  dy: number;
   /** Only shown while a tag-team match is running. */
   tagOnly?: boolean;
 }
 
+/**
+ * Right-thumb cluster, fanned around ATK: JMP sits up-right so a jump→attack is one thumb roll, BLK is a
+ * holdable pad to the left, SPL (rare) is furthest up, and TAG squeezes in above-right only in tag mode.
+ */
 const BUTTONS: ButtonDef[] = [
-  { action: 'attack', label: 'ATK', sub: 'attack', color: '#ff6a2a', size: 1 },
-  { action: 'jump', label: 'JMP', sub: 'jump', color: '#39f3ff', size: 0.8 },
-  { action: 'special', label: 'SPL', sub: 'special', color: '#8a4dff', size: 0.74 },
-  { action: 'tag', label: 'TAG', sub: 'partner', color: '#ffd21f', size: 0.62, tagOnly: true },
+  { action: 'attack', label: 'ATK', sub: 'attack', color: '#ff6a2a', size: 1, dx: 0, dy: 0 },
+  { action: 'jump', label: 'JMP', sub: 'jump', color: '#39f3ff', size: 0.8, dx: 0.85, dy: -0.68 },
+  { action: 'block', label: 'BLK', sub: 'guard', color: '#6fb6ff', size: 0.8, dx: -1.0, dy: -0.05 },
+  { action: 'special', label: 'SPL', sub: 'special', color: '#8a4dff', size: 0.72, dx: -0.25, dy: -1.05 },
+  { action: 'tag', label: 'TAG', sub: 'partner', color: '#ffd21f', size: 0.56, dx: 0.55, dy: -1.45, tagOnly: true },
 ];
+/** Rightmost extent of the cluster (JMP's right edge) in layout units, used to pin it to the screen edge. */
+const CLUSTER_RIGHT = 0.85 + 0.4;
 
 const STYLE = `
 .tc-root { position: fixed; inset: 0; pointer-events: none; z-index: 10; display: none;
@@ -287,13 +297,13 @@ export class TouchControls {
     let areaTop: number;
     let unit: number;
     if (portrait) {
-      unit = Math.min(vw / 4.2, 120);
+      unit = Math.min(vw / 5, 110);
       // Center the game view in the space left above the pad so it sits closer to the thumbs.
-      const controlsH = unit * 3.4;
+      const controlsH = unit * 3.1;
       const pad = Math.max(8, (vh - view.height - controlsH) / 2);
       if (app && this.visible) app.style.paddingTop = `${pad}px`;
       areaTop = pad + view.height + 8;
-      unit = Math.min(unit, Math.max(160, vh - areaTop) / 2.6);
+      unit = Math.min(unit, Math.max(160, vh - areaTop) / 2.9);
       this.hint.style.display = 'block';
       this.hint.style.top = `${areaTop + 6}px`;
     } else {
@@ -310,43 +320,42 @@ export class TouchControls {
     this.knob.style.width = `${baseSize * 0.44}px`;
     this.knob.style.height = `${baseSize * 0.44}px`;
 
-    const zoneW = portrait ? vw * 0.52 : vw * 0.42;
+    // The cluster hugs the bottom-right corner; the pause / music / fullscreen minis stay in the top corner,
+    // so the highest button (SPL, or TAG in tag mode) keeps clear air above it.
+    const cx = vw - unit * CLUSTER_RIGHT - 6;
+    const cy = vh - safeBottom - unit * (portrait ? 1.25 : 0.5);
+
+    const zoneW = portrait ? vw * 0.46 : vw * 0.42;
     const zoneTop = portrait ? areaTop + 24 : areaTop;
     this.zone.style.left = '0px';
     this.zone.style.top = `${zoneTop}px`;
     this.zone.style.width = `${zoneW}px`;
     this.zone.style.height = `${vh - zoneTop}px`;
     this.rest.x = Math.min(zoneW * 0.5, this.radius + 26);
-    this.rest.y = vh - zoneTop - this.radius - safeBottom - (portrait ? unit * 0.5 : 10);
+    this.rest.y = Math.max(this.radius, cy - zoneTop);
     if (this.stickPointer === null) {
       this.base.style.left = `${this.rest.x}px`;
       this.base.style.top = `${this.rest.y}px`;
     }
 
-    const cx = vw - unit * 1.35 - 8;
-    const cy = vh - unit * (portrait ? 1.55 : 1.15) - safeBottom;
-    const place = [
-      { x: cx, y: cy },
-      { x: cx + unit * 0.8, y: cy - unit * 0.95 },
-      { x: cx - unit * 1.05, y: cy - unit * 0.55 },
-      { x: cx - unit * 0.3, y: cy - unit * 1.5 },
-    ];
-    this.buttons.forEach((b, i) => {
+    for (const b of this.buttons) {
       const size = unit * b.def.size;
-      const p = place[i];
       b.el.style.width = `${size}px`;
       b.el.style.height = `${size}px`;
       b.el.style.fontSize = `${size}px`;
-      b.el.style.left = `${Math.min(p.x, vw - size / 2 - 6)}px`;
-      b.el.style.top = `${p.y}px`;
-    });
+      b.el.style.left = `${Math.min(cx + unit * b.def.dx, vw - size / 2 - 6)}px`;
+      b.el.style.top = `${cy + unit * b.def.dy}px`;
+    }
 
+    const miniSize = portrait ? 42 : 38;
     this.minis.forEach((m, i) => {
+      m.style.width = `${miniSize}px`;
+      m.style.height = `${miniSize}px`;
       if (portrait) {
         m.style.top = `${areaTop + 30}px`;
-        m.style.right = `${10 + i * 50}px`;
+        m.style.right = `${10 + i * (miniSize + 8)}px`;
       } else {
-        m.style.top = `${10 + i * 50}px`;
+        m.style.top = `${8 + i * (miniSize + 8)}px`;
         m.style.right = '6px';
       }
     });
