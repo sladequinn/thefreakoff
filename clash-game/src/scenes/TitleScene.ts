@@ -10,16 +10,18 @@ const HERO_PAIRS: [CharId, CharId][] = [
   ['slade', 'freckles'],
   ['whitelie', 'fiddlejay'],
   ['batman', 'slade'],
+  ['righteous', 'whitelie'],
 ];
 const HERO_CYCLE = 60 * 9;
 const HERO_FADE = 24;
-const HERO_ACCENT: Record<CharId, string> = { slade: COLORS.voidGlow, freckles: COLORS.bone, whitelie: '#ffd21f', fiddlejay: '#ffb13b', batman: '#8a93a8' };
+const HERO_ACCENT: Record<CharId, string> = { slade: COLORS.voidGlow, freckles: COLORS.bone, whitelie: '#ffd21f', fiddlejay: '#ffb13b', batman: '#8a93a8', righteous: '#e8c87a' };
 const HERO_RIM: Record<CharId, string> = {
   slade: 'rgba(138,77,255,0.16)',
   freckles: 'rgba(236,232,240,0.14)',
   whitelie: 'rgba(255,210,31,0.14)',
   fiddlejay: 'rgba(255,177,59,0.14)',
   batman: 'rgba(138,147,168,0.16)',
+  righteous: 'rgba(232,200,122,0.16)',
 };
 
 interface MenuEntry {
@@ -53,7 +55,7 @@ export class TitleScene extends Scene {
     this.items = [
       {
         label: 'STORY MODE',
-        hint: 'Five campaigns. Carve through six stages of Clownbots and Ninjabots to reach your rival.',
+        hint: 'Six campaigns. Carve through six stages of Clownbots and Ninjabots to reach your rival.',
         go: () => this.game.scenes.go('select', { mode: 'story', cpu: false }),
       },
       {
@@ -197,7 +199,7 @@ export class TitleScene extends Scene {
     if (!this.pressedStart) {
       const a = 0.45 + 0.55 * Math.abs(Math.sin(time * 0.05));
       g.ui.text(ctx, touch ? 'TAP TO START' : 'PRESS ANY KEY', CANVAS_WIDTH / 2, 380, 24, '#ffffff', { stroke: '#000', strokeWidth: 5, alpha: a });
-      g.ui.text(ctx, 'The bots own the streets. Five fighters want the city.', CANVAS_WIDTH / 2, 412, 13, 'rgba(255,255,255,0.7)', {
+      g.ui.text(ctx, 'The bots own the streets. Six fighters want the city.', CANVAS_WIDTH / 2, 412, 13, 'rgba(255,255,255,0.7)', {
         template: FONT_UI,
       });
     } else if (this.showControls) {

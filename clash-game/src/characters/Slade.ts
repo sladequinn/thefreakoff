@@ -219,6 +219,7 @@ export const SLADE: CharacterDef = {
     whitelie: ['Big shirt, bigger target.', 'Platinum dents like anything else.'],
     fiddlejay: ['Nice tune. Shame about the tempo.', 'Your bow is a stick. Mine is a blade.'],
     batman: ['A cape is not a shadow. Sit down.', 'No relation? No contest.'],
+    righteous: ['A crozier is still a stick.', 'Your light blinked. Mine did not.'],
     slade: ['Only one of us is the original.'],
   },
   moveList: [

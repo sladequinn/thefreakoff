@@ -278,6 +278,7 @@ export const FIDDLE_JAY: CharacterDef = {
     freckles: ['I\'ll play you a lullaby. Sleep it off.', 'Sad song, sadder fight.'],
     whitelie: ['Big man, no rhythm.', 'That mic hits harder than your bars.'],
     batman: ['Bats fly off when the fiddle starts. Always have.', 'No relation, no rhythm.'],
+    righteous: ['The devil already went down. You can sit this one out.', 'Nice hat. Bad tempo.'],
     fiddlejay: ['Only one of us practised today.'],
   },
   moveList: [

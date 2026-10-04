@@ -238,7 +238,7 @@ const STORY: Record<StoryCharId, { pre: Page[][]; boss: string[]; ending: Page[]
         { speaker: 'SYNDICATE PA', arch: null, text: 'FOUNDRY BREACH. SHOGUN-X REBUILD COMPLETE. ALL LINES: PROTECT THE MASTER TAPE.' },
       ],
       [
-        { speaker: 'FIDDLE JAY', arch: 'fiddler', text: 'The signal climbs to a mountain shrine, and on the steps sits the biggest man I ever saw, tan overshirt and a fitted cap, swinging a wired mic like a flail.' },
+        { speaker: 'FIDDLE JAY', arch: 'fiddler', text: 'The signal climbs to a mountain shrine, and on the steps sits the biggest man I ever saw, white overshirt and a fitted cap, swinging a wired mic like a flail.' },
         { speaker: 'WHITE LIE', arch: 'kingpin', text: "Fiddle Jay. Your bootleg is running through every bot that took my clubs. You here to apologise, or you here to get featured on the pavement?" },
       ],
     ],
@@ -280,6 +280,38 @@ const STORY: Record<StoryCharId, { pre: Page[][]; boss: string[]; ending: Page[]
       { speaker: 'BATMAN', arch: 'bat', text: "Batman. No relation. The vault is under this shrine, and somebody in there is forging both our names. Let's go file a complaint. With our fists." },
     ],
   },
+  righteous: {
+    pre: [
+      [
+        { speaker: 'NEO-KASAI, 2089', arch: null, text: 'The Iron Syndicate bought the parish on a Sunday and boarded the doors on a Monday. By Tuesday the pews were full of Ninjabots, and the collection plate was empty.' },
+        { speaker: 'RIGHTEOUS', arch: 'bishop', text: 'They took the tithe, the keys and the hymnals. I still have the crozier. Tonight I collect what is owed, in order, starting with whoever is standing in the aisle.' },
+      ],
+      [
+        { speaker: 'RIGHTEOUS', arch: 'bishop', text: 'Pier 9. The crates are stamped with a platinum seal I have seen on every billboard downtown. A record label shipping bots into my parish. Imagine that.' },
+        { speaker: 'SYNDICATE PA', arch: null, text: 'PIER 9 ALERT. SHOGUN-X COMMAND UNIT ACTIVATED. UNLICENSED CLERGY ON THE DOCKS. CONFISCATE THE CROZIER.' },
+      ],
+      [
+        { speaker: 'RIGHTEOUS', arch: 'bishop', text: 'The Core. Every unit in here steps on the same stolen beat, and the Clownbot heavies swing like they learned it from a platinum tape. Somebody sold a sermon and a song to the same buyer.' },
+        { speaker: 'SYNDICATE PA', arch: null, text: 'CORE FACILITY LOCKDOWN. INTRUDER: RIGHTEOUS. THE PARISH IS IN DEFAULT. PRIORITY: TERMINATE.' },
+      ],
+      [
+        { speaker: 'RIGHTEOUS', arch: 'bishop', text: 'The rooftops are one long advertisement for Platinum Records. The man who owns it is a three-hundred-pound rap mogul named White Lie. He bought a church with a single. I have notes.' },
+      ],
+      [
+        { speaker: 'RIGHTEOUS', arch: 'bishop', text: 'The Foundry. The Shogun is rebuilt and standing on the catwalk like a deacon. Smash the forge and nobody pours another idol in this city.' },
+        { speaker: 'SYNDICATE PA', arch: null, text: 'FOUNDRY BREACH. SHOGUN-X REBUILD COMPLETE. ALL LINES: PROTECT THE DEED.' },
+      ],
+      [
+        { speaker: 'RIGHTEOUS', arch: 'bishop', text: 'The signal climbs to a mountain shrine, and on the steps sits the biggest man I ever saw, white overshirt and a fitted cap, swinging a wired mic like a flail.' },
+        { speaker: 'WHITE LIE', arch: 'kingpin', text: "Evening, Father. Funny thing: your parish is on a platinum ledger now. You here to tithe, or you here to get featured on the pavement?" },
+      ],
+    ],
+    boss: ['WHITE LIE: Your name is on a deed I already cashed.', 'RIGHTEOUS: Then let the court hear the case. Crozier versus mic. Right now.'],
+    ending: [
+      { speaker: 'WHITE LIE', arch: 'kingpin', text: '…All right, Father. Nobody who hits that honest is hiding a Syndicate contract. They forged your parish same as they forged my label.' },
+      { speaker: 'RIGHTEOUS', arch: 'bishop', text: 'Then we have a shared grievance and a vault under this shrine. You bring the gold, mogul. I will bring the book.' },
+    ],
+  },
 };
 
 type Phase = 'card' | 'play' | 'clear' | 'bossIntro' | 'bossDown' | 'ending' | 'gameover';
@@ -290,6 +322,7 @@ const ARCH_COLOR: Record<Archetype, string> = {
   kingpin: '#ffd21f',
   fiddler: '#ffb13b',
   bat: '#aab3c8',
+  bishop: '#e8c87a',
   ninjabot: '#9fe8ff',
   clownbot: '#ff9a5a',
 };
@@ -299,6 +332,7 @@ const ARCH_BG: Record<Archetype, string> = {
   kingpin: '#3a2a08',
   fiddler: '#4a1c0a',
   bat: '#161a2a',
+  bishop: '#2a2208',
   ninjabot: '#0a2a3a',
   clownbot: '#4a1c0a',
 };

@@ -61,4 +61,13 @@ export const ROUTES: Record<CharId, RouteDef> = {
     midBoss: 'FOREMAN MK-II',
     story: 'The Syndicate trademarked the night and sent a cease-and-desist with an army of Clownbots attached. Prove the city needs a bat. Any bat. Legally distinct.',
   },
+  righteous: {
+    foes: 'ninjabot',
+    mix: 'clownbot',
+    foesLabel: 'NINJABOTS + CLOWNBOT HEAVIES',
+    boss: 'whitelie',
+    label: 'RIGHTEOUS ROUTE · THE TITHE',
+    midBoss: 'SHOGUN-X',
+    story: 'The Syndicate bought the parish, boarded the doors and put Clownbots in the pews. Collect the tithe they stole, then collect the mogul who signed the deed.',
+  },
 };

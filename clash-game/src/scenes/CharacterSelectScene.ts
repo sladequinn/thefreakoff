@@ -24,6 +24,7 @@ const STYLE: Record<CharId, { accent: string; glow: string }> = {
   whitelie: { accent: '#ffd21f', glow: '#ffe38a' },
   fiddlejay: { accent: '#ffb13b', glow: '#ffd27a' },
   batman: { accent: '#8a93a8', glow: '#ffd21f' },
+  righteous: { accent: '#e8c87a', glow: '#fff3c8' },
 };
 
 const entry = (id: CharId): RosterEntry => ({ id, def: CHARACTERS[id], ...STYLE[id] });
@@ -591,8 +592,8 @@ export class CharacterSelectScene extends Scene {
     ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
     ctx.restore();
 
-    ui.text(ctx, def.name, x + w / 2, y + h - 22, w < 200 ? 16 : 18, '#ffffff', { stroke: '#000', strokeWidth: 4 });
-    ui.text(ctx, def.title.toUpperCase(), x + w / 2, y + h - 8, 10, r.glow, { template: FONT_UI });
+    ui.text(ctx, def.name, x + w / 2, y + h - 22, w < 160 ? 13 : w < 200 ? 16 : 18, '#ffffff', { stroke: '#000', strokeWidth: 4 });
+    ui.text(ctx, def.title.toUpperCase(), x + w / 2, y + h - 8, w < 160 ? 8 : 10, r.glow, { template: FONT_UI });
     const altUnlocked = this.game.save.isAltUnlocked(r.id);
     if (altUnlocked) ui.text(ctx, hovered ? '▲▼ COSTUME' : 'ALT ✓', x + w - 8, y + 22, 9, hovered ? COLORS.hazard : 'rgba(255,255,255,0.45)', { align: 'right', template: FONT_UI });
 

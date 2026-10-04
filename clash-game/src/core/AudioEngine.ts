@@ -18,6 +18,7 @@ const VOICE_PITCH: Record<VoiceId, number> = {
   whitelie: 92,
   fiddlejay: 168,
   batman: 70,
+  righteous: 118,
   ninjabot: 210,
   clownbot: 78,
 };
@@ -128,6 +129,22 @@ const VOICE_TAUNTS: Record<VoiceId, PhoneStep[][]> = {
       { c: 'sh', at: 0.54 },
       { v: 'uh', p0: 0.95, p1: 0.7, at: 0.6, dur: 0.2 },
       { c: 'n', at: 0.8 },
+    ],
+  ],
+  righteous: [
+    // "Amen."
+    [
+      { v: 'e', v2: 'i', p0: 1.15, p1: 1.05, at: 0.0, dur: 0.16 },
+      { c: 'm', at: 0.18 },
+      { v: 'e', p0: 1.05, p1: 0.8, at: 0.22, dur: 0.22 },
+      { c: 'n', at: 0.44 },
+    ],
+    // "Kneel."
+    [
+      { c: 'n', at: 0 },
+      { v: 'i', p0: 1.2, p1: 1.1, at: 0.04, dur: 0.12 },
+      { c: 'l', at: 0.2 },
+      { v: 'e', p0: 1.0, p1: 0.75, at: 0.24, dur: 0.22 },
     ],
   ],
   ninjabot: [

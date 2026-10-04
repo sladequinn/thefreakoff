@@ -190,6 +190,7 @@ export const BATMAN: CharacterDef = {
     freckles: ['Clowns. Why is it always clowns.', 'Dry your eyes. I know a guy who deals with your type.'],
     whitelie: ['Big man, slow swing. I had a whole minute to pose.', "You've got the chains. I've got the cape. Cape wins."],
     fiddlejay: ['Nice tune. The bat signal is louder.', 'I brought a rang to a fiddle fight and still won.'],
+    righteous: ['I do not do churches. I do rooftops.', 'Your light is a streetlamp. Sit down.'],
     batman: ['There can only be one. Legally, there are at least two.'],
   },
   moveList: [

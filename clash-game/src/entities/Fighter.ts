@@ -1154,6 +1154,35 @@ export class Fighter extends Entity {
         p.smoke(this.x, this.y + 10, this.z, 10, 'rgba(40,44,60,1)');
         for (let i = 0; i < 8; i++) p.spawn('spark', this.x + (Math.random() - 0.5) * 24, this.y + 40 + Math.random() * 40, this.z + 1, this.facing * (Math.random() * 2), 3 + Math.random() * 4, 0, 18, 2.5, '#ffd21f', { gravity: 0.08 });
         break;
+      // ---- Righteous
+      case 'crozier_tap':
+        a.playWhiff();
+        p.dust(this.x + this.facing * 28, this.z, 4, this.facing);
+        break;
+      case 'crozier_arc':
+        a.playSlash();
+        a.playMagic();
+        p.spawn('kinetic', this.x + this.facing * 30, this.y + 58 * this.scale, this.z + 1, this.facing * 0.3, 1.2, 0, 16, 14, '#e8c87a', { size2: 48, rot: this.facing });
+        break;
+      case 'crozier_dive':
+        a.playDash();
+        a.playVoiceGrunt(this.def.voice, 'hyah');
+        break;
+      case 'absolve_charge':
+        a.playVoiceGrunt(this.def.voice, 'hah');
+        a.playCharge();
+        p.ring(this.x, this.z, 8, 50, '#e8c87a', 16);
+        p.glyphs(this.x, this.y + 60 * this.scale, this.z + 1, 8);
+        break;
+      case 'absolve':
+        a.playSpecial();
+        a.playMagic();
+        world.camera.shake(9, 0, 1, 16);
+        p.ring(this.x, this.z, 18, 140, '#e8c87a', 26);
+        p.ring(this.x, this.z, 10, 110, '#fff3c8', 20);
+        p.glyphs(this.x, this.y + 40 * this.scale, this.z + 2, 16);
+        p.spawn('flash', this.x, this.y + 50 * this.scale, this.z + 1, 0, 0, 0, 14, 18, '#fff3c8', { size2: 110 });
+        break;
       // ---- Fiddle Jay
       case 'bow_whip':
         a.playSlash();

@@ -73,6 +73,8 @@ const IDLE: Record<Archetype, Pose> = {
   fiddler: P(0.15, -0.05, 1.45, 0.75, 0.75, 1.97, -0.4, -0.12, 0.45, -0.5, 0, 0.18),
   // Batman (no relation): tall boxer's guard, both gauntlets up at chin height, cape hanging behind.
   bat: P(0.08, 0.02, 0.5, 2.0, 0.8, 1.9, -0.3, -0.1, 0.35, -0.35),
+  // Righteous: planted, crozier planted like a staff in the near fist, far hand blessing.
+  bishop: P(0.04, 0.04, 0.6, 1.4, 0.35, 1.15, -0.32, -0.08, 0.32, -0.25, 0, -1.55),
   ninjabot: P(0.15, 0, -0.2, 1.1, 0.8, 0.9, -0.3, -0.1, 0.35, -0.4, 0, 0.9),
   clownbot: P(0.08, 0, 0.3, 1.5, 0.5, 1.4, -0.25, -0.1, 0.25, -0.2),
 };
@@ -89,6 +91,7 @@ const GUARD: Record<Archetype, Pose> = {
   kingpin: P(0.05, 0.1, 1.0, 2.0, 1.1, 2.0, -0.38, -0.1, 0.38, -0.3, 0, 0.6),
   fiddler: P(-0.05, 0.1, 1.2, 1.8, 1.0, 1.6, -0.4, -0.2, 0.4, -0.4, 0, -1.0),
   bat: P(0.0, 0.1, 1.2, 1.8, 1.0, 1.7, -0.35, -0.2, 0.4, -0.4),
+  bishop: P(0.02, 0.08, 1.1, 1.8, 0.9, 1.7, -0.32, -0.08, 0.32, -0.25, 0, -1.4),
   ninjabot: P(-0.05, 0.1, 1.2, 1.6, 1.0, 1.6, -0.4, -0.2, 0.4, -0.4, 0, 1.4),
   clownbot: P(0.05, 0.1, 1.0, 2.0, 1.2, 1.9, -0.3, -0.1, 0.3, -0.2),
 };
@@ -101,6 +104,8 @@ const VICTORY: Record<Archetype, Pose> = {
   fiddler: P(0.05, -0.25, 1.45, 0.75, 0.75, 1.97, -0.3, -0.05, 0.3, -0.05, 0, 0.18),
   // Brooding: chin down, near arm pulling the cape across the chest.
   bat: P(0.05, 0.18, 0.3, 0.3, 1.2, 2.6, -0.25, -0.05, 0.25, -0.05),
+  // Crozier raised, far hand blessing the crowd.
+  bishop: P(-0.05, -0.12, -0.4, 0.4, 2.7, 0.2, -0.25, -0.05, 0.25, -0.05, 0, 0.15),
   ninjabot: IDLE.ninjabot,
   clownbot: IDLE.clownbot,
 };
@@ -112,6 +117,7 @@ const FB = IDLE.clownbot;
 const KI = IDLE.kingpin;
 const JI = IDLE.fiddler;
 const BA = IDLE.bat;
+const RI = IDLE.bishop;
 
 const MOVE_KEYS: Record<string, Keys> = {
   slade_slash: [
@@ -357,6 +363,45 @@ const MOVE_KEYS: Record<string, Keys> = {
     [20, P(-0.1, -0.25, 0.4, 1.0, 2.95, 0.15, 0.5, -1.0, 1.0, -1.8)],
     [90, P(0.1, -0.1, 0.4, 1.0, 2.6, 0.3, 0.4, -0.8, 0.8, -1.4)],
   ],
+  ri_tap: [
+    [0, RI],
+    [3, P(-0.05, 0, 0.6, 1.4, -0.5, 1.0, -0.32, -0.08, 0.32, -0.25, 0, -1.55)],
+    [6, P(0.25, 0.05, 0.6, 1.4, 1.55, 0.15, -0.45, -0.08, 0.5, -0.3, 0, -0.2)],
+    [10, P(0.25, 0.05, 0.6, 1.4, 1.5, 0.2, -0.45, -0.08, 0.5, -0.3, 0, -0.25)],
+    [18, RI],
+  ],
+  ri_butt: [
+    [0, RI],
+    [4, P(0.2, 0.1, 0.3, 1.0, 0.2, 1.8, -0.35, -0.08, 0.4, -0.3, 0, -1.4)],
+    [7, P(0.4, 0.2, 0.3, 1.0, 1.4, 0.2, -0.5, -0.05, 0.6, -0.4, 0, -1.5)],
+    [12, P(0.35, 0.15, 0.3, 1.0, 1.35, 0.25, -0.5, -0.05, 0.6, -0.4, 0, -1.5)],
+    [20, RI],
+  ],
+  ri_sweep: [
+    [0, RI],
+    [5, P(-0.2, -0.1, 0.4, 1.2, -1.2, 0.6, -0.3, -0.08, 0.4, -0.3, 0, -1.6)],
+    [9, P(0.45, 0.15, 0.4, 1.2, 1.8, 0.1, -0.6, -0.05, 0.8, -0.5, 0, 0.4)],
+    [14, P(0.4, 0.12, 0.4, 1.2, 1.7, 0.2, -0.6, -0.05, 0.8, -0.5, 0, 0.3)],
+    [32, RI],
+  ],
+  ri_process: [
+    [0, P(0.35, 0.1, 0.5, 1.2, 0.3, 1.4, -0.5, -0.2, 0.6, -0.6, 0, -1.5)],
+    [5, P(0.55, 0.2, 0.4, 1.1, 0.2, 1.5, -0.7, -0.3, 0.85, -0.8, 0, -1.5)],
+    [16, P(0.55, 0.2, 0.4, 1.1, 0.2, 1.5, -0.7, -0.3, 0.85, -0.8, 0, -1.5)],
+    [36, RI],
+  ],
+  ri_dive: [
+    [0, P(-0.1, -0.2, 2.4, 0.3, 2.6, 0.2, 0.5, -1.2, 0.8, -1.4, 0, -1.4)],
+    [6, P(0.5, 0.25, 0.8, 0.2, 1.4, 0.1, 0.4, -0.6, 0.6, -0.5, 0, -1.2)],
+    [70, P(0.5, 0.25, 0.8, 0.2, 1.4, 0.1, 0.4, -0.6, 0.6, -0.5, 0, -1.2)],
+  ],
+  ri_absolve: [
+    [0, RI],
+    [8, P(-0.1, -0.2, 0.6, 1.4, 2.8, 0.15, -0.3, -0.08, 0.3, -0.25, 0, 0.1)],
+    [16, P(-0.15, -0.25, 0.6, 1.4, 2.95, 0.1, -0.3, -0.08, 0.3, -0.25, 0, 0.05)],
+    [28, P(-0.1, -0.2, 0.6, 1.4, 2.9, 0.12, -0.3, -0.08, 0.3, -0.25, 0, 0.08)],
+    [64, RI],
+  ],
   jay_pluck: [
     [0, JI],
     [3, P(-0.1, -0.1, 1.45, 0.75, 0.9, 2.4, -0.45, -0.15, 0.45, -0.5, 0, 0.0)],
@@ -449,6 +494,10 @@ export function idlePose(a: Archetype, t: number): Pose {
     // idly bowing the fiddle
     const stroke = Math.sin(t * 0.11);
     return { ...b, sR: b.sR + stroke * 0.1, eR: b.eR + stroke * 0.22, weapon: b.weapon - stroke * 0.2, head: b.head + breathe * 0.04 };
+  }
+  if (a === 'bishop') {
+    const heave = Math.sin(t * 0.06);
+    return { ...b, lean: b.lean + heave * 0.015, sL: b.sL + heave * 0.06, eL: b.eL - heave * 0.08, head: b.head + breathe * 0.03 };
   }
   return { ...b, lean: b.lean + breathe * 0.03, sR: b.sR + breathe * 0.04, kR: b.kR - breathe * 0.05 };
 }
@@ -566,6 +615,7 @@ const DIMS: Record<Archetype, Dims> = {
   kingpin: { thigh: 22, shin: 21, torso: 36, upper: 16, fore: 16, headR: 10, neck: 8, hipW: 15, chestW: 20, blade: 7 },
   fiddler: { thigh: 23, shin: 23, torso: 29, upper: 15, fore: 15, headR: 8.5, neck: 10, hipW: 7.5, chestW: 10, blade: 32 },
   bat: { thigh: 26, shin: 26, torso: 34, upper: 17, fore: 17, headR: 8, neck: 10, hipW: 6.5, chestW: 9.5, blade: 0 },
+  bishop: { thigh: 23, shin: 22, torso: 34, upper: 16, fore: 16, headR: 8.5, neck: 9, hipW: 10, chestW: 13, blade: 42 },
   ninjabot: { thigh: 22, shin: 23, torso: 29, upper: 16, fore: 15, headR: 8.5, neck: 11, hipW: 7, chestW: 11, blade: 28 },
   clownbot: { thigh: 19, shin: 20, torso: 34, upper: 16, fore: 17, headR: 8, neck: 10, hipW: 12, chestW: 17, blade: 0 },
 };
@@ -643,12 +693,12 @@ const PALETTES: Record<Archetype, Partial<Record<Variant, Palette>> & { normal: 
     boss: { dark: '#15121a', dark2: '#49454f', white: '#f2eff5', white2: '#cfc9d6', hood: '#f2eff5', hood2: '#15121a', glove: '#f2eff5', glove2: '#cfc9d6', skin: '#dfd8de', skinDark: '#c4bcc4', stock1: '#15121a', stock2: '#f2eff5', boots: '#0d0b10', bell: '#ffd21f', hair1: '#15121a', hair2: '#f2eff5', lace: '#ffd21f', knuckle: '#ffd86a', paint: '#0b090e', lips: '#15121a', glow: '#ffb13b', buckle: '#ffd21f' },
   },
   kingpin: {
-    // Tan textured overshirt hanging open over a black tee, black jeans and sneakers, beige fitted cap with a small
-    // dark logo, black rectangular glasses, full dark beard, blue-grey ink on the neck and knuckles, two gold chains,
-    // and a wired handheld mic in the near fist.
-    normal: { shirt: '#d2bf9b', shirt2: '#a99674', tee: '#15121a', pants: '#2a2730', pants2: '#1a1820', cap: '#dccdb0', capBrim: '#b9a884', logo: '#3a3028', skin: '#f1dccb', skinDark: '#d2b49e', glasses: '#0b090e', gold: '#ffd21f', shoe: '#15121a', sole: '#f2eff5', mic: '#1c1c22', micHead: '#b4bcc8', micHead2: '#6d7582', ink: '#3f5068', beard: '#3a2a20', mouth: '#8a4a48', glow: '#ffd21f' },
-    // Alt: black overshirt and white tee, white cap, silver chains.
-    alt: { shirt: '#241f2c', shirt2: '#0d0b10', tee: '#f4f4f6', pants: '#2a2730', pants2: '#1a1820', cap: '#f4f4f6', capBrim: '#cfc9d6', logo: '#15121a', skin: '#f1dccb', skinDark: '#d2b49e', glasses: '#0b090e', gold: '#dfe6f0', shoe: '#f4f4f6', sole: '#15121a', mic: '#1c1c22', micHead: '#dfe6f0', micHead2: '#8a93a2', ink: '#3f5068', beard: '#3a2a20', mouth: '#8a4a48', glow: '#dfe6f0' },
+    // White textured overshirt hanging open over a black tee, black jeans and sneakers, white fitted cap with a small
+    // dark logo, black rectangular glasses, dark beard, faint ink on the neck and knuckles, two gold chains, and a
+    // wired handheld mic in the near fist. Skin is fair.
+    normal: { shirt: '#f4f2ec', shirt2: '#c9c3b8', tee: '#15121a', pants: '#2a2730', pants2: '#1a1820', cap: '#f7f5f0', capBrim: '#d4cec2', logo: '#15121a', skin: '#f8e6d8', skinDark: '#e0c4b0', glasses: '#0b090e', gold: '#ffd21f', shoe: '#15121a', sole: '#f2eff5', mic: '#1c1c22', micHead: '#b4bcc8', micHead2: '#6d7582', ink: '#7f8ea4', beard: '#4a3426', mouth: '#a05a58', glow: '#ffd21f' },
+    // Alt: black overshirt and white tee, black cap, silver chains.
+    alt: { shirt: '#241f2c', shirt2: '#0d0b10', tee: '#f4f4f6', pants: '#2a2730', pants2: '#1a1820', cap: '#1a1620', capBrim: '#0d0b10', logo: '#f4f4f6', skin: '#f8e6d8', skinDark: '#e0c4b0', glasses: '#0b090e', gold: '#dfe6f0', shoe: '#f4f4f6', sole: '#15121a', mic: '#1c1c22', micHead: '#dfe6f0', micHead2: '#8a93a2', ink: '#7f8ea4', beard: '#4a3426', mouth: '#a05a58', glow: '#dfe6f0' },
     // Shadow mogul: violet-black overshirt, silver chains, a mic head that glows like a plasma bulb.
     boss: { shirt: '#2a1740', shirt2: '#160b26', tee: '#0b090e', pants: '#120c18', pants2: '#07050a', cap: '#160b26', capBrim: '#2a1740', logo: '#b066ff', skin: '#d8c2b4', skinDark: '#b89a8a', glasses: '#0b090e', gold: '#dfe6f0', shoe: '#0b090e', sole: '#b066ff', mic: '#1c1c22', micHead: '#e0c4ff', micHead2: '#8a4dc0', ink: '#5a3a7a', beard: '#1a1018', mouth: '#5a2a2a', glow: '#b066ff' },
   },
@@ -666,6 +716,14 @@ const PALETTES: Record<Archetype, Partial<Record<Variant, Palette>> & { normal: 
     alt: { suit: '#8a93a8', suit2: '#5c657a', trunks: '#2a3f8a', cowl: '#2a3f8a', cowl2: '#4a63b8', cape: '#2a3f8a', capeIn: '#1a2a5e', belt: '#ffd21f', emblem: '#ffd21f', emblemBat: '#1a1c26', skin: '#e6c2a4', mouth: '#6a3030', eye: '#f6f8ff', glow: '#9fe8ff' },
     // Shadow bat: violet-black everything, pink-lit eyes.
     boss: { suit: '#2a1740', suit2: '#160b26', trunks: '#0b090e', cowl: '#0b090e', cowl2: '#2a1740', cape: '#160b26', capeIn: '#07050a', belt: '#b066ff', emblem: '#b066ff', emblemBat: '#0b090e', skin: '#c9a890', mouth: '#5a2a2a', eye: '#ff4dff', glow: '#b066ff' },
+  },
+  bishop: {
+    // Street bishop: violet-black cassock, gold sash and pectoral cross, cream mitre with a gold band, oak crozier.
+    normal: { robe: '#2a1a3a', robe2: '#1a1026', sash: '#c9a227', mitre: '#f3ead2', mitreBand: '#c9a227', skin: '#f0d2bc', skinDark: '#d2b09a', hair: '#3a2a22', gold: '#ffd21f', wood: '#6a3a18', woodDark: '#3a1e0c', shoe: '#15121a', mouth: '#7a3a38', eye: '#2a1a10', glow: '#ffd21f' },
+    // Alt: cream cassock, purple sash, dark mitre.
+    alt: { robe: '#efe6d2', robe2: '#cfc4aa', sash: '#5a2aa0', mitre: '#2a1a3a', mitreBand: '#ffd21f', skin: '#f0d2bc', skinDark: '#d2b09a', hair: '#3a2a22', gold: '#ffd21f', wood: '#6a3a18', woodDark: '#3a1e0c', shoe: '#15121a', mouth: '#7a3a38', eye: '#2a1a10', glow: '#c79bff' },
+    // Shadow bishop: ash-black vestments, a crozier that glows like a relic.
+    boss: { robe: '#160b26', robe2: '#07050a', sash: '#b066ff', mitre: '#2a1740', mitreBand: '#b066ff', skin: '#d8c2b4', skinDark: '#b89a8a', hair: '#1a1018', gold: '#dfe6f0', wood: '#e0c4ff', woodDark: '#8a4dc0', shoe: '#0b090e', mouth: '#5a2a2a', eye: '#ff4dff', glow: '#b066ff' },
   },
   ninjabot: {
     normal: { chrome1: '#eef3f8', chrome2: '#7d8896', dark: '#1b2129', mesh: '#2a3440', visor: '#39f3ff', blade: '#c9fbff', joint: '#39f3ff' },
@@ -1382,10 +1440,8 @@ function drawKingpin(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: D
     seg(ctx, mix(el, hd, 0.8), mix(el, hd, 0.9), 10.5, T(pal.shirt2));
     dot(ctx, hd, 5.5, T(pal.skin));
     if (!o.tint) {
-      // knuckle ink: card suits across the fingers
-      dot(ctx, add(hd, fwd, 2.2), 1.1, pal.ink);
-      dot(ctx, add(hd, fwd, -1.4), 1.0, pal.ink);
-      dot(ctx, { x: hd.x + 0.4, y: hd.y - 2.6 }, 0.9, pal.ink);
+      // a single faint knuckle tattoo so the hands still read as skin at world resolution
+      dot(ctx, add(hd, fwd, 1.6), 0.9, pal.ink);
       if (front) {
         const w = mix(el, hd, 0.94);
         const fd = dirv(foreA);
@@ -1399,7 +1455,7 @@ function drawKingpin(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: D
   leg(J.kneeL, J.footL, 15, 13, pal.pants2);
   arm(J.shL, J.elL, J.hdL, J.foreL, pal.shirt2, false);
 
-  // broad back and heavy gut: tan overshirt hanging open over a black tee
+  // broad back and heavy gut: white overshirt hanging open over a black tee
   torsoQuad(ctx, J, d.hipW, d.chestW, o.tint ?? perpGradient(ctx, J, d.chestW, [[0, pal.shirt2], [0.4, pal.shirt], [1, pal.shirt]]));
   const vTop = J.neck;
   const gc = add(mix(J.hip, J.neck, 0.35), perp, d.hipW - 3);
@@ -1413,7 +1469,7 @@ function drawKingpin(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: D
   poly([add(vTop, perp, 8), add(vTop, perp, 14), add(cTop, perp, 9)], pal.shirt);
   if (!o.tint) {
     // seersucker stripes and a chest pocket flap on the far panel
-    ctx.strokeStyle = 'rgba(255,255,255,0.14)';
+    ctx.strokeStyle = 'rgba(0,0,0,0.09)';
     ctx.lineWidth = 1;
     ctx.beginPath();
     for (const k of [-0.78, -0.5, 0.88]) {
@@ -1448,12 +1504,11 @@ function drawKingpin(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: D
   if (!o.tint) {
     const n0 = mix(add(J.neck, perp, 1), J.head, 0.35);
     const n1 = mix(add(J.neck, perp, 1), J.head, 0.7);
-    seg(ctx, add(n0, perp, -3.5), add(n1, perp, -1.5), 1.4, pal.ink);
-    dot(ctx, add(n0, perp, 2.5), 1.3, pal.ink);
-    seg(ctx, add(n1, perp, 1.5), add(n1, perp, 4), 1.1, pal.ink);
+    seg(ctx, add(n0, perp, -3), add(n1, perp, -1.5), 1.1, pal.ink);
+    dot(ctx, add(n0, perp, 2.5), 0.9, pal.ink);
   }
 
-  // head: fitted cap, black rectangular glasses, full beard, stud in the ear
+  // head: fitted cap, black rectangular glasses, short dark beard, stud in the ear
   const ang = p.lean + p.head;
   ctx.save();
   ctx.translate(J.head.x, J.head.y);
@@ -1462,13 +1517,14 @@ function drawKingpin(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: D
   dot(ctx, { x: 0, y: 0 }, r, T(pal.skin));
   dot(ctx, { x: 1.5, y: 3.5 }, r * 0.8, T(pal.skin));
   dot(ctx, { x: -r + 1.5, y: 1 }, 2, T(pal.skinDark));
-  // beard: the whole lower face, climbing the back of the jaw into a sideburn
+  // short dark beard on the jaw only — cheeks and the rest of the face stay fair
   ctx.fillStyle = T(pal.beard);
   ctx.beginPath();
-  ctx.arc(0, 0, r + 0.6, 0.38, Math.PI + 0.12);
+  ctx.arc(0, 0, r + 0.3, 0.95, Math.PI - 0.35);
   ctx.closePath();
   ctx.fill();
-  dot(ctx, { x: 1.5, y: 4.6 }, r * 0.8, T(pal.beard));
+  dot(ctx, { x: 1.2, y: 6.6 }, r * 0.42, T(pal.beard));
+  dot(ctx, { x: 4.4, y: 6.2 }, r * 0.28, T(pal.beard));
   // cap crown and brim
   ctx.fillStyle = T(pal.cap);
   ctx.beginPath();
@@ -1483,14 +1539,14 @@ function drawKingpin(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: D
     dot(ctx, { x: 6.2, y: -5.6 }, 1.1, pal.logo);
     // glasses: near lens plus the temple running back to the ear
     ctx.strokeStyle = pal.glasses;
-    ctx.lineWidth = 1.3;
-    ctx.strokeRect(0.8, -2.1, r - 1.4, 3.3);
-    seg(ctx, { x: 0.8, y: -1.2 }, { x: -r + 2.5, y: -0.4 }, 1.2, pal.glasses);
+    ctx.lineWidth = 1.1;
+    ctx.strokeRect(0.8, -2.1, r - 1.4, 3.0);
+    seg(ctx, { x: 0.8, y: -1.2 }, { x: -r + 2.5, y: -0.4 }, 1.0, pal.glasses);
     dot(ctx, { x: r - 4.4, y: -0.4 }, 0.85, '#2a1a10');
     dot(ctx, { x: r - 2.6, y: -1.3 }, 0.6, '#ffffff');
     dot(ctx, { x: r - 1.2, y: 2.2 }, 0.6, pal.ink);
     dot(ctx, { x: -r + 2.4, y: 1.4 }, 0.9, '#e8f0ff');
-    seg(ctx, { x: 4.4, y: 5.2 }, { x: 7.2, y: 4.8 }, 1.3, pal.mouth);
+    seg(ctx, { x: 4.2, y: 5.8 }, { x: 7.0, y: 5.4 }, 1.3, pal.mouth);
   }
   ctx.restore();
 
@@ -1787,12 +1843,106 @@ function drawFiddler(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: D
   if (o.blade && o.toScreen) o.blade(o.toScreen(tip), o.toScreen(add(J.hdR, bd, d.blade * 0.45)));
 }
 
+function drawBishop(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: DrawOpts): void {
+  const T = (c: string): string => o.tint ?? c;
+  const up = J.up;
+  const perp = J.perp;
+  const fwd: V = { x: 1, y: 0 };
+  ctx.lineCap = 'round';
+  const poly = (pts: V[], color: string): void => {
+    ctx.fillStyle = T(color);
+    ctx.beginPath();
+    pts.forEach((q, i) => (i === 0 ? ctx.moveTo(q.x, q.y) : ctx.lineTo(q.x, q.y)));
+    ctx.closePath();
+    ctx.fill();
+  };
+  const leg = (knee: V, foot: V, w: number, col: string): void => {
+    seg(ctx, J.hip, knee, w, T(col));
+    seg(ctx, knee, foot, w * 0.9, T(col));
+    dot(ctx, knee, w * 0.42, T(col));
+    seg(ctx, add(foot, fwd, -2), add(foot, fwd, 6), w * 0.7, T(pal.shoe));
+    dot(ctx, add(foot, fwd, 6), w * 0.3, T(pal.shoe));
+  };
+  const arm = (sh: V, el: V, hd: V, col: string): void => {
+    dot(ctx, add(sh, up, 1), 5.5, T(col));
+    seg(ctx, sh, el, 8.5, T(col));
+    seg(ctx, el, hd, 7.5, T(col));
+    dot(ctx, hd, 4.4, T(pal.skin));
+  };
+
+  // cassock hem behind the legs
+  const hem = add(J.hip, up, -(d.thigh + 6));
+  poly([add(J.hip, perp, -d.hipW - 2), add(J.hip, perp, d.hipW + 2), add(hem, perp, d.hipW + 6), add(hem, perp, -d.hipW - 8)], pal.robe2);
+
+  leg(J.kneeL, J.footL, 10, pal.robe2);
+  arm(J.shL, J.elL, J.hdL, pal.robe2);
+
+  torsoQuad(ctx, J, d.hipW, d.chestW, o.tint ?? perpGradient(ctx, J, d.chestW, [[0, pal.robe2], [0.5, pal.robe], [1, pal.robe]]));
+  // gold sash across the belly
+  const sash = mix(J.hip, J.neck, 0.28);
+  seg(ctx, add(sash, perp, -d.hipW - 1), add(sash, perp, d.hipW + 2), 4.2, T(pal.sash));
+  if (!o.tint) {
+    const xc = add(mix(J.hip, J.neck, 0.68), perp, 1.5);
+    seg(ctx, add(xc, up, 3), add(xc, up, -5), 1.6, pal.gold);
+    seg(ctx, add(xc, perp, -3.2), add(xc, perp, 3.2), 1.6, pal.gold);
+    dot(ctx, add(xc, up, 4.2), 1.6, pal.gold);
+  }
+
+  leg(J.kneeR, J.footR, 11, pal.robe);
+
+  // neck and head under the mitre
+  seg(ctx, add(J.neck, perp, 0.5), J.head, 8, T(pal.skin));
+  const ang = p.lean + p.head;
+  ctx.save();
+  ctx.translate(J.head.x, J.head.y);
+  ctx.rotate(ang);
+  const r = d.headR;
+  dot(ctx, { x: 0, y: 0 }, r, T(pal.skin));
+  dot(ctx, { x: 1.2, y: 3.2 }, r * 0.7, T(pal.skin));
+  // cropped dark hair at the temples
+  ctx.fillStyle = T(pal.hair);
+  ctx.beginPath();
+  ctx.arc(0, -1, r + 0.2, Math.PI + 0.15, -0.15);
+  ctx.closePath();
+  ctx.fill();
+  // mitre: two tall panels with a gold band
+  poly([{ x: -6.4, y: -2 }, { x: -5.2, y: -r - 11 }, { x: 0.4, y: -r - 7 }, { x: 0.6, y: -2 }], pal.mitre);
+  poly([{ x: 0.2, y: -2 }, { x: 0.6, y: -r - 7 }, { x: 6.2, y: -r - 10 }, { x: 6.6, y: -2 }], pal.mitre);
+  seg(ctx, { x: -6.2, y: -2.4 }, { x: 6.4, y: -2.4 }, 2.4, T(pal.mitreBand));
+  if (!o.tint) {
+    dot(ctx, { x: 0.2, y: -r - 4 }, 1.3, pal.gold);
+    dot(ctx, { x: 3.6, y: -1.6 }, 0.9, pal.eye);
+    seg(ctx, { x: 3.8, y: 4.4 }, { x: 6.4, y: 4.0 }, 1.2, pal.mouth);
+  }
+  ctx.restore();
+
+  arm(J.shR, J.elR, J.hdR, pal.robe);
+  // crozier: staff plus a hooked head
+  const cd = dirv(J.foreR + p.weapon);
+  const grip = add(J.hdR, cd, -6);
+  const tip = add(J.hdR, cd, d.blade);
+  const hook = add(tip, { x: cd.y, y: -cd.x }, 8);
+  if (!o.tint && o.motion > 0.3) {
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = 0.3;
+    seg(ctx, grip, tip, 6, pal.glow);
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+  }
+  seg(ctx, grip, tip, 3.2, T(pal.wood));
+  seg(ctx, tip, hook, 3.0, T(pal.wood));
+  dot(ctx, hook, 2.4, T(pal.gold));
+  dot(ctx, grip, 2.2, T(pal.gold));
+  if (o.blade && o.toScreen) o.blade(o.toScreen(hook), o.toScreen(add(J.hdR, cd, d.blade * 0.5)));
+}
+
 const PAINTERS: Record<Archetype, (ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: DrawOpts) => void> = {
   ninja: drawNinja,
   brawler: drawBrawler,
   kingpin: drawKingpin,
   fiddler: drawFiddler,
   bat: drawBat,
+  bishop: drawBishop,
   ninjabot: drawNinjabot,
   clownbot: drawClownbot,
 };
@@ -1803,6 +1953,7 @@ const TRAIL_TINT: Record<Archetype, string> = {
   kingpin: '#f0e6b0',
   fiddler: '#e8c080',
   bat: '#3a4260',
+  bishop: '#c9a227',
   ninjabot: '#39f3ff',
   clownbot: '#ffd21f',
 };
@@ -1816,6 +1967,7 @@ const PORTRAIT: Record<Archetype, { dx: number; dy: number; zoom: number }> = {
   kingpin: { dx: 1, dy: -2, zoom: 0.8 },
   fiddler: { dx: 6, dy: 0, zoom: 0.94 },
   bat: { dx: 3, dy: 5, zoom: 0.92 },
+  bishop: { dx: 2, dy: 6, zoom: 0.86 },
   ninjabot: { dx: 3, dy: 0, zoom: 1 },
   clownbot: { dx: 2, dy: 0, zoom: 0.9 },
 };
