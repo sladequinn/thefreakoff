@@ -1123,6 +1123,37 @@ export class Fighter extends Entity {
         a.playFiddlePluck(12 + Math.floor(Math.random() * 3) * 7);
         this.throwNote(world);
         break;
+      // ---- Batman (no relation)
+      case 'cape_snap':
+        a.playWhiff();
+        p.smoke(this.x - this.facing * 10, this.y + 30 * this.scale, this.z, 4, 'rgba(40,44,60,1)');
+        break;
+      case 'slide_dust':
+        p.dust(this.x, this.z, 8, this.facing);
+        a.playLand();
+        break;
+      case 'glide':
+        a.playDash();
+        a.playVoiceGrunt(this.def.voice, 'hyah');
+        p.smoke(this.x - this.facing * 12, this.y + 40 * this.scale, this.z, 6, 'rgba(40,44,60,1)');
+        break;
+      case 'rang':
+        this.throwRang(world);
+        break;
+      case 'cowl_charge':
+        a.playVoiceGrunt(this.def.voice, 'hah');
+        a.playCharge();
+        p.dust(this.x, this.z, 6, this.facing);
+        p.spawn('flash', this.x, this.y + 60 * this.scale, this.z + 1, 0, 0, 0, 8, 6, '#ffd21f', { size2: 30 });
+        break;
+      case 'cowl_rise':
+        a.playSpecial();
+        a.playShock();
+        world.camera.shake(6, 0, 1, 10);
+        p.ring(this.x, this.z, 10, 80, '#ffd21f', 18);
+        p.smoke(this.x, this.y + 10, this.z, 10, 'rgba(40,44,60,1)');
+        for (let i = 0; i < 8; i++) p.spawn('spark', this.x + (Math.random() - 0.5) * 24, this.y + 40 + Math.random() * 40, this.z + 1, this.facing * (Math.random() * 2), 3 + Math.random() * 4, 0, 18, 2.5, '#ffd21f', { gravity: 0.08 });
+        break;
       // ---- Fiddle Jay
       case 'bow_whip':
         a.playSlash();
@@ -1201,6 +1232,27 @@ export class Fighter extends Entity {
     world.spawnProjectile(note);
     world.audio.playMagic();
     world.particles.text(this.x + this.facing * 24, this.y + 96 * this.scale, this.z, '♪', '#fff3c8', 14);
+  }
+
+  /** Batman's not-a-rang: a spinning bat-shaped blade that curves briefly toward its target before flying straight. */
+  private throwRang(world: World): void {
+    const target = nearestOpponent(this, world);
+    const angle = target ? Math.atan2((target.z - this.z) / 0.6, target.x - this.x) : this.facing > 0 ? 0 : Math.PI;
+    const rang = new Projectile(this, target, this.x + this.facing * 28, this.y + 70 * this.scale, this.z, angle, 5.0, '#ffd21f');
+    rang.kind = 'rang';
+    rang.homingFrames = 24;
+    rang.turnRate = 0.05;
+    rang.life = 100;
+    rang.hitbox.damage = 5;
+    rang.hitbox.knockbackX = 2.6;
+    rang.hitbox.hitstun = 16;
+    rang.hitbox.hitstop = 4;
+    rang.hitbox.spark = 'impact';
+    rang.hitbox.sfx = 'light';
+    rang.hitbox.width = 22;
+    rang.hitbox.height = 20;
+    world.spawnProjectile(rang);
+    world.audio.playShuriken();
   }
 
   // ------------------------------------------------------------------ render

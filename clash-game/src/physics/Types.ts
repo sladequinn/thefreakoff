@@ -113,13 +113,13 @@ export interface CharacterStats {
   jumpPower: number;
 }
 
-export type CharId = 'slade' | 'freckles' | 'whitelie' | 'fiddlejay';
+export type CharId = 'slade' | 'freckles' | 'whitelie' | 'fiddlejay' | 'batman';
 /** Only the two protagonists have story campaigns; the rest of the roster is VS-only. */
 /** Every fighter now has a campaign; the alias is kept for the save file and scene params. */
 export type StoryCharId = CharId;
-export type Archetype = 'ninja' | 'brawler' | 'kingpin' | 'fiddler' | 'ninjabot' | 'clownbot';
+export type Archetype = 'ninja' | 'brawler' | 'kingpin' | 'fiddler' | 'bat' | 'ninjabot' | 'clownbot';
 export type Variant = 'normal' | 'alt' | 'elite' | 'heavy' | 'boss';
-export type VoiceId = 'slade' | 'freckles' | 'whitelie' | 'fiddlejay' | 'ninjabot' | 'clownbot';
+export type VoiceId = 'slade' | 'freckles' | 'whitelie' | 'fiddlejay' | 'batman' | 'ninjabot' | 'clownbot';
 
 export interface CharacterDef {
   id: string;

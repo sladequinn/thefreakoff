@@ -218,6 +218,7 @@ export const SLADE: CharacterDef = {
     freckles: ['Dry your eyes, Freckles. The city was never yours.', 'Your bells rang the whole time. Easy to track.'],
     whitelie: ['Big shirt, bigger target.', 'Platinum dents like anything else.'],
     fiddlejay: ['Nice tune. Shame about the tempo.', 'Your bow is a stick. Mine is a blade.'],
+    batman: ['A cape is not a shadow. Sit down.', 'No relation? No contest.'],
     slade: ['Only one of us is the original.'],
   },
   moveList: [

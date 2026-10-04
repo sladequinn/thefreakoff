@@ -248,6 +248,38 @@ const STORY: Record<StoryCharId, { pre: Page[][]; boss: string[]; ending: Page[]
       { speaker: 'FIDDLE JAY', arch: 'fiddler', text: "Then let's go find out whose. The vault is under this shrine. You bring the bass, mogul. I'll bring the strings." },
     ],
   },
+  batman: {
+    pre: [
+      [
+        { speaker: 'NEO-KASAI, 2089', arch: null, text: 'The Iron Syndicate filed a trademark on "the night" and served the Outskirts with a cease-and-desist. The enforcement division was six hundred Clownbots.' },
+        { speaker: 'BATMAN', arch: 'bat', text: "I'm Batman. No relation. This city needed a bat and the budget needed a smaller one. Somebody is going to learn that the night isn't theirs to copyright." },
+      ],
+      [
+        { speaker: 'BATMAN', arch: 'bat', text: "Pier 9. The crates are stamped with a legal notice: ALL CAPES SUBJECT TO LICENSING. I read it twice. Then I read it to a Clownbot, slowly, with my boot." },
+        { speaker: 'SYNDICATE PA', arch: null, text: 'PIER 9 ALERT. FOREMAN MK-II ONLINE. UNLICENSED VIGILANTE ON THE DOCKS. CAPE IS AN INFRINGING ARTICLE. CONFISCATE.' },
+      ],
+      [
+        { speaker: 'BATMAN', arch: 'bat', text: "The Core. Every bot in here runs the same stolen fight data, and the Ninjabot enforcers move like someone I haven't met yet. A ninja. Smoke. Sigils. I'm going to need a bigger rang." },
+        { speaker: 'SYNDICATE PA', arch: null, text: 'CORE FACILITY LOCKDOWN. INTRUDER: "BATMAN" (NO RELATION). LEGAL HAS BEEN NOTIFIED. PRIORITY: TERMINATE, THEN LITIGATE.' },
+      ],
+      [
+        { speaker: 'BATMAN', arch: 'bat', text: "Rooftops. Finally. This is where a bat belongs. The billboards are all Syndicate ads, and one of them is a picture of me with a red line through it. I'll allow it. It's a good picture." },
+      ],
+      [
+        { speaker: 'BATMAN', arch: 'bat', text: "The Foundry. They're pouring cowls. Dozens of them, grey and dumpy, with ears exactly like mine. So that's how it is. The Syndicate wants its own off-brand bat. Mine's the original off-brand." },
+        { speaker: 'SYNDICATE PA', arch: null, text: 'FOUNDRY BREACH. FOREMAN MK-II REBUILT. ALL LINES: PROTECT THE COWL MOULDS.' },
+      ],
+      [
+        { speaker: 'BATMAN', arch: 'bat', text: "The signal climbs to a mountain shrine. There's a man on the gate dressed in black, wrapped in smoke, with a sword that glows purple. The ninja from the fight data. He looks like he has a trademark too." },
+        { speaker: 'SLADE', arch: 'ninja', text: "You cut through my stolen shadows in a costume from a discount bin. I don't know whether to be insulted or impressed. Show me which, bat." },
+      ],
+    ],
+    boss: ['SLADE: The night belongs to the shadows. You are only wearing one.', "BATMAN: I'm Batman. No relation. The night belongs to whoever shows up."],
+    ending: [
+      { speaker: 'SLADE', arch: 'ninja', text: '…You fight like a man with nothing to prove and no budget to prove it with. Nobody that stubborn works for the Syndicate. Who are you, really?' },
+      { speaker: 'BATMAN', arch: 'bat', text: "Batman. No relation. The vault is under this shrine, and somebody in there is forging both our names. Let's go file a complaint. With our fists." },
+    ],
+  },
 };
 
 type Phase = 'card' | 'play' | 'clear' | 'bossIntro' | 'bossDown' | 'ending' | 'gameover';
@@ -257,6 +289,7 @@ const ARCH_COLOR: Record<Archetype, string> = {
   brawler: '#ece8f0',
   kingpin: '#ffd21f',
   fiddler: '#ffb13b',
+  bat: '#aab3c8',
   ninjabot: '#9fe8ff',
   clownbot: '#ff9a5a',
 };
@@ -265,6 +298,7 @@ const ARCH_BG: Record<Archetype, string> = {
   brawler: '#1a1620',
   kingpin: '#3a2a08',
   fiddler: '#4a1c0a',
+  bat: '#161a2a',
   ninjabot: '#0a2a3a',
   clownbot: '#4a1c0a',
 };

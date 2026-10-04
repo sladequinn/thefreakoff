@@ -11,6 +11,7 @@ const HUD_ACCENT: Record<Archetype, string> = {
   brawler: '#5a5664',
   kingpin: '#6b5a1e',
   fiddler: '#2a5a48',
+  bat: '#3a3f58',
   ninjabot: '#1a5a66',
   clownbot: '#6b3a1a',
 };

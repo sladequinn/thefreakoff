@@ -265,6 +265,7 @@ export const FRECKLES: CharacterDef = {
     slade: ["You can't blink away a broken jaw, Slade.", 'Smoke and mirrors. I brought a fist.'],
     whitelie: ['All that gold and not one true word.', 'Big man, glass chin.'],
     fiddlejay: ['Play something sad for yourself for once.', 'I liked the song. I liked hitting you more.'],
+    batman: ['Pointy ears, glass jaw.', "Go home, bat. Your city doesn't exist."],
     freckles: ['There was only ever room for one of us.'],
   },
   moveList: [

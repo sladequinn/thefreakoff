@@ -23,6 +23,7 @@ const STYLE: Record<CharId, { accent: string; glow: string }> = {
   freckles: { accent: COLORS.bone, glow: COLORS.silver },
   whitelie: { accent: '#ffd21f', glow: '#ffe38a' },
   fiddlejay: { accent: '#ffb13b', glow: '#ffd27a' },
+  batman: { accent: '#8a93a8', glow: '#ffd21f' },
 };
 
 const entry = (id: CharId): RosterEntry => ({ id, def: CHARACTERS[id], ...STYLE[id] });
@@ -30,10 +31,12 @@ const VS_CARDS: RosterEntry[] = VS_ROSTER.map(entry);
 
 
 const SPLASH_FRAMES = 110;
+// Tiles share the row evenly with a fixed gutter, so the layout follows the roster size.
 const TILE_X0 = 36;
-const TILE_STEP = 226;
+const TILE_GAP = 12;
+const TILE_W = Math.floor((CANVAS_WIDTH - TILE_X0 * 2 - TILE_GAP * (VS_ROSTER.length - 1)) / VS_ROSTER.length);
+const TILE_STEP = TILE_W + TILE_GAP;
 const TILE_Y = 66;
-const TILE_W = 210;
 const TILE_H = 190;
 const STORY_CONFIRM_FRAMES = 70;
 
@@ -588,7 +591,7 @@ export class CharacterSelectScene extends Scene {
     ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
     ctx.restore();
 
-    ui.text(ctx, def.name, x + w / 2, y + h - 22, 18, '#ffffff', { stroke: '#000', strokeWidth: 4 });
+    ui.text(ctx, def.name, x + w / 2, y + h - 22, w < 200 ? 16 : 18, '#ffffff', { stroke: '#000', strokeWidth: 4 });
     ui.text(ctx, def.title.toUpperCase(), x + w / 2, y + h - 8, 10, r.glow, { template: FONT_UI });
     const altUnlocked = this.game.save.isAltUnlocked(r.id);
     if (altUnlocked) ui.text(ctx, hovered ? '▲▼ COSTUME' : 'ALT ✓', x + w - 8, y + 22, 9, hovered ? COLORS.hazard : 'rgba(255,255,255,0.45)', { align: 'right', template: FONT_UI });

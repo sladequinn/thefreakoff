@@ -301,6 +301,7 @@ export const WHITE_LIE: CharacterDef = {
     slade: ['All that magic and you still got dropped by a mic.', 'Ninja? I had three of those on payroll.'],
     freckles: ['Cheer up, kid. Everybody loses to me.', 'Tears don\'t stream. Hits do.'],
     fiddlejay: ['Fiddle? Fella, this is a rap city.', 'Your whole career just went out of tune.'],
+    batman: ['No relation? No record deal either.', 'Skinny man in a cape. Dropped like a single.'],
     whitelie: ['Only one of us signed the real contract.'],
   },
   moveList: [

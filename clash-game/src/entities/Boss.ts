@@ -40,7 +40,7 @@ export class Boss extends Fighter {
     if (!this.aura || this.hidden || this.state === FState.DEAD) return;
     const p = world.particles;
     if (this.animTime % 5 === 0) {
-      const color = this.def.archetype === 'ninja' ? '#9d5cff' : this.def.archetype === 'kingpin' ? '#b066ff' : this.def.archetype === 'fiddler' ? '#ff4d6d' : '#ff7a2a';
+      const color = this.def.archetype === 'ninja' ? '#9d5cff' : this.def.archetype === 'kingpin' ? '#b066ff' : this.def.archetype === 'fiddler' ? '#ff4d6d' : this.def.archetype === 'bat' ? '#ffd21f' : '#ff7a2a';
       p.spawn('ember', this.x + (Math.random() - 0.5) * 36, this.y + Math.random() * 90, this.z - 1, 0, 0.8 + Math.random(), 0, 30, 2.4, color, { drag: 0.98 });
     }
     if (this.hyperArmor > 0 && this.animTime % 3 === 0) {

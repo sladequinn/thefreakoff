@@ -17,6 +17,7 @@ const VOICE_PITCH: Record<VoiceId, number> = {
   freckles: 190,
   whitelie: 92,
   fiddlejay: 168,
+  batman: 70,
   ninjabot: 210,
   clownbot: 78,
 };
@@ -103,6 +104,30 @@ const VOICE_TAUNTS: Record<VoiceId, PhoneStep[][]> = {
       { c: 'n', at: 0.34 },
       { v: 'uh', p0: 1.55, p1: 1.3, at: 0.4, dur: 0.16 },
       { c: 'p', at: 0.57 },
+    ],
+  ],
+  batman: [
+    // "I'm... Batman."  (gravel-low, dragged out, a beat of silence before the name)
+    [
+      { v: 'a', v2: 'i', p0: 1.1, p1: 0.95, at: 0.0, dur: 0.2 },
+      { c: 'm', at: 0.22 },
+      { c: 'b', at: 0.5 },
+      { v: 'a', p0: 1.05, p1: 0.95, at: 0.52, dur: 0.16 },
+      { c: 't', at: 0.7 },
+      { c: 'm', at: 0.74 },
+      { v: 'a', v2: 'uh', p0: 0.95, p1: 0.7, at: 0.78, dur: 0.26 },
+      { c: 'n', at: 1.02 },
+    ],
+    // "No relation."
+    [
+      { c: 'n', at: 0 },
+      { v: 'o', v2: 'u', p0: 1.1, p1: 1.0, at: 0.02, dur: 0.18 },
+      { v: 'i', p0: 1.0, p1: 1.0, at: 0.26, dur: 0.08 },
+      { c: 'l', at: 0.34 },
+      { v: 'e', v2: 'i', p0: 1.15, p1: 1.05, at: 0.36, dur: 0.16 },
+      { c: 'sh', at: 0.54 },
+      { v: 'uh', p0: 0.95, p1: 0.7, at: 0.6, dur: 0.2 },
+      { c: 'n', at: 0.8 },
     ],
   ],
   ninjabot: [

@@ -71,6 +71,8 @@ const IDLE: Record<Archetype, Pose> = {
   kingpin: P(0.05, 0.05, 0.5, 1.0, 0.2, 2.2, -0.38, -0.1, 0.38, -0.3, 0, 0.94),
   // Fiddle Jay holds the fiddle up at the chin with the far arm and rests the bow across the strings.
   fiddler: P(0.15, -0.05, 1.45, 0.75, 0.75, 1.97, -0.4, -0.12, 0.45, -0.5, 0, 0.18),
+  // Batman (no relation): tall boxer's guard, both gauntlets up at chin height, cape hanging behind.
+  bat: P(0.08, 0.02, 0.5, 2.0, 0.8, 1.9, -0.3, -0.1, 0.35, -0.35),
   ninjabot: P(0.15, 0, -0.2, 1.1, 0.8, 0.9, -0.3, -0.1, 0.35, -0.4, 0, 0.9),
   clownbot: P(0.08, 0, 0.3, 1.5, 0.5, 1.4, -0.25, -0.1, 0.25, -0.2),
 };
@@ -86,6 +88,7 @@ const GUARD: Record<Archetype, Pose> = {
   brawler: P(0.1, 0.2, 1.0, 2.3, 1.2, 2.2, -0.45, -0.2, 0.4, -0.4),
   kingpin: P(0.05, 0.1, 1.0, 2.0, 1.1, 2.0, -0.38, -0.1, 0.38, -0.3, 0, 0.6),
   fiddler: P(-0.05, 0.1, 1.2, 1.8, 1.0, 1.6, -0.4, -0.2, 0.4, -0.4, 0, -1.0),
+  bat: P(0.0, 0.1, 1.2, 1.8, 1.0, 1.7, -0.35, -0.2, 0.4, -0.4),
   ninjabot: P(-0.05, 0.1, 1.2, 1.6, 1.0, 1.6, -0.4, -0.2, 0.4, -0.4, 0, 1.4),
   clownbot: P(0.05, 0.1, 1.0, 2.0, 1.2, 1.9, -0.3, -0.1, 0.3, -0.2),
 };
@@ -96,6 +99,8 @@ const VICTORY: Record<Archetype, Pose> = {
   // Mic thrust to the sky, far arm spread wide.
   kingpin: P(-0.05, -0.1, -0.6, 0.3, 2.6, 0.3, -0.3, -0.05, 0.3, -0.05, 0, 0.3),
   fiddler: P(0.05, -0.25, 1.45, 0.75, 0.75, 1.97, -0.3, -0.05, 0.3, -0.05, 0, 0.18),
+  // Brooding: chin down, near arm pulling the cape across the chest.
+  bat: P(0.05, 0.18, 0.3, 0.3, 1.2, 2.6, -0.25, -0.05, 0.25, -0.05),
   ninjabot: IDLE.ninjabot,
   clownbot: IDLE.clownbot,
 };
@@ -106,6 +111,7 @@ const NB = IDLE.ninjabot;
 const FB = IDLE.clownbot;
 const KI = IDLE.kingpin;
 const JI = IDLE.fiddler;
+const BA = IDLE.bat;
 
 const MOVE_KEYS: Record<string, Keys> = {
   slade_slash: [
@@ -305,6 +311,51 @@ const MOVE_KEYS: Record<string, Keys> = {
     [37, P(0.7, 0.35, 1.3, 0.2, 1.4, 0.1, 0.8, -1.5, 0.9, -1.4, 0, -1.2)],
     [48, P(0.7, 0.35, 1.3, 0.2, 1.4, 0.1, 0.8, -1.5, 0.9, -1.4, 0, -1.2)],
     [64, KI],
+  ],
+  bat_jab: [
+    [0, BA],
+    [2, P(0.1, 0.02, 0.5, 2.0, 0.4, 2.2, -0.3, -0.1, 0.35, -0.35)],
+    [4, P(0.3, 0.05, 0.5, 2.0, 1.6, 0.05, -0.45, -0.1, 0.5, -0.35)],
+    [8, P(0.3, 0.05, 0.5, 2.0, 1.55, 0.1, -0.45, -0.1, 0.5, -0.35)],
+    [16, BA],
+  ],
+  bat_cross: [
+    [0, BA],
+    [3, P(-0.1, 0, -0.3, 1.8, 0.8, 1.9, -0.35, -0.1, 0.4, -0.35)],
+    [6, P(0.45, 0.1, 1.75, 0.0, 0.6, 2.0, -0.6, -0.05, 0.8, -0.5)],
+    [12, P(0.4, 0.1, 1.7, 0.05, 0.6, 2.0, -0.6, -0.05, 0.8, -0.5)],
+    [20, BA],
+  ],
+  bat_knee: [
+    [0, BA],
+    [3, P(-0.15, -0.05, 1.6, 0.6, 1.6, 0.6, -0.3, -0.1, 0.3, -0.3)],
+    [6, P(0.25, 0.1, 0.4, 1.8, 0.3, 1.8, -0.2, -0.1, 1.9, -2.0)],
+    [10, P(0.25, 0.1, 0.4, 1.8, 0.3, 1.8, -0.2, -0.1, 1.85, -1.95)],
+    [28, BA],
+  ],
+  bat_slide: [
+    [0, P(0.5, 0.1, 0.6, 1.6, 0.6, 1.6, 0.6, -1.4, 0.9, -1.4)],
+    [3, P(-0.6, -0.2, -0.9, 0.4, 0.4, 0.9, 1.65, -0.05, 0.6, -1.7)],
+    [14, P(-0.6, -0.2, -0.9, 0.4, 0.4, 0.9, 1.65, -0.05, 0.6, -1.7)],
+    [34, BA],
+  ],
+  bat_glide: [
+    [0, P(0.0, -0.1, 2.6, 0.2, 2.9, 0.1, 0.3, -0.4, 0.6, -0.9)],
+    [4, P(0.35, 0.15, 2.2, 0.3, 2.6, 0.2, 0.6, -1.2, 1.5, -0.05, 0.3)],
+    [80, P(0.35, 0.15, 2.2, 0.3, 2.6, 0.2, 0.6, -1.2, 1.5, -0.05, 0.3)],
+  ],
+  bat_throw: [
+    [0, BA],
+    [4, P(-0.2, -0.05, 0.5, 2.0, -1.2, 1.0, -0.3, -0.1, 0.35, -0.35)],
+    [9, P(0.35, 0.1, 0.5, 2.0, 1.8, 0.0, -0.5, -0.1, 0.55, -0.35)],
+    [14, P(0.35, 0.1, 0.5, 2.0, 1.75, 0.05, -0.5, -0.1, 0.55, -0.35)],
+    [30, BA],
+  ],
+  bat_rise: [
+    [0, P(0.3, 0.15, 0.6, 1.9, 0.3, 1.0, 0.7, -1.5, 0.9, -1.4)],
+    [3, P(-0.1, -0.25, 0.4, 1.0, 2.9, 0.2, 0.5, -1.0, 1.0, -1.8)],
+    [20, P(-0.1, -0.25, 0.4, 1.0, 2.95, 0.15, 0.5, -1.0, 1.0, -1.8)],
+    [90, P(0.1, -0.1, 0.4, 1.0, 2.6, 0.3, 0.4, -0.8, 0.8, -1.4)],
   ],
   jay_pluck: [
     [0, JI],
@@ -514,6 +565,7 @@ const DIMS: Record<Archetype, Dims> = {
   brawler: { thigh: 24, shin: 24, torso: 31, upper: 15, fore: 15, headR: 8, neck: 10, hipW: 9.5, chestW: 10, blade: 0 },
   kingpin: { thigh: 22, shin: 21, torso: 36, upper: 16, fore: 16, headR: 10, neck: 8, hipW: 15, chestW: 20, blade: 7 },
   fiddler: { thigh: 23, shin: 23, torso: 29, upper: 15, fore: 15, headR: 8.5, neck: 10, hipW: 7.5, chestW: 10, blade: 32 },
+  bat: { thigh: 26, shin: 26, torso: 34, upper: 17, fore: 17, headR: 8, neck: 10, hipW: 6.5, chestW: 9.5, blade: 0 },
   ninjabot: { thigh: 22, shin: 23, torso: 29, upper: 16, fore: 15, headR: 8.5, neck: 11, hipW: 7, chestW: 11, blade: 28 },
   clownbot: { thigh: 19, shin: 20, torso: 34, upper: 16, fore: 17, headR: 8, neck: 10, hipW: 12, chestW: 17, blade: 0 },
 };
@@ -606,6 +658,14 @@ const PALETTES: Record<Archetype, Partial<Record<Variant, Palette>> & { normal: 
     alt: { gi: '#1a1620', giDark: '#0d0b10', pants: '#1a1620', pants2: '#0d0b10', belt: '#ffd21f', skin: '#d9a06c', skinDark: '#b07a4c', hair: '#1a1010', band: '#f2eff5', wood: '#2a1a10', woodDark: '#0d0b10', strings: '#ffd21f', bow: '#d8d0c0', bowHair: '#ffffff', frog: '#ffd21f', eye: '#2a1a10', mouth: '#6b3a2a', glow: '#39f3ff' },
     // Shadow fiddler: ash-black gi, blood-red belt and headband, a charred fiddle strung with light.
     boss: { gi: '#2a2230', giDark: '#17121c', pants: '#120c18', pants2: '#07050a', belt: '#b8102e', skin: '#c9946a', skinDark: '#9a6a44', hair: '#1a1010', band: '#ff4d6d', wood: '#3a1a1a', woodDark: '#1a0a0a', strings: '#ff9ab0', bow: '#4a2a2a', bowHair: '#ff4d6d', frog: '#ff4d6d', eye: '#ff4d6d', mouth: '#6b3a2a', glow: '#ff4d6d' },
+  },
+  bat: {
+    // Off-brand bat: grey suit, dark trunks, cowl, boots and gauntlets, dark cape, yellow belt and oval emblem.
+    normal: { suit: '#5a6478', suit2: '#3c4457', trunks: '#1a1c26', cowl: '#1a1c26', cowl2: '#343a4e', cape: '#30354a', capeIn: '#1a1d2a', belt: '#ffd21f', emblem: '#ffd21f', emblemBat: '#1a1c26', skin: '#e6c2a4', mouth: '#6a3030', eye: '#f6f8ff', glow: '#ffd21f' },
+    // Alt: Saturday-morning blue and grey.
+    alt: { suit: '#8a93a8', suit2: '#5c657a', trunks: '#2a3f8a', cowl: '#2a3f8a', cowl2: '#4a63b8', cape: '#2a3f8a', capeIn: '#1a2a5e', belt: '#ffd21f', emblem: '#ffd21f', emblemBat: '#1a1c26', skin: '#e6c2a4', mouth: '#6a3030', eye: '#f6f8ff', glow: '#9fe8ff' },
+    // Shadow bat: violet-black everything, pink-lit eyes.
+    boss: { suit: '#2a1740', suit2: '#160b26', trunks: '#0b090e', cowl: '#0b090e', cowl2: '#2a1740', cape: '#160b26', capeIn: '#07050a', belt: '#b066ff', emblem: '#b066ff', emblemBat: '#0b090e', skin: '#c9a890', mouth: '#5a2a2a', eye: '#ff4dff', glow: '#b066ff' },
   },
   ninjabot: {
     normal: { chrome1: '#eef3f8', chrome2: '#7d8896', dark: '#1b2129', mesh: '#2a3440', visor: '#39f3ff', blade: '#c9fbff', joint: '#39f3ff' },
@@ -1462,6 +1522,127 @@ function drawKingpin(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: D
   if (o.blade && o.toScreen) o.blade(o.toScreen(headC), o.toScreen(J.hdR));
 }
 
+function drawBat(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: DrawOpts): void {
+  const T = (c: string): string => o.tint ?? c;
+  const t = o.time;
+  const up = J.up;
+  const perp = J.perp;
+  const fwd: V = { x: 1, y: 0 };
+  ctx.lineCap = 'round';
+  const poly = (pts: V[], color: string): void => {
+    ctx.fillStyle = T(color);
+    ctx.beginPath();
+    pts.forEach((q, i) => (i === 0 ? ctx.moveTo(q.x, q.y) : ctx.lineTo(q.x, q.y)));
+    ctx.closePath();
+    ctx.fill();
+  };
+  const leg = (knee: V, foot: V, w: number, col: string): void => {
+    seg(ctx, J.hip, knee, w, T(col));
+    seg(ctx, knee, foot, w * 0.85, T(col));
+    dot(ctx, knee, w * 0.42, T(col));
+    // tall boot to just under the knee
+    seg(ctx, mix(knee, foot, 0.42), foot, w * 0.95, T(pal.trunks));
+    seg(ctx, add(foot, fwd, -3), add(foot, fwd, 7), w * 0.7, T(pal.trunks));
+    dot(ctx, add(foot, fwd, 7), w * 0.32, T(pal.trunks));
+  };
+  const arm = (sh: V, el: V, hd: V, foreA: number, col: string): void => {
+    dot(ctx, add(sh, up, 1), 4.5, T(col));
+    seg(ctx, sh, el, 7, T(col));
+    seg(ctx, el, hd, 6.5, T(col));
+    // gauntlet with its little fins
+    seg(ctx, mix(el, hd, 0.5), hd, 7.5, T(pal.trunks));
+    dot(ctx, hd, 4.2, T(pal.trunks));
+    if (!o.tint) {
+      const fd = dirv(foreA);
+      const pd = { x: fd.y, y: -fd.x };
+      const w0 = mix(el, hd, 0.58);
+      const w1 = mix(el, hd, 0.76);
+      seg(ctx, add(w0, pd, -3.5), add(w0, pd, -6), 1.3, pal.cowl2);
+      seg(ctx, add(w1, pd, -3.5), add(w1, pd, -6), 1.3, pal.cowl2);
+    }
+  };
+
+  // cape: hangs from the shoulders, trails behind and whips wide with speed, scalloped hem
+  const sh = add(J.neck, up, -2.5);
+  const billow = 13 + o.motion * 34 + Math.sin(t * 0.13) * 1.5;
+  const hem = add(J.hip, up, -(d.thigh * 0.95 - o.motion * 10));
+  const flutter = Math.sin(t * 0.21) * 1.5;
+  const capePts: V[] = [add(sh, perp, 7), add(sh, perp, -9)];
+  const back = { x: hem.x - billow - 8, y: hem.y + flutter - o.motion * 8 };
+  const front = add(hem, perp, 3);
+  const n = 5;
+  for (let i = 0; i <= n; i++) {
+    const q = mix(back, front, i / n);
+    capePts.push({ x: q.x, y: q.y + (i % 2 ? -5 : 1) });
+  }
+  const capeFill = o.tint ?? perpGradient(ctx, J, 14, [[0, pal.capeIn], [0.6, pal.cape], [1, pal.cape]]);
+  ctx.fillStyle = capeFill;
+  ctx.beginPath();
+  capePts.forEach((q, i) => (i === 0 ? ctx.moveTo(q.x, q.y) : ctx.lineTo(q.x, q.y)));
+  ctx.closePath();
+  ctx.fill();
+
+  // back limbs
+  leg(J.kneeL, J.footL, 8.5, pal.suit2);
+  arm(J.shL, J.elL, J.hdL, J.foreL, pal.suit2);
+
+  // narrow torso, trunks, belt and the oval emblem
+  torsoQuad(ctx, J, d.hipW, d.chestW, o.tint ?? perpGradient(ctx, J, d.chestW, [[0, pal.suit2], [0.45, pal.suit], [1, pal.suit]]));
+  const waist = mix(J.hip, J.neck, 0.24);
+  poly([add(J.hip, perp, -d.hipW - 0.5), add(J.hip, perp, d.hipW + 0.5), add(waist, perp, d.hipW + 0.2), add(waist, perp, -d.hipW - 0.2)], pal.trunks);
+  seg(ctx, add(waist, perp, -d.hipW - 1), add(waist, perp, d.hipW + 1), 3, T(pal.belt));
+  if (!o.tint) {
+    dot(ctx, add(waist, perp, 1), 1.6, pal.trunks);
+    dot(ctx, add(waist, perp, -4.5), 1.1, pal.trunks);
+    dot(ctx, add(waist, perp, 5.5), 1.1, pal.trunks);
+    // yellow oval with a dumpy little bat silhouette in it
+    const ec = add(mix(J.hip, J.neck, 0.72), perp, 1.5);
+    ctx.save();
+    ctx.translate(ec.x, ec.y);
+    ctx.rotate(Math.atan2(up.y, up.x) + Math.PI / 2);
+    ctx.fillStyle = pal.emblem;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, 5.2, 3.2, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = pal.emblemBat;
+    ctx.beginPath();
+    const bat: [number, number][] = [[-4, 0.2], [-2.6, -1.1], [-1.1, -0.4], [0, -1.7], [1.1, -0.4], [2.6, -1.1], [4, 0.2], [2, 1.3], [0.7, 0.7], [0, 1.6], [-0.7, 0.7], [-2, 1.3]];
+    bat.forEach(([x, y], i) => (i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y)));
+    ctx.closePath();
+    ctx.fill();
+    ctx.restore();
+  }
+
+  // front leg
+  leg(J.kneeR, J.footR, 9, pal.suit);
+
+  // cowled head with two too-long ears, exposed jaw and a scowl
+  seg(ctx, add(J.neck, perp, 0.5), J.head, 8, T(pal.cowl));
+  const ang = p.lean + p.head;
+  ctx.save();
+  ctx.translate(J.head.x, J.head.y);
+  ctx.rotate(ang);
+  const r = d.headR;
+  dot(ctx, { x: 0, y: 0 }, r, T(pal.cowl));
+  poly([{ x: -6.5, y: -r + 3 }, { x: -5.5, y: -r - 8.5 }, { x: -2, y: -r + 1 }], pal.cowl);
+  poly([{ x: 1, y: -r + 1 }, { x: 3.8, y: -r - 6.5 }, { x: 5.5, y: -r + 2.5 }], pal.cowl);
+  // exposed lower face
+  dot(ctx, { x: 3.4, y: 3.8 }, r * 0.56, T(pal.skin));
+  dot(ctx, { x: 4.8, y: 1.8 }, r * 0.42, T(pal.skin));
+  if (!o.tint) {
+    dot(ctx, { x: -1.5, y: -r + 3.5 }, 1.8, 'rgba(255,255,255,0.14)');
+    seg(ctx, { x: -5, y: -r + 2 }, { x: -2.5, y: -r + 0.5 }, 0.8, pal.cowl2);
+    // one narrowed white eye slit
+    poly([{ x: 1.6, y: -2.8 }, { x: 6.6, y: -3.6 }, { x: 6.9, y: -1.7 }, { x: 2.2, y: -1.0 }], pal.eye);
+    seg(ctx, { x: 3.4, y: 4.6 }, { x: 6.4, y: 4.1 }, 1.2, pal.mouth);
+    dot(ctx, { x: 5.6, y: 3.0 }, 0.5, pal.mouth);
+  }
+  ctx.restore();
+
+  // front arm
+  arm(J.shR, J.elR, J.hdR, J.foreR, pal.suit);
+}
+
 function drawFiddler(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: DrawOpts): void {
   const T = (c: string): string => o.tint ?? c;
   const t = o.time;
@@ -1611,6 +1792,7 @@ const PAINTERS: Record<Archetype, (ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal:
   brawler: drawBrawler,
   kingpin: drawKingpin,
   fiddler: drawFiddler,
+  bat: drawBat,
   ninjabot: drawNinjabot,
   clownbot: drawClownbot,
 };
@@ -1620,6 +1802,7 @@ const TRAIL_TINT: Record<Archetype, string> = {
   brawler: '#d8d0e0',
   kingpin: '#f0e6b0',
   fiddler: '#e8c080',
+  bat: '#3a4260',
   ninjabot: '#39f3ff',
   clownbot: '#ffd21f',
 };
@@ -1632,6 +1815,7 @@ const PORTRAIT: Record<Archetype, { dx: number; dy: number; zoom: number }> = {
   brawler: { dx: 2, dy: 1, zoom: 1 },
   kingpin: { dx: 1, dy: -2, zoom: 0.8 },
   fiddler: { dx: 6, dy: 0, zoom: 0.94 },
+  bat: { dx: 3, dy: 5, zoom: 0.92 },
   ninjabot: { dx: 3, dy: 0, zoom: 1 },
   clownbot: { dx: 2, dy: 0, zoom: 0.9 },
 };
@@ -1855,6 +2039,32 @@ export class SpriteRenderer {
     ctx.beginPath();
     ctx.arc(0, 0, 1.8, 0, Math.PI * 2);
     ctx.fill();
+    ctx.restore();
+  }
+
+  /** Batman's not-a-rang: a spinning yellow bat-wing blade with a dark glow trail. */
+  drawRang(ctx: Ctx, x: number, y: number, spin: number, color: string): void {
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.globalCompositeOperation = 'lighter';
+    const g = ctx.createRadialGradient(0, 0, 0, 0, 0, 14);
+    g.addColorStop(0, color);
+    g.addColorStop(1, 'rgba(0,0,0,0)');
+    ctx.fillStyle = g;
+    ctx.globalAlpha = 0.6;
+    ctx.fillRect(-14, -14, 28, 28);
+    ctx.globalAlpha = 1;
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.rotate(spin);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    const wing: [number, number][] = [[-11, 1], [-7, -3], [-3, -1], [0, -4.5], [3, -1], [7, -3], [11, 1], [5.5, 3.5], [2, 2], [0, 4.5], [-2, 2], [-5.5, 3.5]];
+    wing.forEach(([wx, wy], i) => (i === 0 ? ctx.moveTo(wx, wy) : ctx.lineTo(wx, wy)));
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#1a1c26';
+    ctx.lineWidth = 1.4;
+    ctx.stroke();
     ctx.restore();
   }
 

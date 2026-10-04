@@ -1,4 +1,5 @@
 import type { CharId, CharacterDef, StoryCharId } from '../physics/Types';
+import { BATMAN } from './Batman';
 import { FIDDLE_JAY } from './FiddleJay';
 import { FRECKLES } from './Freckles';
 import { SLADE } from './Slade';
@@ -9,10 +10,11 @@ export const CHARACTERS: Record<CharId, CharacterDef> = {
   freckles: FRECKLES,
   whitelie: WHITE_LIE,
   fiddlejay: FIDDLE_JAY,
+  batman: BATMAN,
 };
 
-export const STORY_ROSTER: StoryCharId[] = ['slade', 'freckles', 'whitelie', 'fiddlejay'];
-export const VS_ROSTER: CharId[] = ['slade', 'freckles', 'whitelie', 'fiddlejay'];
+export const STORY_ROSTER: StoryCharId[] = ['slade', 'freckles', 'whitelie', 'fiddlejay', 'batman'];
+export const VS_ROSTER: CharId[] = ['slade', 'freckles', 'whitelie', 'fiddlejay', 'batman'];
 
 export const charDef = (id: CharId): CharacterDef => CHARACTERS[id];
 

@@ -54,7 +54,7 @@ export class Projectile extends Entity {
   readonly owner: Fighter;
   target: Fighter | null;
   deflected = false;
-  kind: 'shuriken' | 'note' = 'shuriken';
+  kind: 'shuriken' | 'note' | 'rang' = 'shuriken';
   private age = 0;
 
   constructor(owner: Fighter, target: Fighter | null, x: number, y: number, z: number, angle: number, speed: number, color: string) {
@@ -117,6 +117,8 @@ export class Projectile extends Entity {
       // rides a sine wave like a note on a stave, leaving a soft trail
       this.y += Math.cos(this.age * 0.18) * 1.1;
       if (world.frame % 3 === 0) world.particles.spawn('ember', this.x, this.y, this.z, -this.vx * 0.08, 0.2, 0, 16, 2, this.age % 6 < 3 ? this.color : '#fff3c8');
+    } else if (this.kind === 'rang') {
+      if (world.frame % 3 === 0) world.particles.spawn('ember', this.x, this.y, this.z, -this.vx * 0.06, 0, 0, 12, 1.8, this.color);
     } else if (world.frame % 2 === 0) {
       world.particles.spawn('ember', this.x, this.y, this.z, -this.vx * 0.05, 0, 0, 14, 2.2, this.color);
     }
@@ -126,6 +128,7 @@ export class Projectile extends Entity {
 
   draw(ctx: CanvasRenderingContext2D, view: RenderView): void {
     if (this.kind === 'note') view.sprites.drawNote(ctx, this.screenX(view), this.screenY(view), this.age, this.color);
+    else if (this.kind === 'rang') view.sprites.drawRang(ctx, this.screenX(view), this.screenY(view), this.spin, this.color);
     else view.sprites.drawShuriken(ctx, this.screenX(view), this.screenY(view), this.spin, this.color);
   }
 

@@ -52,4 +52,13 @@ export const ROUTES: Record<CharId, RouteDef> = {
     midBoss: 'SHOGUN-X',
     story: 'Every bot in the city moves to a rhythm sampled from your fiddle. Follow the signal to the label that pressed it and the mogul who signed it.',
   },
+  batman: {
+    foes: 'clownbot',
+    mix: 'ninjabot',
+    foesLabel: 'CLOWNBOTS + NINJABOT ENFORCERS',
+    boss: 'slade',
+    label: 'BATMAN ROUTE · NO RELATION',
+    midBoss: 'FOREMAN MK-II',
+    story: 'The Syndicate trademarked the night and sent a cease-and-desist with an army of Clownbots attached. Prove the city needs a bat. Any bat. Legally distinct.',
+  },
 };
