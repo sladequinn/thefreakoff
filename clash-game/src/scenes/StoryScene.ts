@@ -227,7 +227,7 @@ export class StoryScene extends CombatScene {
   }
 
   enter(): void {
-    this.audio.startMusic(this.stage.music);
+    this.audio.startMusic(this.stage.music, this.theme);
   }
 
   exit(): void {
@@ -362,7 +362,7 @@ export class StoryScene extends CombatScene {
       if (variant === 'boss') {
         this.midBoss = e;
         this.midBossTimer = 0;
-        this.audio.startMusic('boss');
+        this.audio.startMusic('boss', this.theme);
       }
     });
     this.audio.playWarning();
@@ -395,7 +395,7 @@ export class StoryScene extends CombatScene {
         this.waveActive = false;
         if (this.midBoss) {
           this.midBoss = null;
-          this.audio.startMusic(this.stage.music);
+          this.audio.startMusic(this.stage.music, this.theme);
         }
         cam.unlock();
         this.waveIndex++;
@@ -451,7 +451,7 @@ export class StoryScene extends CombatScene {
     if (ONE_UP_AFTER.has(this.stageIndex)) p.lives++;
     this.stageIndex++;
     this.setupStage(this.stageIndex);
-    this.audio.startMusic(this.stage.music);
+    this.audio.startMusic(this.stage.music, this.theme);
     this.openCard(STORY[this.params.char].pre[this.stageIndex]);
   }
 
@@ -507,7 +507,7 @@ export class StoryScene extends CombatScene {
         this.updatePlay();
         break;
       case 'bossIntro':
-        if (this.phaseTimer === 1) this.audio.playVoiceGrunt(this.boss!.def.voice, 'hah');
+        if (this.phaseTimer === 1) this.audio.playTaunt(this.boss!.def.voice, 0);
         if (this.phaseTimer > 230 || (this.phaseTimer > 40 && this.game.input.menu().confirm)) {
           this.boss!.setState(FState.IDLE);
           this.player.human.enabled = true;

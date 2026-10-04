@@ -163,7 +163,7 @@ export class CharacterSelectScene extends Scene {
         c.lockT = 0;
         this.flash = 10;
         audio.playConfirm();
-        audio.playVoiceGrunt(this.roster[c.index].def.voice, 'hah');
+        audio.playTaunt(this.roster[c.index].def.voice, 0);
         if (c.who === 'CPU') return;
       }
     }

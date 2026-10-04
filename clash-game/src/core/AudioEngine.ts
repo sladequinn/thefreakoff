@@ -1,4 +1,5 @@
 import type { VoiceId } from '../physics/Types';
+import type { StageTheme } from '../rendering/Renderer';
 
 type Formant = [number, number, number];
 
@@ -22,6 +23,125 @@ const VOICE_PITCH: Record<VoiceId, number> = {
 
 export type GruntType = 'hah' | 'take' | 'pain' | 'ko' | 'hyah';
 export type MusicTrack = 'title' | 'stage' | 'harbor' | 'facility' | 'skyline' | 'foundry' | 'boss' | 'versus' | 'victory';
+
+type Consonant = 'h' | 't' | 'k' | 's' | 'th' | 'y' | 'sh' | 'b' | 'p' | 'm' | 'n' | 'l';
+/** One step of a scripted taunt: a consonant burst, or a vowel with pitch (relative to the voice) and length. */
+type PhoneStep = { c: Consonant; at: number } | { v: string; v2?: string; p0: number; p1: number; at: number; dur: number };
+
+/** Character catch-phrases built from the same formant synth as the grunts. Times are seconds from the start. */
+const VOICE_TAUNTS: Record<VoiceId, PhoneStep[][]> = {
+  slade: [
+    // "Shadow step!"
+    [
+      { c: 'sh', at: 0 },
+      { v: 'a', p0: 1.3, p1: 1.2, at: 0.08, dur: 0.12 },
+      { c: 't', at: 0.2 },
+      { v: 'o', p0: 1.15, p1: 1.0, at: 0.22, dur: 0.14 },
+      { c: 's', at: 0.38 },
+      { c: 't', at: 0.47 },
+      { v: 'e', p0: 1.45, p1: 1.1, at: 0.49, dur: 0.16 },
+      { c: 'p', at: 0.66 },
+    ],
+    // "Too slow."
+    [
+      { c: 't', at: 0 },
+      { v: 'u', p0: 1.35, p1: 1.3, at: 0.02, dur: 0.16 },
+      { c: 's', at: 0.22 },
+      { c: 'l', at: 0.3 },
+      { v: 'o', v2: 'u', p0: 1.2, p1: 0.85, at: 0.32, dur: 0.3 },
+    ],
+  ],
+  freckles: [
+    // "Boo... hoo."  (a sob, pitched down and dragged)
+    [
+      { c: 'b', at: 0 },
+      { v: 'u', p0: 1.4, p1: 1.0, at: 0.02, dur: 0.3 },
+      { c: 'h', at: 0.42 },
+      { v: 'u', v2: 'o', p0: 1.25, p1: 0.7, at: 0.45, dur: 0.38 },
+    ],
+    // "Why me..."
+    [
+      { c: 'y', at: 0 },
+      { v: 'a', v2: 'i', p0: 1.5, p1: 1.25, at: 0.0, dur: 0.22 },
+      { c: 'm', at: 0.26 },
+      { v: 'i', p0: 1.2, p1: 0.75, at: 0.3, dur: 0.34 },
+    ],
+  ],
+  whitelie: [
+    // "Platinum."
+    [
+      { c: 'p', at: 0 },
+      { c: 'l', at: 0.03 },
+      { v: 'a', p0: 1.15, p1: 1.1, at: 0.06, dur: 0.16 },
+      { c: 't', at: 0.24 },
+      { v: 'i', p0: 1.1, p1: 1.0, at: 0.26, dur: 0.1 },
+      { c: 'n', at: 0.38 },
+      { v: 'uh', v2: 'u', p0: 1.0, p1: 0.8, at: 0.4, dur: 0.24 },
+      { c: 'm', at: 0.6 },
+    ],
+    // "Pay up."
+    [
+      { c: 'p', at: 0 },
+      { v: 'e', v2: 'i', p0: 1.2, p1: 1.1, at: 0.02, dur: 0.2 },
+      { v: 'uh', p0: 1.0, p1: 0.75, at: 0.3, dur: 0.18 },
+      { c: 'p', at: 0.48 },
+    ],
+  ],
+  fiddlejay: [
+    // "Yee-haw!"
+    [
+      { c: 'y', at: 0 },
+      { v: 'i', v2: 'e', p0: 1.4, p1: 1.7, at: 0.0, dur: 0.18 },
+      { c: 'h', at: 0.2 },
+      { v: 'a', v2: 'o', p0: 1.75, p1: 1.0, at: 0.23, dur: 0.3 },
+    ],
+    // "Rosin up!"
+    [
+      { v: 'o', p0: 1.3, p1: 1.25, at: 0.0, dur: 0.14 },
+      { c: 's', at: 0.16 },
+      { v: 'i', p0: 1.35, p1: 1.2, at: 0.24, dur: 0.1 },
+      { c: 'n', at: 0.34 },
+      { v: 'uh', p0: 1.55, p1: 1.3, at: 0.4, dur: 0.16 },
+      { c: 'p', at: 0.57 },
+    ],
+  ],
+  ninjabot: [
+    // "Target locked"
+    [
+      { c: 't', at: 0 },
+      { v: 'a', p0: 1.2, p1: 1.2, at: 0.02, dur: 0.1 },
+      { c: 'k', at: 0.14 },
+      { v: 'e', p0: 1.1, p1: 1.1, at: 0.16, dur: 0.09 },
+      { c: 't', at: 0.27 },
+      { c: 'l', at: 0.34 },
+      { v: 'o', p0: 1.0, p1: 1.0, at: 0.36, dur: 0.12 },
+      { c: 'k', at: 0.5 },
+      { c: 't', at: 0.56 },
+    ],
+  ],
+  clownbot: [
+    // "Honk honk"
+    [
+      { c: 'h', at: 0 },
+      { v: 'o', p0: 1.5, p1: 1.2, at: 0.02, dur: 0.12 },
+      { c: 'n', at: 0.14 },
+      { c: 'k', at: 0.2 },
+      { c: 'h', at: 0.3 },
+      { v: 'o', p0: 1.3, p1: 1.0, at: 0.32, dur: 0.14 },
+      { c: 'n', at: 0.46 },
+      { c: 'k', at: 0.52 },
+    ],
+  ],
+};
+
+/** Hz offsets of the open-string style voicings Fiddle Jay plays, per riff, relative to D4. */
+const FIDDLE_RIFFS: number[][] = [
+  [0, 7, 12, 16], // D A D F#
+  [3, 7, 10, 15], // F A C F
+  [5, 9, 12, 17], // G B D G
+  [0, 7, 12, 19], // D A D A (finale)
+];
+const FIDDLE_ROOT = 293.66;
 
 interface TrackDef {
   bpm: number;
@@ -187,8 +307,11 @@ export class AudioEngine {
       this.sfxBus.gain.value = this.sfxOn ? AudioEngine.SFX_LEVEL : 0;
       this.musicBus = this.ctx.createGain();
       this.musicBus.gain.value = this.musicOn ? AudioEngine.MUSIC_LEVEL : 0;
+      this.ambBus = this.ctx.createGain();
+      this.ambBus.gain.value = this.sfxOn ? AudioEngine.AMB_LEVEL : 0;
       this.sfxBus.connect(this.comp);
       this.musicBus.connect(this.comp);
+      this.ambBus.connect(this.comp);
       this.comp.connect(this.master);
       this.master.connect(this.ctx.destination);
       const len = this.ctx.sampleRate * 1.5;
@@ -197,8 +320,10 @@ export class AudioEngine {
       for (let i = 0; i < len; i++) data[i] = Math.random() * 2 - 1;
       if (this.trackName) {
         const t = this.trackName;
+        const amb = this.ambTheme;
         this.trackName = null;
-        this.startMusic(t);
+        this.ambTheme = null;
+        this.startMusic(t, amb ?? undefined);
       }
     }
     if (this.ctx.state === 'suspended') void this.ctx.resume();
@@ -212,6 +337,8 @@ export class AudioEngine {
 
   private static readonly SFX_LEVEL = 0.9;
   private static readonly MUSIC_LEVEL = 0.22;
+  private static readonly AMB_LEVEL = 0.16;
+  private ambBus!: GainNode;
   musicOn = true;
   sfxOn = true;
 
@@ -222,7 +349,9 @@ export class AudioEngine {
 
   setSfxEnabled(on: boolean): void {
     this.sfxOn = on;
-    if (this.ctx) this.sfxBus.gain.setTargetAtTime(on ? AudioEngine.SFX_LEVEL : 0, this.ctx.currentTime, 0.03);
+    if (!this.ctx) return;
+    this.sfxBus.gain.setTargetAtTime(on ? AudioEngine.SFX_LEVEL : 0, this.ctx.currentTime, 0.03);
+    this.ambBus.gain.setTargetAtTime(on ? AudioEngine.AMB_LEVEL : 0, this.ctx.currentTime, 0.03);
   }
 
   /** Prevents the same effect stacking into a wall of noise when many hits land on one frame. */
@@ -568,7 +697,7 @@ export class AudioEngine {
     vib.stop(t + dur + 0.05);
   }
 
-  private consonant(t: number, kind: 'h' | 't' | 'k' | 's' | 'th' | 'y', vol: number): void {
+  private consonant(t: number, kind: Consonant, vol: number): void {
     switch (kind) {
       case 'h':
         this.noise(0.06, 'bandpass', 1500, 1200, 1, vol * 0.5, t);
@@ -582,12 +711,270 @@ export class AudioEngine {
       case 's':
         this.noise(0.12, 'highpass', 5500, 6000, 1, vol * 0.45, t, this.sfxBus, 0.01);
         break;
+      case 'sh':
+        this.noise(0.1, 'bandpass', 3200, 2600, 2, vol * 0.5, t, this.sfxBus, 0.01);
+        break;
       case 'th':
         this.noise(0.04, 'bandpass', 4500, 4000, 1, vol * 0.3, t);
+        break;
+      case 'b':
+      case 'p':
+        this.noise(0.02, 'lowpass', 900, 300, 1, vol * (kind === 'b' ? 0.7 : 0.9), t, this.sfxBus, 0.001);
+        this.tone('sine', 160, 90, 0.03, vol * 0.3, t);
+        break;
+      case 'm':
+      case 'n':
+        this.tone('sine', kind === 'm' ? 180 : 230, kind === 'm' ? 150 : 200, 0.07, vol * 0.45, t);
+        break;
+      case 'l':
+        this.tone('triangle', 260, 320, 0.04, vol * 0.3, t);
         break;
       case 'y':
         break;
     }
+  }
+
+  /** A scripted catch-phrase for the character ("Shadow step!", "Yee-haw!", "Platinum."). */
+  playTaunt(char: VoiceId, index?: number): void {
+    if (!this.ctx || !this.throttle(`taunt-${char}`, 700)) return;
+    const lines = VOICE_TAUNTS[char];
+    const script = lines[(index ?? Math.floor(Math.random() * lines.length)) % lines.length];
+    const robot = char === 'ninjabot' || char === 'clownbot';
+    const p = VOICE_PITCH[char] * (0.97 + Math.random() * 0.06);
+    const t0 = this.now + 0.005;
+    const vol = robot ? 0.17 : 0.24;
+    for (const step of script) {
+      if ('c' in step) this.consonant(t0 + step.at, step.c, vol);
+      else this.syllable(t0 + step.at, p * step.p0, p * step.p1, step.dur, VOWELS[step.v], step.v2 ? VOWELS[step.v2] : null, vol, robot);
+    }
+  }
+
+  // ---------------------------------------------------------------- fiddle
+
+  /** A bowed string: sawtooth through two body resonances with slow vibrato. */
+  private bowed(t: number, hz: number, dur: number, vol: number, dest: AudioNode = this.sfxBus): void {
+    const ctx = this.ctx!;
+    const src = ctx.createOscillator();
+    src.type = 'sawtooth';
+    src.frequency.setValueAtTime(hz * 0.985, t);
+    src.frequency.exponentialRampToValueAtTime(hz, t + 0.04);
+    const vib = ctx.createOscillator();
+    vib.frequency.value = 6.2;
+    const vibG = ctx.createGain();
+    vibG.gain.setValueAtTime(0, t);
+    vibG.gain.linearRampToValueAtTime(hz * 0.012, t + dur * 0.5);
+    vib.connect(vibG);
+    vibG.connect(src.frequency);
+    const out = ctx.createGain();
+    out.gain.setValueAtTime(0.0001, t);
+    out.gain.linearRampToValueAtTime(vol, t + 0.035);
+    out.gain.setValueAtTime(vol, t + dur * 0.7);
+    out.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    out.connect(dest);
+    for (const [f, q, w] of [
+      [280, 2.5, 1.0],
+      [2400, 1.6, 0.6],
+      [hz * 2, 6, 0.35],
+    ] as const) {
+      const bp = ctx.createBiquadFilter();
+      bp.type = 'bandpass';
+      bp.frequency.value = f;
+      bp.Q.value = q;
+      const g = ctx.createGain();
+      g.gain.value = w * 1.8;
+      src.connect(bp);
+      bp.connect(g);
+      g.connect(out);
+    }
+    this.noise(0.05, 'highpass', 4000, 6000, 1, vol * 0.25, t, dest, 0.004);
+    src.start(t);
+    vib.start(t);
+    src.stop(t + dur + 0.05);
+    vib.stop(t + dur + 0.05);
+  }
+
+  /** Four-note fiddle arpeggio for Fiddle Jay's riffs; `index` picks the voicing so the special climbs. */
+  playFiddleRiff(index = 0): void {
+    if (!this.ctx || !this.throttle('fiddle', 90)) return;
+    const notes = FIDDLE_RIFFS[index % FIDDLE_RIFFS.length];
+    const t = this.now;
+    const gap = 0.07;
+    notes.forEach((semi, i) => {
+      const hz = FIDDLE_ROOT * Math.pow(2, semi / 12);
+      this.bowed(t + i * gap, hz, i === notes.length - 1 ? 0.42 : 0.2, 0.3);
+    });
+    // A double-stop drone under the run.
+    this.bowed(t, FIDDLE_ROOT / 2, gap * 4 + 0.3, 0.14);
+  }
+
+  /** A single plucked string, used when a note is launched. */
+  playFiddlePluck(semi = 12): void {
+    if (!this.ctx || !this.throttle('pluck', 40)) return;
+    const hz = FIDDLE_ROOT * Math.pow(2, semi / 12);
+    const t = this.now;
+    this.tone('triangle', hz, hz * 0.995, 0.34, 0.26, t);
+    this.tone('sawtooth', hz * 2, hz * 2, 0.12, 0.08, t);
+    this.noise(0.02, 'highpass', 5000, 5000, 1, 0.14, t, this.sfxBus, 0.001);
+  }
+
+  // ---------------------------------------------------------------- ambience
+
+  private ambNodes: AudioNode[] = [];
+  private ambTimers: number[] = [];
+  private ambTheme: StageTheme | null = null;
+
+  /** A looping noise bed through a filter whose cutoff drifts with a slow LFO. */
+  private ambBed(filter: BiquadFilterType, f: number, q: number, vol: number, lfoHz: number, lfoDepth: number): void {
+    const ctx = this.ctx!;
+    const src = ctx.createBufferSource();
+    src.buffer = this.noiseBuf;
+    src.loop = true;
+    const bq = ctx.createBiquadFilter();
+    bq.type = filter;
+    bq.frequency.value = f;
+    bq.Q.value = q;
+    const lfo = ctx.createOscillator();
+    lfo.frequency.value = lfoHz;
+    const lfoG = ctx.createGain();
+    lfoG.gain.value = lfoDepth;
+    lfo.connect(lfoG);
+    lfoG.connect(bq.frequency);
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, this.now);
+    g.gain.linearRampToValueAtTime(vol, this.now + 1.5);
+    src.connect(bq);
+    bq.connect(g);
+    g.connect(this.ambBus);
+    src.start();
+    lfo.start();
+    this.ambNodes.push(src, lfo, g);
+  }
+
+  private ambDrone(type: OscillatorType, hz: number, vol: number, detune = 0): void {
+    const ctx = this.ctx!;
+    const o = ctx.createOscillator();
+    o.type = type;
+    o.frequency.value = hz;
+    o.detune.value = detune;
+    const lp = ctx.createBiquadFilter();
+    lp.type = 'lowpass';
+    lp.frequency.value = hz * 4;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0.0001, this.now);
+    g.gain.linearRampToValueAtTime(vol, this.now + 2);
+    o.connect(lp);
+    lp.connect(g);
+    g.connect(this.ambBus);
+    o.start();
+    this.ambNodes.push(o, g);
+  }
+
+  /** Schedules `fn` at random intervals between min and max ms for as long as the ambience runs. */
+  private ambEvery(min: number, max: number, fn: () => void): void {
+    const tick = (): void => {
+      if (!this.ambTheme) return;
+      fn();
+      this.ambTimers.push(window.setTimeout(tick, min + Math.random() * (max - min)));
+    };
+    this.ambTimers.push(window.setTimeout(tick, min * 0.5 + Math.random() * min));
+  }
+
+  /** Background sound bed for a stage: wind, surf, machinery, furnace roar or wind chimes. */
+  startAmbience(theme: StageTheme): void {
+    if (this.ambTheme === theme) return;
+    this.stopAmbience();
+    this.ambTheme = theme;
+    if (!this.ctx) return;
+    const bus = this.ambBus;
+    switch (theme) {
+      case 'outskirts':
+        this.ambBed('lowpass', 420, 0.8, 0.55, 0.11, 260);
+        this.ambEvery(900, 2600, () => {
+          const t = this.now;
+          for (let i = 0; i < 4; i++) this.tone('square', 4200, 4300, 0.035, 0.012, t + i * 0.06, bus);
+        });
+        break;
+      case 'harbor':
+        this.ambBed('bandpass', 380, 0.5, 0.75, 0.14, 240);
+        this.ambBed('highpass', 2500, 0.7, 0.08, 0.09, 900);
+        this.ambEvery(6000, 11000, () => this.tone('sine', 740, 735, 1.6, 0.08, this.now, bus));
+        this.ambEvery(5000, 12000, () => {
+          const t = this.now;
+          this.tone('sawtooth', 1500, 1900, 0.18, 0.025, t, bus);
+          this.tone('sawtooth', 1900, 1300, 0.22, 0.02, t + 0.2, bus);
+        });
+        break;
+      case 'facility':
+        this.ambDrone('sawtooth', 58, 0.35);
+        this.ambDrone('square', 116, 0.08, 6);
+        this.ambBed('bandpass', 1800, 2, 0.06, 0.4, 500);
+        this.ambEvery(3000, 7000, () => this.noise(0.5, 'bandpass', 2600, 900, 1.5, 0.12, this.now, bus, 0.02));
+        this.ambEvery(2500, 6000, () => {
+          const t = this.now;
+          this.tone('square', 1320, 1320, 0.05, 0.03, t, bus);
+          this.tone('square', 1760, 1760, 0.05, 0.03, t + 0.12, bus);
+        });
+        break;
+      case 'rooftop':
+        this.ambBed('lowpass', 260, 0.6, 1.0, 0.08, 150);
+        this.ambBed('bandpass', 900, 1.2, 0.3, 0.17, 500);
+        this.ambEvery(9000, 18000, () => {
+          const t = this.now;
+          for (let i = 0; i < 3; i++) this.tone('sine', 880, 1100, 0.6, 0.02, t + i * 1.2, bus);
+          for (let i = 0; i < 3; i++) this.tone('sine', 1100, 880, 0.6, 0.02, t + 0.6 + i * 1.2, bus);
+        });
+        break;
+      case 'foundry':
+        this.ambBed('lowpass', 180, 1.2, 1.7, 0.3, 90);
+        this.ambBed('bandpass', 3200, 0.8, 0.1, 1.7, 1200);
+        this.ambEvery(2000, 6000, () => {
+          const t = this.now;
+          this.tone('square', 900 + Math.random() * 500, 300, 0.25, 0.08, t, bus);
+          this.noise(0.3, 'bandpass', 3000, 1800, 6, 0.12, t, bus);
+        });
+        this.ambEvery(300, 1200, () => this.noise(0.03, 'highpass', 5000, 4000, 1, 0.05, this.now, bus, 0.002));
+        break;
+      case 'sanctuary':
+        this.ambBed('lowpass', 500, 0.5, 0.5, 0.07, 300);
+        this.ambEvery(700, 2400, () => {
+          const scale = [0, 2, 4, 7, 9, 12, 14];
+          const hz = 1046.5 * Math.pow(2, scale[Math.floor(Math.random() * scale.length)] / 12);
+          this.tone('sine', hz, hz * 0.998, 1.4, 0.05, this.now, bus);
+          this.tone('sine', hz * 2.76, hz * 2.75, 0.5, 0.012, this.now, bus);
+        });
+        break;
+    }
+  }
+
+  stopAmbience(): void {
+    for (const id of this.ambTimers) window.clearTimeout(id);
+    this.ambTimers = [];
+    this.ambTheme = null;
+    if (!this.ctx) {
+      this.ambNodes = [];
+      return;
+    }
+    const t = this.now;
+    for (const n of this.ambNodes) {
+      if (n instanceof GainNode) {
+        n.gain.cancelScheduledValues(t);
+        n.gain.setTargetAtTime(0.0001, t, 0.15);
+      }
+    }
+    const nodes = this.ambNodes;
+    this.ambNodes = [];
+    window.setTimeout(() => {
+      for (const n of nodes) {
+        if (n instanceof AudioScheduledSourceNode) {
+          try {
+            n.stop();
+          } catch {
+            /* already stopped */
+          }
+        }
+        n.disconnect();
+      }
+    }, 600);
   }
 
   /** Retro formant-synthesised voice clips: "Hah!", "Take this!", pain grunts and KO screams. */
@@ -627,9 +1014,12 @@ export class AudioEngine {
 
   // ---------------------------------------------------------------- music
 
-  startMusic(name: MusicTrack): void {
+  /** Starts a music loop; pass a stage theme to layer its ambience, or omit it to silence any running ambience. */
+  startMusic(name: MusicTrack, ambience?: StageTheme): void {
+    if (ambience) this.startAmbience(ambience);
+    else this.stopAmbience();
     if (this.trackName === name && this.musicTimer !== null) return;
-    this.stopMusic();
+    this.stopMusic(false);
     this.trackName = name;
     if (!this.ctx) return;
     this.track = TRACKS[name];
@@ -638,11 +1028,12 @@ export class AudioEngine {
     this.musicTimer = window.setInterval(() => this.schedule(), 25);
   }
 
-  stopMusic(): void {
+  stopMusic(ambience = true): void {
     if (this.musicTimer !== null) window.clearInterval(this.musicTimer);
     this.musicTimer = null;
     this.track = null;
     this.trackName = null;
+    if (ambience) this.stopAmbience();
   }
 
   private schedule(): void {

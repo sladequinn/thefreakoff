@@ -303,6 +303,11 @@ export abstract class CombatScene extends Scene implements World {
 
     if (t.hp <= 0) this.audio.playVoiceGrunt(t.def.voice, 'ko');
     else if (heavy || Math.random() < 0.25) this.audio.playVoiceGrunt(t.def.voice, 'pain');
+    // Fighters crow over a knockdown now and then; bots do it more, they have no manners.
+    const bot = a.def.archetype === 'ninjabot' || a.def.archetype === 'clownbot';
+    if (t.hp > 0 && (hb.effect === 'knockdown' || hb.effect === 'hardKnockdown') && Math.random() < (bot ? 0.3 : 0.18)) {
+      this.audio.playTaunt(a.def.voice);
+    }
 
     a.combat.hitsLanded++;
     a.combat.damageDealt += Math.max(0, dealt);

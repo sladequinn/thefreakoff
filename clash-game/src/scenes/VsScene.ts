@@ -63,7 +63,7 @@ export class VsScene extends CombatScene {
   }
 
   enter(): void {
-    this.audio.startMusic('versus');
+    this.audio.startMusic('versus', this.theme);
   }
 
   exit(): void {
@@ -123,7 +123,7 @@ export class VsScene extends CombatScene {
       this.perfect = w.hp >= w.maxHp - 0.01;
       w.move = null;
       w.setState(FState.VICTORY);
-      this.audio.playVoiceGrunt(w.def.voice, 'hah');
+      this.audio.playTaunt(w.def.voice);
     }
   }
 
@@ -144,7 +144,8 @@ export class VsScene extends CombatScene {
     switch (this.phase) {
       case 'intro':
         if (this.phaseTimer === 10) this.audio.playBell();
-        if (this.phaseTimer === 90) this.audio.playVoiceGrunt(this.p1.def.voice, 'hah');
+        if (this.phaseTimer === 40) this.audio.playTaunt(this.p2.def.voice, 0);
+        if (this.phaseTimer === 90) this.audio.playTaunt(this.p1.def.voice, 0);
         if (this.phaseTimer === 100) this.audio.playGo();
         if (this.phaseTimer >= 110) {
           this.p1.setState(FState.IDLE);

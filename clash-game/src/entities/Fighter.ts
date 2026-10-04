@@ -121,6 +121,7 @@ export class Fighter extends Entity {
   autoFace: Fighter | null = null;
   /** Attacker currently holding this fighter in a command grab. */
   grabbedBy: Fighter | null = null;
+  private riffIndex = 0;
   lastAttacker: Fighter | null = null;
   damageMult = 1;
   speedMult = 1;
@@ -1041,6 +1042,7 @@ export class Fighter extends Entity {
         p.text(this.x + this.facing * 30, this.y + 128 * this.scale, this.z, 'TAKEOVER', '#ffd21f', 18);
         break;
       case 'note':
+        a.playFiddlePluck(12 + Math.floor(Math.random() * 3) * 7);
         this.throwNote(world);
         break;
       // ---- Fiddle Jay
@@ -1053,12 +1055,13 @@ export class Fighter extends Entity {
         p.kinetic(hx + this.facing * 10, hy, this.z + 1, this.facing, '#ffb13b', 46);
         break;
       case 'riff_start':
-        a.playVoiceGrunt(this.def.voice, 'hah');
+        this.riffIndex = 0;
+        a.playTaunt(this.def.voice, 1);
         a.playMagic();
         p.ring(this.x, this.z, 10, 60, '#ffb13b', 18);
         break;
       case 'riff': {
-        a.playMagic();
+        a.playFiddleRiff(this.riffIndex++);
         a.playShock();
         world.camera.shake(4, 0, 1, 8);
         p.ring(this.x, this.z, 16, 120, 'rgba(255,177,59,0.85)', 18);
@@ -1071,6 +1074,7 @@ export class Fighter extends Entity {
         break;
       }
       case 'sonic_boom':
+        a.playFiddleRiff(3);
         a.playSpecial();
         a.playShock();
         world.camera.shake(11, 0, 1, 20);
