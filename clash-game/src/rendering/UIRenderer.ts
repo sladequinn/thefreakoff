@@ -130,7 +130,7 @@ export class UIRenderer {
   // ------------------------------------------------------------------ story HUD
 
   storyHud(ctx: Ctx, p: Player, focus: Fighter | null, time: number, stageLabel: string): void {
-    const accent = p.def.archetype === 'ninja' ? '#5a2aa0' : '#b8481a';
+    const accent = p.def.archetype === 'ninja' ? '#5a2aa0' : '#5a5664';
     this.panel(ctx, 10, 10, 360, 78);
     this.portraitFrame(ctx, p, 20, 18, 60, 1, time, accent);
     this.text(ctx, p.name, 92, 34, 18, '#ffffff', { align: 'left', stroke: '#000', strokeWidth: 3 });
@@ -285,8 +285,8 @@ export class UIRenderer {
     ctx.fillStyle = 'rgba(6,4,12,0.7)';
     ctx.fillRect(0, 0, CANVAS_WIDTH, 78);
     ctx.restore();
-    this.portraitFrame(ctx, p1, 12, 12, 54, 1, time, p1.def.archetype === 'ninja' ? '#5a2aa0' : '#b8481a');
-    this.portraitFrame(ctx, p2, CANVAS_WIDTH - 66, 12, 54, -1, time, p2.def.archetype === 'ninja' ? '#5a2aa0' : '#b8481a');
+    this.portraitFrame(ctx, p1, 12, 12, 54, 1, time, p1.def.archetype === 'ninja' ? '#5a2aa0' : '#5a5664');
+    this.portraitFrame(ctx, p2, CANVAS_WIDTH - 66, 12, 54, -1, time, p2.def.archetype === 'ninja' ? '#5a2aa0' : '#5a5664');
     this.healthBar(ctx, 76, y, barW, 18, p1, time, { showSpecial: true });
     this.healthBar(ctx, CANVAS_WIDTH - 76 - barW, y, barW, 18, p2, time, { flip: true, showSpecial: true });
     this.text(ctx, p1.name, 78, 64, 15, '#fff', { align: 'left', stroke: '#000', strokeWidth: 3 });
@@ -382,7 +382,7 @@ export class UIRenderer {
     ctx.stroke();
     ctx.fillStyle = '#8a4dff';
     ctx.fillRect(-bw / 2 - slant - 40, -3, 30, 6);
-    ctx.fillStyle = '#ff6a2a';
+    ctx.fillStyle = '#ece8f0';
     ctx.fillRect(bw / 2 + slant + 10, -3, 30, 6);
     const tg = ctx.createLinearGradient(0, -14, 0, 12);
     tg.addColorStop(0, '#ffffff');

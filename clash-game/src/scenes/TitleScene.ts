@@ -205,8 +205,8 @@ export class TitleScene extends Scene {
     ctx.fillStyle = left;
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     const right = ctx.createRadialGradient(cx + 60, cy, 10, cx + 60, cy, 360 * pulse);
-    right.addColorStop(0, 'rgba(255,106,42,0.42)');
-    right.addColorStop(1, 'rgba(255,106,42,0)');
+    right.addColorStop(0, 'rgba(236,232,240,0.34)');
+    right.addColorStop(1, 'rgba(236,232,240,0)');
     ctx.fillStyle = right;
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     ctx.strokeStyle = 'rgba(255,255,255,0.5)';
@@ -244,7 +244,7 @@ export class TitleScene extends Scene {
       ctx.fillRect(x - 200, 160, 400, 400);
     };
     rim(220 + sway, 'rgba(138,77,255,0.16)');
-    rim(740 - sway, 'rgba(255,106,42,0.14)');
+    rim(740 - sway, 'rgba(236,232,240,0.14)');
     ctx.restore();
   }
 
@@ -252,7 +252,7 @@ export class TitleScene extends Scene {
     const ui = this.game.ui;
     ui.text(ctx, 'SLADE', 150, 505, 20, COLORS.voidGlow, { stroke: '#000', strokeWidth: 5, align: 'left' });
     ui.text(ctx, 'The Magick Ninja', 150, 522, 11, 'rgba(255,255,255,0.6)', { template: FONT_UI, align: 'left' });
-    ui.text(ctx, 'FRECKLES', 810, 505, 20, COLORS.ember, { stroke: '#000', strokeWidth: 5, align: 'right' });
+    ui.text(ctx, 'FRECKLES', 810, 505, 20, COLORS.bone, { stroke: '#000', strokeWidth: 5, align: 'right' });
     ui.text(ctx, 'The Gothic Jester', 810, 522, 11, 'rgba(255,255,255,0.6)', { template: FONT_UI, align: 'right' });
   }
 

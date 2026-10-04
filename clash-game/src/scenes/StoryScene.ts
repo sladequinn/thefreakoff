@@ -611,7 +611,7 @@ export class StoryScene extends CombatScene {
     ctx.fillRect(0, CANVAS_HEIGHT - 100, CANVAS_WIDTH, 100);
     ctx.restore();
     ui.text(ctx, 'WARNING', CANVAS_WIDTH / 2, 48, 30, Math.floor(t / 8) % 2 ? '#ff3b3b' : '#ffd21f', { stroke: '#000', strokeWidth: 5 });
-    if (t > 30) ui.banner(ctx, boss.name, `${boss.def.title.toUpperCase()}  ·  AI MASTER`, t - 30, boss.def.archetype === 'ninja' ? '#b98aff' : '#ff8a3a', 200);
+    if (t > 30) ui.banner(ctx, boss.name, `${boss.def.title.toUpperCase()}  ·  AI MASTER`, t - 30, boss.def.archetype === 'ninja' ? '#b98aff' : '#ece8f0', 200);
     const lines = STORY[this.params.char].boss;
     lines.forEach((line, i) => {
       if (t > 70 + i * 60) ui.text(ctx, line, CANVAS_WIDTH / 2, CANVAS_HEIGHT - 62 + i * 26, 15, i === 0 ? '#ffd6a8' : '#d6c4ff', { template: FONT_UI, stroke: '#000', strokeWidth: 3 });

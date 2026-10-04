@@ -8,7 +8,7 @@ import { Scene } from './Scene';
 
 const ROSTER: { id: CharId; def: CharacterDef; accent: string; glow: string }[] = [
   { id: 'slade', def: SLADE, accent: COLORS.void, glow: COLORS.voidGlow },
-  { id: 'freckles', def: FRECKLES, accent: COLORS.ember, glow: COLORS.brass },
+  { id: 'freckles', def: FRECKLES, accent: COLORS.bone, glow: COLORS.silver },
 ];
 
 const ROUTES: Record<CharId, { foes: string; boss: string; story: string }> = {
@@ -52,7 +52,7 @@ export class CharacterSelectScene extends Scene {
     const p1: Cursor = { who: 'P1', slot: 0, index: 0, locked: false, lockT: 0, color: COLORS.voidGlow };
     if (params.mode === 'story') this.cursors = [p1];
     else if (params.cpu) this.cursors = [p1, { who: 'CPU', slot: 0, index: 1, locked: false, lockT: 0, color: '#b8c0cc' }];
-    else this.cursors = [p1, { who: 'P2', slot: 1, index: 1, locked: false, lockT: 0, color: COLORS.ember }];
+    else this.cursors = [p1, { who: 'P2', slot: 1, index: 1, locked: false, lockT: 0, color: COLORS.bone }];
   }
 
   enter(): void {

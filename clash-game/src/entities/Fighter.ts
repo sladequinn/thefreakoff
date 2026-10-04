@@ -857,7 +857,7 @@ export class Fighter extends Entity {
       case 'hammer_land':
         p.debris(this.x + this.facing * 16, this.z, 10);
         p.dust(this.x, this.z, 12);
-        p.ring(this.x + this.facing * 14, this.z, 10, 80, '#ff8a3a', 18);
+        p.ring(this.x + this.facing * 14, this.z, 10, 80, '#e6e2f0', 18);
         world.camera.shake(7, 0, 1, 12);
         a.playHitHeavy();
         a.playDebris();
@@ -866,7 +866,7 @@ export class Fighter extends Entity {
         a.playWhiff();
         a.playDash();
         p.dust(this.x, this.z, 6);
-        p.ring(this.x, this.z, 20, 80, 'rgba(255,170,90,0.7)', 14);
+        p.ring(this.x, this.z, 20, 80, 'rgba(236,232,240,0.7)', 14);
         break;
       case 'slam':
         a.playSpecial();
@@ -877,9 +877,9 @@ export class Fighter extends Entity {
         p.debris(this.x + 20, this.z, 16, 1);
         p.dust(this.x - 40, this.z, 10, 1);
         p.dust(this.x + 40, this.z, 10, -1);
-        p.ring(this.x, this.z, 20, 150, '#ff7a2a', 26);
-        p.ring(this.x, this.z, 10, 110, '#ffc857', 20);
-        p.spawn('flash', this.x + this.facing * 20, 10, this.z + 1, 0, 0, 0, 14, 20, '#ff6a2a', { size2: 110 });
+        p.ring(this.x, this.z, 20, 150, '#ece8f0', 26);
+        p.ring(this.x, this.z, 10, 110, '#ffffff', 20);
+        p.spawn('flash', this.x + this.facing * 20, 10, this.z + 1, 0, 0, 0, 14, 20, '#ffffff', { size2: 110 });
         break;
       case 'shuriken':
         this.throwShuriken(world);

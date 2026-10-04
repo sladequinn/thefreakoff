@@ -52,6 +52,8 @@ export const COLORS = {
   voidDeep: '#3b1580',
   voidGlow: '#c79bff',
   ember: '#ff6a2a',
+  bone: '#ece8f0',
+  silver: '#b8bcc8',
   brass: '#ffc857',
   cyan: '#39f3ff',
   hazard: '#ffd21f',
