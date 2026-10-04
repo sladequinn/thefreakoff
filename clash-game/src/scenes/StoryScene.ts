@@ -643,7 +643,7 @@ export class StoryScene extends CombatScene {
       ctx.fillStyle = page.arch === 'ninja' ? '#2a1450' : '#4a1c0a';
       ctx.fillRect(px + 24, py + 24, 130, 140);
       ctx.restore();
-      this.game.sprites.drawPortrait(ctx, page.arch, variant, px + 24, py + 24, 130, 140, 1, this.game.time);
+      this.game.sprites.drawPortrait(ctx, page.arch, variant, px + 24, py + 24, 130, 140, 1, this.game.time, 'bust');
       tx = px + 180;
     }
     ui.text(ctx, page.speaker, tx, py + 46, 18, page.arch === 'ninja' ? '#c79bff' : page.arch === 'brawler' ? '#ffb13b' : '#9fe8ff', { align: 'left', stroke: '#000', strokeWidth: 3 });

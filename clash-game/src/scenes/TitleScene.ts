@@ -1,8 +1,24 @@
 import { CANVAS_HEIGHT, CANVAS_WIDTH, COLORS, FONT_UI } from '../config/constants';
 import { CONTROL_HELP, TOUCH_HELP } from '../config/controls';
+import { CHARACTERS } from '../characters';
 import type { GameContext, SceneMap } from '../core/StateManager';
+import type { CharId } from '../physics/Types';
 import { idlePose } from '../rendering/SpriteRenderer';
 import { Scene } from './Scene';
+
+const HERO_PAIRS: [CharId, CharId][] = [
+  ['slade', 'freckles'],
+  ['whitelie', 'fiddlejay'],
+];
+const HERO_CYCLE = 60 * 9;
+const HERO_FADE = 24;
+const HERO_ACCENT: Record<CharId, string> = { slade: COLORS.voidGlow, freckles: COLORS.bone, whitelie: '#ffd21f', fiddlejay: '#ffb13b' };
+const HERO_RIM: Record<CharId, string> = {
+  slade: 'rgba(138,77,255,0.16)',
+  freckles: 'rgba(236,232,240,0.14)',
+  whitelie: 'rgba(255,210,31,0.14)',
+  fiddlejay: 'rgba(255,177,59,0.14)',
+};
 
 interface MenuEntry {
   label: string;
@@ -164,7 +180,7 @@ export class TitleScene extends Scene {
     if (!this.pressedStart) {
       const a = 0.45 + 0.55 * Math.abs(Math.sin(time * 0.05));
       g.ui.text(ctx, touch ? 'TAP TO START' : 'PRESS ANY KEY', CANVAS_WIDTH / 2, 380, 24, '#ffffff', { stroke: '#000', strokeWidth: 5, alpha: a });
-      g.ui.text(ctx, 'The bots own the streets. Two legends fight to own the city.', CANVAS_WIDTH / 2, 412, 13, 'rgba(255,255,255,0.7)', {
+      g.ui.text(ctx, 'The bots own the streets. Four fighters want the city.', CANVAS_WIDTH / 2, 412, 13, 'rgba(255,255,255,0.7)', {
         template: FONT_UI,
       });
     } else if (this.showControls) {
@@ -223,19 +239,33 @@ export class TitleScene extends Scene {
     ctx.restore();
   }
 
+  /** Which pair of the roster is on stage right now, plus a 0..1 fade for the hand-off between pairs. */
+  private heroPair(): { pair: [CharId, CharId]; alpha: number } {
+    const phase = this.t % HERO_CYCLE;
+    const pair = HERO_PAIRS[Math.floor(this.t / HERO_CYCLE) % HERO_PAIRS.length];
+    const alpha = phase < HERO_FADE ? phase / HERO_FADE : phase > HERO_CYCLE - HERO_FADE ? (HERO_CYCLE - phase) / HERO_FADE : 1;
+    return { pair, alpha };
+  }
+
   private drawHeroes(ctx: CanvasRenderingContext2D, time: number): void {
     const sprites = this.game.sprites;
     const floorY = 520;
     const sway = Math.sin(time * 0.02) * 6;
+    const { pair, alpha } = this.heroPair();
+    const [l, r] = pair.map((id) => CHARACTERS[id].archetype);
+    const slide = (1 - alpha) * 40;
     this.game.renderer.withSprites((s) => {
-      this.shadow(s, 220 + sway, floorY, 90);
-      this.shadow(s, 740 - sway, floorY, 110);
-      sprites.drawBody(s, 'ninja', 'normal', idlePose('ninja', time), 220 + sway, floorY, 1, 2.35, time);
-      sprites.drawBody(s, 'brawler', 'normal', idlePose('brawler', time), 740 - sway, floorY, -1, 2.35, time);
+      s.globalAlpha = alpha;
+      this.shadow(s, 220 + sway - slide, floorY, 90);
+      this.shadow(s, 740 - sway + slide, floorY, 110);
+      sprites.drawBody(s, l, 'normal', idlePose(l, time), 220 + sway - slide, floorY, 1, 2.35, time);
+      sprites.drawBody(s, r, 'normal', idlePose(r, time), 740 - sway + slide, floorY, -1, 2.35, time);
+      s.globalAlpha = 1;
     });
 
     ctx.save();
     ctx.globalCompositeOperation = 'lighter';
+    ctx.globalAlpha = alpha;
     const rim = (x: number, color: string): void => {
       const gr = ctx.createRadialGradient(x, 360, 0, x, 360, 200);
       gr.addColorStop(0, color);
@@ -243,17 +273,19 @@ export class TitleScene extends Scene {
       ctx.fillStyle = gr;
       ctx.fillRect(x - 200, 160, 400, 400);
     };
-    rim(220 + sway, 'rgba(138,77,255,0.16)');
-    rim(740 - sway, 'rgba(236,232,240,0.14)');
+    rim(220 + sway, HERO_RIM[pair[0]]);
+    rim(740 - sway, HERO_RIM[pair[1]]);
     ctx.restore();
   }
 
   private drawHeroLabels(ctx: CanvasRenderingContext2D): void {
     const ui = this.game.ui;
-    ui.text(ctx, 'SLADE', 150, 505, 20, COLORS.voidGlow, { stroke: '#000', strokeWidth: 5, align: 'left' });
-    ui.text(ctx, 'The Magick Ninja', 150, 522, 11, 'rgba(255,255,255,0.6)', { template: FONT_UI, align: 'left' });
-    ui.text(ctx, 'FRECKLES', 810, 505, 20, COLORS.bone, { stroke: '#000', strokeWidth: 5, align: 'right' });
-    ui.text(ctx, 'Sad Clowngirl', 810, 522, 11, 'rgba(255,255,255,0.6)', { template: FONT_UI, align: 'right' });
+    const { pair, alpha } = this.heroPair();
+    const [l, r] = pair.map((id) => CHARACTERS[id]);
+    ui.text(ctx, l.name.toUpperCase(), 150, 505, 20, HERO_ACCENT[pair[0]], { stroke: '#000', strokeWidth: 5, align: 'left', alpha });
+    ui.text(ctx, l.title, 150, 522, 11, 'rgba(255,255,255,0.6)', { template: FONT_UI, align: 'left', alpha });
+    ui.text(ctx, r.name.toUpperCase(), 810, 505, 20, HERO_ACCENT[pair[1]], { stroke: '#000', strokeWidth: 5, align: 'right', alpha });
+    ui.text(ctx, r.title, 810, 522, 11, 'rgba(255,255,255,0.6)', { template: FONT_UI, align: 'right', alpha });
   }
 
   private shadow(ctx: CanvasRenderingContext2D, x: number, y: number, w: number): void {

@@ -80,6 +80,7 @@ const crouchOf = (a: Archetype): Pose => ({ ...withLegs(IDLE[a], 0.7, -1.5, 1.0,
 
 const LYING: Pose = { ...P(0, 0.2, -0.3, 0.3, 0.3, 0.2, 0.05, 0, 0.15, -0.1, -Math.PI / 2), lying: true };
 const HURT_POSE = P(-0.35, -0.4, -1.2, 0.8, -0.9, 0.6, -0.2, -0.2, 0.35, -0.3, 0, 0.7);
+const SAD_INTRO = P(0.3, 0.62, 0.05, 0.15, 0.1, 0.25, -0.3, -0.08, 0.3, -0.12);
 const GUARD: Record<Archetype, Pose> = {
   ninja: P(-0.05, 0.1, 1.2, 1.8, 1.0, 1.6, -0.4, -0.2, 0.4, -0.4, 0, 1.4),
   brawler: P(0.1, 0.2, 1.0, 2.3, 1.2, 2.2, -0.45, -0.2, 0.4, -0.4),
@@ -90,7 +91,8 @@ const GUARD: Record<Archetype, Pose> = {
 };
 const VICTORY: Record<Archetype, Pose> = {
   ninja: P(-0.05, -0.15, -0.4, 1.2, 3.0, 0, -0.3, -0.05, 0.3, -0.05, 0, 0),
-  brawler: P(-0.05, -0.2, 0.5, 2.0, 3.0, 0.3, -0.3, -0.05, 0.3, -0.05),
+  // Freckles doesn't celebrate: head hung, far arm limp, near hand wiping a tear.
+  brawler: P(0.1, 0.32, 0.2, 0.3, 2.25, 2.45, -0.3, -0.05, 0.3, -0.05),
   kingpin: P(-0.05, -0.1, -0.6, 0.3, 2.6, 0.3, -0.3, -0.05, 0.3, -0.05, 0, -1.6),
   fiddler: P(0.05, -0.25, 1.45, 0.75, 0.75, 1.97, -0.3, -0.05, 0.3, -0.05, 0, 0.18),
   ninjabot: IDLE.ninjabot,
@@ -380,8 +382,14 @@ export function poseFor(f: Fighter): Pose {
   const a = f.def.archetype;
   const base = IDLE[a];
   switch (f.state) {
-    case FState.IDLE:
     case FState.INTRO:
+      if (a === 'brawler') {
+        // slumped and staring at the floor, then slowly lifting her head as the bell rings
+        const lift = Math.min(1, Math.max(0, (f.stateFrame - 55) / 40));
+        return lerpPose(SAD_INTRO, idlePose(a, f.animTime), lift * lift);
+      }
+      return idlePose(a, f.animTime);
+    case FState.IDLE:
       if (f.guarding) return GUARD[a];
       return idlePose(a, f.animTime);
     case FState.WALK: {
@@ -552,9 +560,11 @@ const PALETTES: Record<Archetype, Partial<Record<Variant, Palette>> & { normal: 
   },
   brawler: {
     // Monochrome harlequin: black and white motley, porcelain skin, one black and one white twin-tail, silver bells.
-    normal: { dark: '#15121a', dark2: '#2a2630', white: '#f2eff5', white2: '#cfc9d6', skin: '#dfd8de', skinDark: '#c4bcc4', stock1: '#15121a', stock2: '#f2eff5', boots: '#0d0b10', bell: '#d8dde6', hair1: '#15121a', hair2: '#f2eff5', lace: '#f2eff5', knuckle: '#d8dde6', paint: '#0b090e', lips: '#15121a', glow: '#dfe6ff', buckle: '#c0c8d4' },
-    alt: { dark: '#f2eff5', dark2: '#cfc9d6', white: '#15121a', white2: '#2a2630', skin: '#dfd8de', skinDark: '#c4bcc4', stock1: '#f2eff5', stock2: '#15121a', boots: '#15121a', bell: '#9fe8ff', hair1: '#f2eff5', hair2: '#15121a', lace: '#15121a', knuckle: '#9fe8ff', paint: '#0b090e', lips: '#15121a', glow: '#9fe8ff', buckle: '#9fe8ff' },
-    boss: { dark: '#15121a', dark2: '#2a2630', white: '#f2eff5', white2: '#cfc9d6', skin: '#dfd8de', skinDark: '#c4bcc4', stock1: '#15121a', stock2: '#f2eff5', boots: '#0d0b10', bell: '#ffd21f', hair1: '#15121a', hair2: '#f2eff5', lace: '#ffd21f', knuckle: '#ffd86a', paint: '#0b090e', lips: '#15121a', glow: '#ffb13b', buckle: '#ffd21f' },
+    // dark2 sits one palette step above dark so sleeves and rim highlights survive on night stages.
+    normal: { dark: '#15121a', dark2: '#49454f', white: '#f2eff5', white2: '#cfc9d6', hood: '#f2eff5', hood2: '#15121a', glove: '#f2eff5', glove2: '#cfc9d6', skin: '#dfd8de', skinDark: '#c4bcc4', stock1: '#15121a', stock2: '#f2eff5', boots: '#0d0b10', bell: '#d8dde6', hair1: '#15121a', hair2: '#f2eff5', lace: '#f2eff5', knuckle: '#d8dde6', paint: '#0b090e', lips: '#15121a', glow: '#dfe6ff', buckle: '#c0c8d4' },
+    // Alt keeps the black dress and inverts only the hood, with ice-blue bells, gloves and lacing.
+    alt: { dark: '#15121a', dark2: '#49454f', white: '#9fe8ff', white2: '#cfc9d6', hood: '#15121a', hood2: '#f2eff5', glove: '#9fe8ff', glove2: '#5fb8d8', skin: '#dfd8de', skinDark: '#c4bcc4', stock1: '#15121a', stock2: '#9fe8ff', boots: '#0d0b10', bell: '#9fe8ff', hair1: '#15121a', hair2: '#9fe8ff', lace: '#9fe8ff', knuckle: '#9fe8ff', paint: '#0b090e', lips: '#15121a', glow: '#9fe8ff', buckle: '#9fe8ff' },
+    boss: { dark: '#15121a', dark2: '#49454f', white: '#f2eff5', white2: '#cfc9d6', hood: '#f2eff5', hood2: '#15121a', glove: '#f2eff5', glove2: '#cfc9d6', skin: '#dfd8de', skinDark: '#c4bcc4', stock1: '#15121a', stock2: '#f2eff5', boots: '#0d0b10', bell: '#ffd21f', hair1: '#15121a', hair2: '#f2eff5', lace: '#ffd21f', knuckle: '#ffd86a', paint: '#0b090e', lips: '#15121a', glow: '#ffb13b', buckle: '#ffd21f' },
   },
   kingpin: {
     // White three-piece suit over a black shirt, gold chain and rings, white cane with a gold head.
@@ -769,19 +779,30 @@ function drawBrawler(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: D
     }
     ctx.lineCap = 'round';
   };
+  // Thin grey rim along one edge of a black limb so the silhouette reads against dark stages.
+  const rim = (a: V, b: V, w: number, side: number): void => {
+    if (o.tint) return;
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const n = { x: (-dy / len) * side, y: (dx / len) * side };
+    seg(ctx, add(mix(a, b, 0.1), n, w * 0.36), add(mix(a, b, 0.9), n, w * 0.36), 1.1, pal.dark2);
+  };
   const boot = (knee: V, foot: V, w: number): void => {
     seg(ctx, mix(knee, foot, 0.68), foot, w, T(pal.boots));
     seg(ctx, add(foot, fwd, -2), add(foot, fwd, 7), w * 0.6, T(pal.boots));
     seg(ctx, add(foot, fwd, -2.5), add(add(foot, fwd, -2.5), { x: 0, y: -1 }, 3.5), 2.4, T(pal.boots));
+    rim(mix(knee, foot, 0.68), foot, w, 1);
     if (!o.tint) dot(ctx, add(mix(knee, foot, 0.8), fwd, w * 0.3), 1.1, pal.buckle);
   };
-  // Harlequin arms: the near arm wears white with a black glove, the far arm the reverse.
+  // Harlequin arms: black sleeves, the near hand in a white glove and the far hand in a shaded one.
   const sleeve = (sh: V, el: V, hd: V, front: boolean): void => {
     const cloth = front ? pal.dark : pal.dark2;
-    const glove = front ? pal.white : pal.white2;
+    const glove = front ? pal.glove : pal.glove2;
     dot(ctx, add(sh, up, 1), 4.6, T(cloth));
     seg(ctx, sh, el, 6.5, T(cloth));
     seg(ctx, el, mix(el, hd, 0.7), 5.6, T(cloth));
+    if (front) rim(sh, el, 6.5, -1);
     seg(ctx, mix(el, hd, 0.7), hd, 5.6, T(glove));
     dot(ctx, hd, 4.2, T(glove));
   };
@@ -836,6 +857,7 @@ function drawBrawler(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: D
     [add(J.hip, perp, -d.hipW), add(waist, perp, -waistW), add(J.neck, perp, -d.chestW), add(J.neck, perp, d.chestW), add(waist, perp, waistW), add(J.hip, perp, d.hipW)],
     pal.dark,
   );
+  rim(add(J.hip, perp, -d.hipW), add(J.neck, perp, -d.chestW), 3, 1);
   const cb = mix(J.hip, J.neck, 0.78);
   poly([add(J.neck, perp, -d.chestW + 1), add(J.neck, perp, d.chestW), add(cb, perp, 3)], pal.skin);
   dot(ctx, add(cb, perp, 1), 5.6, T(pal.skin));
@@ -892,7 +914,7 @@ function drawBrawler(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: D
     taper(ctx, { x: bx, y: by }, { x: tx, y: ty }, w, 1.6, T(color));
     dot(ctx, { x: tx, y: ty }, 2, T(pal.bell));
   };
-  point(-4, -4, -17 - sway * 0.8, 1 + Math.abs(sway) * 0.5, 8, pal.white);
+  point(-4, -4, -17 - sway * 0.8, 1 + Math.abs(sway) * 0.5, 8, pal.hood);
   dot(ctx, { x: 0, y: 0 }, r, T(pal.skin));
   dot(ctx, { x: 2.5, y: 3 }, 5.2, T(pal.skin));
   poly(
@@ -903,12 +925,20 @@ function drawBrawler(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: D
     ],
     pal.skin,
   );
-  point(3, -6, 10 - sway * 0.3, -15 + sway * 0.4, 7, pal.dark);
-  ctx.fillStyle = T(pal.white);
+  point(3, -6, 10 - sway * 0.3, -15 + sway * 0.4, 7, pal.hood2);
+  ctx.fillStyle = T(pal.hood);
   ctx.beginPath();
   ctx.arc(0, 0, r + 1.3, Math.PI * 0.95, Math.PI * 1.84);
   ctx.closePath();
   ctx.fill();
+  if (!o.tint && pal.hood === pal.dark) {
+    // black hood needs a grey edge or it melts into the hair
+    ctx.strokeStyle = pal.dark2;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(0, 0, r + 1.3, Math.PI * 0.98, Math.PI * 1.8);
+    ctx.stroke();
+  }
   if (!o.tint) {
     // jagged anime bangs under the hood, plus a side-lock framing the back of the face
     poly(
@@ -938,8 +968,11 @@ function drawBrawler(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: D
     seg(ctx, { x: 6.4, y: -1 }, { x: 7.9, y: -1.9 }, 0.8, pal.paint);
     dot(ctx, { x: 5.2, y: 0 }, 0.55, '#ffffff');
     dot(ctx, { x: 4.6, y: 1.7 }, 0.3, '#ffffff');
+    // painted sad-clown tear under the eye
+    taper(ctx, { x: 4.4, y: 2.7 }, { x: 4.1, y: 4.6 }, 1.5, 0.5, pal.paint);
     dot(ctx, { x: 5.6, y: 4 }, 1.1, pal.skinDark);
-    seg(ctx, { x: 6.4, y: 4.4 }, { x: 7.5, y: 4.2 }, 1, pal.lips);
+    // downturned mouth
+    seg(ctx, { x: 6.2, y: 4.3 }, { x: 7.6, y: 5.1 }, 1, pal.lips);
   }
   ctx.restore();
 
@@ -1492,6 +1525,18 @@ const TRAIL_TINT: Record<Archetype, string> = {
   clownbot: '#ffd21f',
 };
 
+export type PortraitCrop = 'chest' | 'bust';
+
+/** Per-archetype portrait framing: dx pushes the skull back from centre, dy raises it, zoom shrinks wide builds. */
+const PORTRAIT: Record<Archetype, { dx: number; dy: number; zoom: number }> = {
+  ninja: { dx: 3, dy: 0, zoom: 0.92 },
+  brawler: { dx: 2, dy: 1, zoom: 1 },
+  kingpin: { dx: 1, dy: -2, zoom: 0.8 },
+  fiddler: { dx: 6, dy: 0, zoom: 0.94 },
+  ninjabot: { dx: 3, dy: 0, zoom: 1 },
+  clownbot: { dx: 2, dy: 0, zoom: 0.9 },
+};
+
 // ============================================================================ public renderer
 
 export class SpriteRenderer {
@@ -1648,8 +1693,12 @@ export class SpriteRenderer {
 
   private portraitBuf: HTMLCanvasElement | null = null;
 
-  /** Portraits are painted at half resolution and upscaled with nearest-neighbour to match the pixelated world. */
-  drawPortrait(ctx: Ctx, arch: Archetype, variant: Variant, x: number, y: number, w: number, h: number, facing = 1, time = 0): void {
+  /**
+   * Portraits are painted at half resolution and upscaled with nearest-neighbour to match the pixelated world.
+   * `crop` picks between a chest-up framing and a tight head-and-shoulders bust; both anchor on the skull so
+   * every archetype lands in the same spot regardless of leg or torso length.
+   */
+  drawPortrait(ctx: Ctx, arch: Archetype, variant: Variant, x: number, y: number, w: number, h: number, facing = 1, time = 0, crop: PortraitCrop = 'chest'): void {
     const bw = Math.max(1, Math.ceil(w / 2));
     const bh = Math.max(1, Math.ceil(h / 2));
     const buf = (this.portraitBuf ??= document.createElement('canvas'));
@@ -1660,9 +1709,15 @@ export class SpriteRenderer {
     b.clearRect(0, 0, bw, bh);
     b.setTransform(0.5, 0, 0, 0.5, 0, 0);
     b.lineCap = 'round';
-    const scale = (h / 60) * 1.35;
-    const pose = idlePose(arch, time);
-    this.drawBody(b, arch, variant, { ...pose, lean: 0.05, head: 0 }, w / 2 - facing * 6 * scale, h * 0.36 + 88 * scale, facing, scale, time);
+    const fr = PORTRAIT[arch];
+    const tight = crop === 'bust';
+    const scale = (h / 60) * (tight ? 2.0 : 1.35) * fr.zoom;
+    const pose = { ...idlePose(arch, time), lean: 0.05, head: 0 };
+    const head = buildSkeleton(pose, DIMS[arch]).head;
+    // Skull sits a little behind centre so the face has breathing room in the facing direction.
+    const cx = w / 2 - facing * (head.x + fr.dx) * scale;
+    const feetY = h * (tight ? 0.5 : 0.4) - (head.y - fr.dy) * scale;
+    this.drawBody(b, arch, variant, pose, cx, feetY, facing, scale, time);
     const img = b.getImageData(0, 0, bw, bh);
     pixelize(img);
     b.putImageData(img, 0, 0);
@@ -1670,6 +1725,11 @@ export class SpriteRenderer {
     ctx.imageSmoothingEnabled = false;
     ctx.drawImage(buf, 0, 0, bw, bh, x, y, bw * 2, bh * 2);
     ctx.restore();
+  }
+
+  /** Tight head-and-shoulders portrait for HUD frames and dialogue boxes. */
+  drawBust(ctx: Ctx, arch: Archetype, variant: Variant, x: number, y: number, size: number, facing = 1, time = 0): void {
+    this.drawPortrait(ctx, arch, variant, x, y, size, size, facing, time, 'bust');
   }
 
   drawShuriken(ctx: Ctx, x: number, y: number, spin: number, color: string): void {

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" shape-rendering="crispEdges">
+  <rect width="16" height="16" fill="#07060d"/>
+  <rect x="1" y="1" width="14" height="14" fill="#1a1230"/>
+  <!-- purple shuriken blade (Slade) -->
+  <path d="M8 2h1v3h3v1H9v3H8V6H5V5h3z" fill="#9d5cff"/>
+  <!-- white harlequin diamond (Freckles) -->
+  <path d="M8 8h1v1h1v1h1v1h-1v1h-1v1H8v-1H7v-1H6v-1h1V9h1z" fill="#f2eff5"/>
+  <rect x="8" y="10" width="1" height="1" fill="#15121a"/>
+  <!-- gold accent -->
+  <rect x="3" y="12" width="2" height="1" fill="#ffd21f"/>
+  <rect x="12" y="3" width="1" height="2" fill="#ffd21f"/>
+</svg>

@@ -130,7 +130,7 @@ export class UIRenderer {
     g.addColorStop(1, '#0a0712');
     ctx.fillStyle = g;
     ctx.fillRect(x, y, size, size);
-    this.sprites.drawPortrait(ctx, f.def.archetype, f.variant === 'boss' ? 'normal' : f.variant, x, y, size, size, facing, time);
+    this.sprites.drawBust(ctx, f.def.archetype, f.variant === 'boss' ? 'normal' : f.variant, x, y, size, facing, time);
     ctx.strokeStyle = 'rgba(255,255,255,0.5)';
     ctx.lineWidth = 1.5;
     ctx.strokeRect(x, y, size, size);
