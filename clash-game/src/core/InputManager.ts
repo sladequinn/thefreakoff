@@ -20,7 +20,7 @@ import { emptyInput, type InputFrame } from '../physics/Types';
 type ActionMap = Record<Action, boolean>;
 
 function blankActions(): ActionMap {
-  return { up: false, down: false, left: false, right: false, jump: false, attack: false, special: false };
+  return { up: false, down: false, left: false, right: false, jump: false, attack: false, special: false, tag: false };
 }
 
 interface SlotState {
@@ -266,6 +266,7 @@ export class InputManager {
     f.specialPressed = pressed.special || comboSpecial;
     f.attackPressed = pressed.attack && !comboSpecial;
     f.jumpPressed = pressed.jump && !comboSpecial;
+    f.tagPressed = pressed.tag;
     f.moveRequest = undefined;
   }
 

@@ -35,7 +35,14 @@ export interface SceneMap {
   story: { char: StoryCharId; stage: number; score: number; lives: number };
   vs: { p1: CharId; p2: CharId; cpu: boolean; stage: StagePick; v1?: 'normal' | 'alt'; v2?: 'normal' | 'alt'; arcade?: ArcadeRun };
   training: { p1: CharId; p2: CharId; stage: StagePick; v1?: 'normal' | 'alt'; v2?: 'normal' | 'alt' };
+  tag: { t1: TagTeam; t2: TagTeam; cpu: boolean; stage: StagePick };
   gameover: GameOverParams;
+}
+
+/** A two-fighter team: point fighter first, partner second, with matching costumes. */
+export interface TagTeam {
+  chars: [CharId, CharId];
+  costumes: ['normal' | 'alt', 'normal' | 'alt'];
 }
 
 export type SceneName = keyof SceneMap;
@@ -44,6 +51,8 @@ export type SceneFactory<K extends SceneName> = (game: GameContext, params: Scen
 /** Session-only toggles; anything that should survive a reload lives in `GameContext.save.settings`. */
 export interface GameSettings {
   debug: boolean;
+  /** Set by the tag-team scene so the touch pad shows its TAG button. */
+  tagButton: boolean;
 }
 
 export interface GameContext {

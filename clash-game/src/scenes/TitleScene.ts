@@ -65,6 +65,11 @@ export class TitleScene extends Scene {
         go: () => this.game.scenes.go('select', { mode: 'versus', cpu: true }),
       },
       {
+        label: 'TAG TEAM: 2 vs 2',
+        hint: 'Pick a pair, swap partners mid-fight and KO both opponents. Human or CPU opposition.',
+        go: () => this.game.scenes.go('select', { mode: 'tag', cpu: true }),
+      },
+      {
         label: 'ARCADE LADDER',
         hint: 'Climb four CPU rungs that get meaner each match, then face your own shadow.',
         go: () => this.game.scenes.go('select', { mode: 'arcade', cpu: true }),
@@ -197,7 +202,7 @@ export class TitleScene extends Scene {
       this.drawControls(ctx);
     } else {
       const disabled = this.disabled();
-      g.ui.menu(ctx, this.items.map((i) => i.label), this.index, CANVAS_WIDTH / 2, 238, time, 36, disabled);
+      g.ui.menu(ctx, this.items.map((i) => i.label), this.index, CANVAS_WIDTH / 2, 230, time, 32, disabled);
       g.ui.panel(ctx, CANVAS_WIDTH / 2 - 300, 440, 600, 30);
       const hint = disabled[this.index] ? 'Player 2 needs a keyboard or gamepad. Connect one to play local versus.' : this.items[this.index].hint;
       g.ui.text(ctx, hint, CANVAS_WIDTH / 2, 460, 13, 'rgba(255,255,255,0.82)', { template: FONT_UI });
@@ -327,9 +332,9 @@ export class TitleScene extends Scene {
     }
     const ui = this.game.ui;
     const x = 110;
-    const y = 190;
+    const y = 176;
     const w = CANVAS_WIDTH - 220;
-    const rowH = 28;
+    const rowH = 26;
     ui.panel(ctx, x, y, w, 44 + CONTROL_HELP.length * rowH + 30, 'rgba(8,6,18,0.9)');
     const cols = [x + 24, x + 200, x + 380, x + 560];
     ['ACTION', 'PLAYER 1', 'PLAYER 2', 'GAMEPAD'].forEach((h, i) =>
@@ -356,9 +361,9 @@ export class TitleScene extends Scene {
   private drawTouchControls(ctx: CanvasRenderingContext2D): void {
     const ui = this.game.ui;
     const x = 110;
-    const y = 180;
+    const y = 176;
     const w = CANVAS_WIDTH - 220;
-    const rowH = 32;
+    const rowH = 28;
     const h = 40 + TOUCH_HELP.length * rowH + 34;
     ui.panel(ctx, x, y, w, h, 'rgba(8,6,18,0.92)');
     ui.text(ctx, 'TOUCH CONTROLS', x + 24, y + 28, 15, COLORS.hazard, { align: 'left' });

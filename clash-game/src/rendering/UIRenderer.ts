@@ -321,6 +321,93 @@ export class UIRenderer {
     this.text(ctx, String(Math.max(0, Math.ceil(timer))).padStart(2, '0'), tx, 56, 36, urgent && Math.floor(time / 10) % 2 ? '#ff4d4d' : '#ffe7a8', { stroke: '#000', strokeWidth: 4 });
   }
 
+  // ------------------------------------------------------------------ tag-team HUD
+
+  /**
+   * One side of the tag HUD: point fighter on the big bar, partner on a slim bar beneath with a bust,
+   * and a TAG READY / cooldown lamp. `flip` mirrors it for the right-hand team.
+   */
+  tagSideHud(ctx: Ctx, point: Fighter, partner: Fighter, flip: boolean, label: string, labelColor: string, tagReady: number, time: number): void {
+    const barW = 300;
+    const y = 30;
+    const x = flip ? CANVAS_WIDTH - 76 - barW : 76;
+    const edge = flip ? CANVAS_WIDTH - 78 : 78;
+    const align: CanvasTextAlign = flip ? 'right' : 'left';
+    this.portraitFrame(ctx, point, flip ? CANVAS_WIDTH - 66 : 12, 12, 54, flip ? -1 : 1, time, HUD_ACCENT[point.def.archetype]);
+    this.healthBar(ctx, x, y, barW, 18, point, time, { flip, showSpecial: true });
+    this.text(ctx, point.name, edge, 64, 15, '#fff', { align, stroke: '#000', strokeWidth: 3 });
+    this.text(ctx, label, edge, 24, 11, labelColor, { align, template: FONT_UI });
+
+    // Partner strip: bust + slim bar; a KO'd partner shows as a dark bar with a cross.
+    const alive = partner.hp > 0;
+    const px = flip ? CANVAS_WIDTH - 76 - 26 : 76;
+    const py = 70;
+    ctx.save();
+    ctx.fillStyle = '#0a0712';
+    ctx.fillRect(px - 2, py - 2, 30, 30);
+    ctx.fillStyle = alive ? HUD_ACCENT[partner.def.archetype] : '#2a0c12';
+    ctx.fillRect(px, py, 26, 26);
+    if (alive) this.sprites.drawBust(ctx, partner.def.archetype, partner.variant === 'boss' ? 'normal' : partner.variant, px, py, 26, flip ? -1 : 1, time);
+    else {
+      ctx.strokeStyle = '#ff4d6d';
+      ctx.lineWidth = 3;
+      ctx.beginPath();
+      ctx.moveTo(px + 6, py + 6);
+      ctx.lineTo(px + 20, py + 20);
+      ctx.moveTo(px + 20, py + 6);
+      ctx.lineTo(px + 6, py + 20);
+      ctx.stroke();
+    }
+    ctx.restore();
+    const sbW = barW - 34 - 110;
+    const sbX = flip ? px - 8 - sbW : px + 34;
+    if (alive) this.healthBar(ctx, sbX, py + 10, sbW, 8, partner, time, { flip, colors: ['#9fe8ff', '#3b8fd6'] });
+    else {
+      ctx.save();
+      ctx.fillStyle = '#120a18';
+      ctx.fillRect(sbX - 2, py + 8, sbW + 4, 12);
+      ctx.fillStyle = '#2a0c12';
+      ctx.fillRect(sbX, py + 10, sbW, 8);
+      ctx.restore();
+    }
+    this.text(ctx, alive ? partner.name.toUpperCase() : `${partner.name.toUpperCase()}  ·  OUT`, flip ? sbX + sbW : sbX, py + 6, 9, alive ? 'rgba(255,255,255,0.75)' : '#ff7a8a', { align, template: FONT_UI });
+
+    // Tag lamp sits outboard of the partner bar.
+    const lx = flip ? sbX - 12 - 96 : sbX + sbW + 12;
+    const ly = py + 4;
+    const ready = alive && tagReady <= 0;
+    ctx.save();
+    ctx.fillStyle = ready ? `rgba(255,210,31,${0.75 + 0.25 * Math.sin(time * 0.2)})` : 'rgba(20,14,30,0.9)';
+    ctx.fillRect(lx, ly, 96, 20);
+    ctx.strokeStyle = ready ? '#fff6c4' : 'rgba(255,255,255,0.2)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(lx + 0.5, ly + 0.5, 95, 19);
+    if (!ready && alive && tagReady > 0) {
+      ctx.fillStyle = 'rgba(255,210,31,0.35)';
+      ctx.fillRect(lx + 2, ly + 16, 92 * Math.max(0, 1 - tagReady), 2);
+    }
+    ctx.restore();
+    this.text(ctx, !alive ? 'NO PARTNER' : ready ? 'TAG READY' : 'TAG CHARGING', lx + 48, ly + 14, 9, ready ? '#120a1c' : 'rgba(255,255,255,0.55)', { template: FONT_UI });
+  }
+
+  tagTimer(ctx: Ctx, timer: number, time: number): void {
+    const tx = CANVAS_WIDTH / 2;
+    ctx.save();
+    ctx.fillStyle = 'rgba(6,4,12,0.7)';
+    ctx.fillRect(0, 0, CANVAS_WIDTH, 104);
+    ctx.restore();
+    ctx.save();
+    ctx.fillStyle = '#0a0712';
+    ctx.fillRect(tx - 36, 14, 72, 52);
+    ctx.strokeStyle = '#ffd86a';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(tx - 36, 14, 72, 52);
+    ctx.restore();
+    const urgent = timer <= 10;
+    this.text(ctx, String(Math.max(0, Math.ceil(timer))).padStart(3, '0'), tx, 56, 32, urgent && Math.floor(time / 10) % 2 ? '#ff4d4d' : '#ffe7a8', { stroke: '#000', strokeWidth: 4 });
+    this.text(ctx, 'TAG TEAM', tx, 82, 10, 'rgba(255,255,255,0.6)', { template: FONT_UI });
+  }
+
   private pip(ctx: Ctx, x: number, y: number, won: boolean): void {
     ctx.save();
     ctx.translate(x, y);

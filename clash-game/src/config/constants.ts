@@ -42,6 +42,14 @@ export const VS_ROUND_SECONDS = 99;
 export const VS_ROUNDS_TO_WIN = 2;
 export const VS_ARENA_MARGIN = 40;
 
+/** Tag team: one long round, partner swaps on a cooldown, the bench slowly recovers part of its damage. */
+export const TAG_ROUND_SECONDS = 150;
+export const TAG_COOLDOWN_FRAMES = 300;
+export const TAG_BENCH_REGEN = 0.0005;
+export const TAG_BENCH_RECOVER = 0.3;
+export const TAG_SWAP_OUT_FRAMES = 22;
+export const TAG_SWAP_IN_FRAMES = 30;
+
 export const PARTICLE_POOL_SIZE = 900;
 
 export const TEAM_PLAYER = 0 as const;

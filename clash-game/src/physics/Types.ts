@@ -156,6 +156,8 @@ export interface InputFrame {
   jumpPressed: boolean;
   attackPressed: boolean;
   specialPressed: boolean;
+  /** Tag-team only: ask the scene to swap in the partner. */
+  tagPressed: boolean;
   dashDir: number;
   /** AI-only: request a specific move by id when actionable. */
   moveRequest?: string;
@@ -170,6 +172,7 @@ export function emptyInput(): InputFrame {
     jumpPressed: false,
     attackPressed: false,
     specialPressed: false,
+    tagPressed: false,
     dashDir: 0,
   };
 }
@@ -189,7 +192,7 @@ export interface Bounds {
   maxZ: number;
 }
 
-export type GameMode = 'story' | 'versus' | 'training' | 'arcade';
+export type GameMode = 'story' | 'versus' | 'training' | 'arcade' | 'tag';
 
 export interface World {
   frame: number;

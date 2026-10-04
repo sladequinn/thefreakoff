@@ -16,6 +16,7 @@ import { StoryScene } from './scenes/StoryScene';
 import { TitleScene } from './scenes/TitleScene';
 import { VsScene } from './scenes/VsScene';
 import { TrainingScene } from './scenes/TrainingScene';
+import { TagScene } from './scenes/TagScene';
 
 const root = document.getElementById('app');
 if (!root) throw new Error('Missing #app container');
@@ -43,7 +44,7 @@ const game: GameContext = {
   audio,
   scenes,
   loop: null,
-  settings: { debug: false },
+  settings: { debug: false, tagButton: false },
   save,
   time: 0,
 };
@@ -55,6 +56,7 @@ scenes.register('select', (g, p) => new CharacterSelectScene(g, p));
 scenes.register('story', (g, p) => new StoryScene(g, p));
 scenes.register('vs', (g, p) => new VsScene(g, p));
 scenes.register('training', (g, p) => new TrainingScene(g, p));
+scenes.register('tag', (g, p) => new TagScene(g, p));
 scenes.register('gameover', (g, p) => new GameOverScene(g, p));
 
 let toast = '';
@@ -72,6 +74,7 @@ function update(): void {
     toastT = 90;
   }
   touch.setVisible(input.touchMode);
+  touch.setTagVisible(game.settings.tagButton);
   scenes.update();
   game.time++;
   if (toastT > 0) toastT--;

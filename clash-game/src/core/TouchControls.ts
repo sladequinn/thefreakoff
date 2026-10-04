@@ -10,12 +10,15 @@ interface ButtonDef {
   sub: string;
   color: string;
   size: number;
+  /** Only shown while a tag-team match is running. */
+  tagOnly?: boolean;
 }
 
 const BUTTONS: ButtonDef[] = [
   { action: 'attack', label: 'ATK', sub: 'attack', color: '#ff6a2a', size: 1 },
   { action: 'jump', label: 'JMP', sub: 'jump', color: '#39f3ff', size: 0.8 },
   { action: 'special', label: 'SPL', sub: 'special', color: '#8a4dff', size: 0.74 },
+  { action: 'tag', label: 'TAG', sub: 'partner', color: '#ffd21f', size: 0.62, tagOnly: true },
 ];
 
 const STYLE = `
@@ -38,6 +41,8 @@ const STYLE = `
 .tc-root.landscape .tc-base { opacity: 0.35; }
 .tc-root.landscape .tc-base.active { opacity: 0.8; }
 .tc-btn.down { opacity: 1; filter: brightness(1.35); transform: translate(-50%, -50%) scale(0.92); }
+.tc-btn.tag-only { display: none; }
+.tc-root.tag .tc-btn.tag-only { display: flex; }
 .tc-mini { position: absolute; pointer-events: auto; touch-action: none; width: 42px; height: 42px; border-radius: 12px;
   display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px;
   background: rgba(10,6,20,0.6); border: 1px solid rgba(255,255,255,0.25); }
@@ -64,6 +69,7 @@ export class TouchControls {
   private radius = 56;
   private dirs: Record<'up' | 'down' | 'left' | 'right', boolean> = { up: false, down: false, left: false, right: false };
   private visible = false;
+  private tagShown = false;
 
   constructor(
     private readonly input: InputManager,
@@ -91,7 +97,7 @@ export class TouchControls {
 
     for (const def of BUTTONS) {
       const el = document.createElement('div');
-      el.className = 'tc-btn';
+      el.className = def.tagOnly ? 'tc-btn tag-only' : 'tc-btn';
       el.style.background = `radial-gradient(circle at 35% 30%, ${def.color}ee, ${def.color}66 60%, rgba(10,6,20,0.6))`;
       el.innerHTML = `<span>${def.label}</span><small>${def.sub}</small>`;
       this.bindHold(el, (down) => this.input.setTouchAction(def.action, down));
@@ -145,6 +151,20 @@ export class TouchControls {
       if (this.canvas.parentElement) this.canvas.parentElement.style.paddingTop = '';
     }
     window.dispatchEvent(new Event('resize'));
+  }
+
+  /** Shows the TAG button; only tag-team matches have a use for it. */
+  setTagVisible(v: boolean): void {
+    if (v === this.tagShown) return;
+    this.tagShown = v;
+    this.root.classList.toggle('tag', v);
+    if (!v) {
+      for (const b of this.buttons) {
+        if (!b.def.tagOnly) continue;
+        b.el.classList.remove('down');
+        this.input.setTouchAction(b.def.action, false);
+      }
+    }
   }
 
   private mini(label: string, onTap: () => void): HTMLDivElement {
@@ -309,6 +329,7 @@ export class TouchControls {
       { x: cx, y: cy },
       { x: cx + unit * 0.8, y: cy - unit * 0.95 },
       { x: cx - unit * 1.05, y: cy - unit * 0.55 },
+      { x: cx - unit * 0.3, y: cy - unit * 1.5 },
     ];
     this.buttons.forEach((b, i) => {
       const size = unit * b.def.size;

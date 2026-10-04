@@ -1,6 +1,6 @@
-export type Action = 'up' | 'down' | 'left' | 'right' | 'jump' | 'attack' | 'special';
+export type Action = 'up' | 'down' | 'left' | 'right' | 'jump' | 'attack' | 'special' | 'tag';
 
-export const ACTIONS: Action[] = ['up', 'down', 'left', 'right', 'jump', 'attack', 'special'];
+export const ACTIONS: Action[] = ['up', 'down', 'left', 'right', 'jump', 'attack', 'special', 'tag'];
 
 export type KeyBindings = Record<Action, string[]>;
 
@@ -13,6 +13,7 @@ export const P1_KEYS: KeyBindings = {
   jump: ['KeyK', 'Space'],
   attack: ['KeyJ'],
   special: ['KeyU'],
+  tag: ['KeyI'],
 };
 
 export const P2_KEYS: KeyBindings = {
@@ -23,6 +24,7 @@ export const P2_KEYS: KeyBindings = {
   jump: ['Numpad2', 'Period'],
   attack: ['Numpad1', 'Comma'],
   special: ['Numpad4', 'KeyL'],
+  tag: ['Numpad5', 'Semicolon'],
 };
 
 /** Standard Gamepad mapping indices. */
@@ -51,6 +53,7 @@ export const PAD_BINDINGS: Record<Action, number[]> = {
   jump: [PAD.A],
   attack: [PAD.X],
   special: [PAD.Y, PAD.LT, PAD.RT],
+  tag: [PAD.LB, PAD.RB],
 };
 
 export const PAD_DEADZONE = 0.35;
@@ -72,6 +75,7 @@ export const PREVENT_DEFAULT_KEYS = new Set([
   'Numpad1',
   'Numpad2',
   'Numpad4',
+  'Numpad5',
   'Period',
   'Comma',
   'Backspace',
@@ -85,6 +89,7 @@ export const TOUCH_HELP: { label: string; how: string }[] = [
   { label: 'Dash Attack', how: 'ATK while running' },
   { label: 'Special', how: 'SPL button, or ATK + JMP together (costs 8% HP)' },
   { label: 'Block (Versus)', how: 'Hold the stick away from your opponent' },
+  { label: 'Tag (Tag Team)', how: 'TAG button while standing; your partner jumps in' },
   { label: 'Pause / Mute', how: 'II and \u266A buttons in the corner' },
 ];
 
@@ -95,6 +100,7 @@ export const CONTROL_HELP: { label: string; p1: string; p2: string; pad: string 
   { label: 'Attack', p1: 'J', p2: 'Numpad 1 / ,', pad: 'X (West)' },
   { label: 'Special', p1: 'U  or  J + K', p2: 'Numpad 4 / L', pad: 'Y (North) / Triggers' },
   { label: 'Block (Versus)', p1: 'Hold away', p2: 'Hold away', pad: 'Hold away' },
+  { label: 'Tag (Tag Team)', p1: 'I', p2: 'Numpad 5 / ;', pad: 'LB / RB' },
   { label: 'Pause', p1: 'Esc / P', p2: '—', pad: 'Start' },
   { label: 'Debug / Mute', p1: '`  /  M', p2: '—', pad: '—' },
 ];
