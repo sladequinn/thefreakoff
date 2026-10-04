@@ -48,16 +48,20 @@ Results screens offer rematch, next stage, character / team select and title. Wi
 | Dash / run     | Double-tap A / D    | Double-tap ← / →  | Double-tap left / right  |
 | Jump           | K / Space           | Numpad 2 / `.`    | A (south)                |
 | Attack         | J                   | Numpad 1 / `,`    | X (west)                 |
-| Special        | U, or J + K         | Numpad 4 / L      | Y (north) / triggers     |
-| Block (versus) | Hold away           | Hold away         | Hold away                |
+| Block / parry  | H / Left Shift      | Numpad 0 / `/`    | B (east) / LT            |
+| Special        | U                   | Numpad 4 / L      | Y (north) / RT           |
 | Tag (tag team) | I                   | Numpad 5 / `;`    | LB / RB                  |
 | Pause          | Esc / P             |                   | Start                    |
 
 Contextual moves: attack while running for a dash attack, attack in the air for an air attack, hold toward the opponent and press special for White Lie's command grab, hold away and attack for Fiddle Jay's travelling note. Specials cost 8% of your current HP; command grabs are free. Gamepads rumble on hits, knockdowns and KOs.
 
+Blocking works in every mode and is a held button, not a stick direction, so retreating never raises your guard by accident. A guard only covers the front; in story mode a fresh block press turns you toward the nearest thug. Blocked hits do 12% chip damage. Press block within six frames of impact and you parry instead: no chip, you are free three frames later and the attacker is frozen for an extra twelve, which is enough to land a full punish. Hard versus CPUs can parry too; story bosses only block.
+
+Inputs are buffered for ten frames through recovery, landing lag, blockstun and hitstop, so a jump or attack pressed a moment early comes out on the first free frame. Pressing attack during the three pre-jump frames (or on the same frame as jump) fires the air attack the instant you leave the ground.
+
 ### Phones and tablets
 
-On touch devices an on-screen pad appears automatically. A floating joystick follows your thumb on the left half of the screen. Push it fully sideways to run. The ATK, JMP and SPL buttons sit on the right (a TAG button joins them in tag team), and pause, mute and fullscreen buttons are in the corner. Landscape gives the biggest view. In portrait the game sits above the controls. Local 1P vs 2P and two-player tag need a keyboard or gamepad for Player 2. To test on a phone from a remote dev box, serve the production build and tunnel it: `npm run build && npx vite preview` (port 47322), then `cloudflared tunnel --protocol http2 --url http://127.0.0.1:47322`. The bundled build loads in a handful of requests, which holds up far better over a tunnel than the dev server's per-module requests. The `.trycloudflare.com` and `.loca.lt` hosts are already allowed in `vite.config.ts`.
+On touch devices an on-screen pad appears automatically. A floating joystick follows your thumb on the left half of the screen. Push it fully sideways to run. The right-thumb cluster fans out around ATK: JMP sits up-right so jump-into-air-attack is one thumb roll, BLK is a holdable pad to the left, SPL is furthest up, and a TAG button joins above-right in tag team. The pause, mute and fullscreen buttons stay in the top-right corner, well clear of the cluster. Landscape gives the biggest view. In portrait the game sits above the controls. Local 1P vs 2P and two-player tag need a keyboard or gamepad for Player 2. To test on a phone from a remote dev box, serve the production build and tunnel it: `npm run build && npx vite preview` (port 47322), then `cloudflared tunnel --protocol http2 --url http://127.0.0.1:47322`. The bundled build loads in a handful of requests, which holds up far better over a tunnel than the dev server's per-module requests. The `.trycloudflare.com` and `.loca.lt` hosts are already allowed in `vite.config.ts`.
 
 Press `` ` `` (backtick) to toggle the debug overlay: red hitboxes, green hurtboxes, blue z-depth planes, FPS and state info. Press `M` to mute.
 
