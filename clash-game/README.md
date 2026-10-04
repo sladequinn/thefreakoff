@@ -1,13 +1,15 @@
 # THE FREAKOFF: SHADOW WARS
 
-Clownbot and Ninjabot armies flood the streets while the two real figureheads tear the city apart to settle who actually runs it.
+Clownbot and Ninjabot armies flood the streets while four figureheads tear the city apart to settle who actually runs it.
 
-A 2.5D arcade beat 'em up and 1v1 versus fighter built in TypeScript on a plain Canvas 2D renderer. Every sprite, background, sound effect, voice grunt and music track is generated procedurally at runtime; there are no image or audio assets.
+A 2.5D arcade beat 'em up and versus fighter built in TypeScript on a plain Canvas 2D renderer. Every sprite, background, sound effect, voice line and music track is generated procedurally at runtime; there are no image or audio assets.
 
 - **Slade, the Magick Ninja**: fast arcane zoner with a ninjato, smoke teleports and sigil eruptions.
 - **Freckles, Sad Clowngirl**: a black-and-white harlequin with a belled hood, one black and one white twin-tail, a laced corset, striped stockings and spiked knuckles, fighting with four-hit strings, armored tackles and seismic slams.
-- **White Lie, the Platinum Kingpin** (versus only): a three-hundred-pound rap mogul in a white suit with a gold chain and a cane. Slow and heavily armored; backhands, cane hooks, wall-bouncing belly bumps, an elbow drop and the two-ring Mic Drop shockwave.
-- **Fiddle Jay, the Rosin Fist** (versus only): a fiddle virtuoso and karate master. Whips his bow like a blade, chains snap kicks and spinning hook kicks, slides and dive-kicks, and plays the Hellfire Hoedown, a sonic riff that launches everyone around him.
+- **White Lie, the Platinum Kingpin**: a three-hundred-pound rap mogul in a white suit with a gold chain and a cane. Slow and heavily armored; backhands, cane hooks, wall-bouncing belly bumps, an elbow drop, the two-ring Mic Drop shockwave and Hostile Takeover, an unblockable command grab that hoists you overhead and slams you.
+- **Fiddle Jay, the Rosin Fist**: a fiddle virtuoso and karate master. Whips his bow like a blade, chains snap kicks and spinning hook kicks, slides and dive-kicks, plucks a travelling Devil's Trill note and plays the Hellfire Hoedown, a bowed arpeggio that launches everyone around him.
+
+Every fighter has an unlockable alt costume, two spoken catch-phrase taunts and a boss-shadow palette.
 
 ## Run it
 
@@ -29,9 +31,14 @@ Click or press any key once to enable sound (browsers block audio until then).
 
 ## Modes
 
-- **Story Mode**: six stages, each with its own look and music: The Outskirts, Pier 9 Harbor, The Core Facility, Neon Skyline, The Iron Foundry and The Sanctuary. Playing as Freckles you fight Ninjabots and then Slade. Playing as Slade you fight Clownbots and then Freckles. The Harbor and Foundry end with a Warden mid-boss (SHOGUN-X or FOREMAN MK-II). You start with three lives and earn an extra one after stages 3 and 5. Each cleared stage restores some health.
-- **Versus: 1P vs 2P**: local head-to-head from the full four-fighter roster, best of three rounds with a 99-second timer. Combo damage scales down the longer a combo runs.
-- **Versus: 1P vs CPU**: pick your fighter, then pick the CPU's. The CPU blocks, punishes and uses specials.
+- **Story Mode**: four campaigns, one per fighter, across six stages that each have their own look, music and ambience: The Outskirts, Pier 9 Harbor, The Core Facility, Neon Skyline, The Iron Foundry and The Sanctuary. Slade cuts through Clownbots to reach Freckles; Freckles fights Ninjabots to reach Slade; White Lie's "Hostile Takeover" and Fiddle Jay's "The Devil's Contract" run through mixed bot crews and end with each other. The Harbor and Foundry end with a Warden mid-boss (SHOGUN-X or FOREMAN MK-II). You start with three lives and earn an extra one after stages 3 and 5. Each cleared stage restores some health.
+- **Versus: 1P vs 2P**: local head-to-head from the full roster, best of three rounds with a 99-second timer, on any of six stages or random. Combo damage scales down the longer a combo runs.
+- **Versus: 1P vs CPU**: pick your fighter, then the CPU's, then the stage and CPU level (Easy to Nightmare). The CPU blocks, punishes, uses specials, command grabs and projectiles.
+- **Tag Team: 2 vs 2**: each side picks a point fighter and a partner. One 150-second round; tag with `I` (P2: Numpad 5 / `;`, pad LB / RB, touch TAG) while standing to walk your fighter off and leap the partner in. Tags recharge over five seconds; the benched fighter slowly recovers up to 30% of the health they left with. When a point fighter is KO'd the partner relays in; a team loses when both are down. Choose human or CPU opposition on the opener screen; the CPU tags out on its own when it is hurt and has a fresh partner.
+- **Arcade Ladder**: fight all four fighters in a random order at rising difficulty, touring the stages from your chosen start, then face a shadow version of your own character in the Sanctuary with an aura and extra health. Three continues, a score that rewards health, perfects and speed, per-character high scores.
+- **Training**: infinite health, hitbox overlay, startup / active / recovery frame data and frame advantage on hit and block, combo damage, and a dummy that can stand, block everything, fight back, or record and replay your inputs. All options live in the pause menu.
+
+Results screens offer rematch, next stage, character / team select and title. Wins unlock alt costumes (toggle with up / down on the roster), best combos and arcade high scores are saved in `localStorage`, and the pause menu holds music, sound, rumble and exit options.
 
 ## Controls
 
@@ -43,13 +50,14 @@ Click or press any key once to enable sound (browsers block audio until then).
 | Attack         | J                   | Numpad 1 / `,`    | X (west)                 |
 | Special        | U, or J + K         | Numpad 4 / L      | Y (north) / triggers     |
 | Block (versus) | Hold away           | Hold away         | Hold away                |
+| Tag (tag team) | I                   | Numpad 5 / `;`    | LB / RB                  |
 | Pause          | Esc / P             |                   | Start                    |
+
+Contextual moves: attack while running for a dash attack, attack in the air for an air attack, hold toward the opponent and press special for White Lie's command grab, hold away and attack for Fiddle Jay's travelling note. Specials cost 8% of your current HP; command grabs are free. Gamepads rumble on hits, knockdowns and KOs.
 
 ### Phones and tablets
 
-On touch devices an on-screen pad appears automatically. A floating joystick follows your thumb on the left half of the screen. Push it fully sideways to run. The ATK, JMP and SPL buttons sit on the right, and pause, mute and fullscreen buttons are in the corner. Landscape gives the biggest view. In portrait the game sits above the controls. Local 1P vs 2P needs a keyboard or gamepad for Player 2. To test on a phone from a remote dev box, serve the production build and tunnel it: `npm run build && npx vite preview` (port 47322), then `cloudflared tunnel --protocol http2 --url http://127.0.0.1:47322`. The bundled build loads in a handful of requests, which holds up far better over a tunnel than the dev server's per-module requests. The `.trycloudflare.com` and `.loca.lt` hosts are already allowed in `vite.config.ts`.
-
-Contextual moves: attack while running for a dash attack (Shadow Step / Bull Charge), attack in the air for an air attack (Tengu Dive / Comet Hammer). Specials cost 8% of your current HP.
+On touch devices an on-screen pad appears automatically. A floating joystick follows your thumb on the left half of the screen. Push it fully sideways to run. The ATK, JMP and SPL buttons sit on the right (a TAG button joins them in tag team), and pause, mute and fullscreen buttons are in the corner. Landscape gives the biggest view. In portrait the game sits above the controls. Local 1P vs 2P and two-player tag need a keyboard or gamepad for Player 2. To test on a phone from a remote dev box, serve the production build and tunnel it: `npm run build && npx vite preview` (port 47322), then `cloudflared tunnel --protocol http2 --url http://127.0.0.1:47322`. The bundled build loads in a handful of requests, which holds up far better over a tunnel than the dev server's per-module requests. The `.trycloudflare.com` and `.loca.lt` hosts are already allowed in `vite.config.ts`.
 
 Press `` ` `` (backtick) to toggle the debug overlay: red hitboxes, green hurtboxes, blue z-depth planes, FPS and state info. Press `M` to mute.
 
@@ -57,18 +65,20 @@ Press `` ` `` (backtick) to toggle the debug overlay: red hitboxes, green hurtbo
 
 ```
 src/
-  config/     tuning constants and key bindings
-  core/       fixed 60 Hz loop, camera, input, Web Audio synth, scene manager
+  config/     tuning constants, key bindings, stages, story routes, arcade ladder
+  core/       fixed 60 Hz loop, camera, input + touch pad, Web Audio synth, save data, scene manager
   physics/    shared types and 3-axis (X, Y, Z-depth) collision
   entities/   Fighter state machine, Player, Enemy, Boss, projectiles, particles
-  characters/ Slade and Freckles frame data
+  characters/ frame data for Slade, Freckles, White Lie and Fiddle Jay
   ai/         Ninjabot, Clownbot and boss/CPU controllers
   rendering/  stage painter, procedural skeletal sprites, HUD
-  scenes/     title, character select, story, versus, results
+  scenes/     title, character select, story, versus / arcade, tag team, training, results
 ```
 
 - **Pixel look**: the world is painted into a 480x270 buffer, reduced to an 8-level-per-channel palette with 4x4 ordered (Bayer) dithering, and scaled up with nearest-neighbour. Fighters, projectiles and particles go through a separate sprite pass (`rendering/Pixelize.ts`): colours snap to flat palette levels, partial alpha becomes a Bayer mesh (the 16-bit way to fake transparency, used for trails, fades and glows) and every solid pixel touching empty space becomes a dark outline, so the vector-drawn rigs come out as outlined cel sprites. Portraits run through the same pass. The camera snaps to whole world pixels. The HUD is drawn on top at 960x540 in pixel fonts (Press Start 2P snapped to its 8px grid, plus VT323, bundled via Fontsource), and the browser scales the whole frame with `image-rendering: pixelated`.
 - **Projection**: `screenX = x - cam.x`, `screenY = z - y - cam.y`. Entities are sorted by `z` before drawing, and shadows are drawn at `(screenX, z - cam.y)`.
 - **Hit test**: X overlap, Y overlap, and `|dz| <= zRange` (default 14). Hits trigger 4 to 6 frames of hitstop and a camera shake in the direction of the hit.
 - **Fighter states**: IDLE, WALK, RUN, PREJUMP, JUMP, LAND, ATTACK, HURT, KNOCKDOWN, WAKEUP, plus BLOCK, SUBSTITUTE, DEAD, INTRO and VICTORY.
-- Moves are data-driven (`MoveData`): hit windows, motion keys, invulnerability windows, armor, HP cost and timed effect events.
+- Moves are data-driven (`MoveData`): hit windows, motion keys, invulnerability windows, armor, HP cost, grab holds and timed effect events.
+- **Audio**: every sound is synthesised in `core/AudioEngine.ts`. Voices use a formant synth driven by phoneme steps, so taunts like "Shadow step!" or "Platinum." are spoken, not sampled. Fiddle Jay's riffs are a bowed-string model (sawtooth through body resonances with vibrato). Each stage has a looping ambient bed (wind and crickets, surf and gulls, machine hum, traffic and sirens, furnace roar, chimes) on its own bus.
+- **Modes** share one simulation: `scenes/Scene.ts` holds the `CombatScene` base (update order, hit resolution, hitstop, projectiles, particles, pause menu, debug overlay) and the story, versus, tag and training scenes only add their rules and HUD on top.
