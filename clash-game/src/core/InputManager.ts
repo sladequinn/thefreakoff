@@ -332,4 +332,29 @@ export class InputManager {
   connectedPads(): number {
     return this.getPads().length;
   }
+
+  rumbleEnabled = true;
+  private rumbleUntil: number[] = [];
+
+  /**
+   * Dual-rumble pulse on the pad bound to `slot`. Stronger pulses pre-empt weaker ones; a weak pulse never
+   * interrupts a heavy one that is still running. Silently no-ops when the pad has no actuator.
+   */
+  rumble(slot: number, strong: number, weak: number, ms: number): void {
+    if (!this.rumbleEnabled) return;
+    const s = this.slots[slot];
+    if (!s) return;
+    const pad = this.getPads()[s.padIndex];
+    const actuator = (pad as (Gamepad & { vibrationActuator?: GamepadHapticActuator }) | undefined)?.vibrationActuator;
+    if (!actuator || typeof actuator.playEffect !== 'function') return;
+    const now = performance.now();
+    const until = this.rumbleUntil[slot] ?? 0;
+    if (now < until && strong < 0.6) return;
+    this.rumbleUntil[slot] = now + ms;
+    try {
+      void actuator.playEffect('dual-rumble', { startDelay: 0, duration: ms, strongMagnitude: strong, weakMagnitude: weak }).catch(() => undefined);
+    } catch {
+      /* unsupported effect type */
+    }
+  }
 }

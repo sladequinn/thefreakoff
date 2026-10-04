@@ -184,9 +184,9 @@ export class AudioEngine {
       this.master = this.ctx.createGain();
       this.master.gain.value = this.muted ? 0 : 0.8;
       this.sfxBus = this.ctx.createGain();
-      this.sfxBus.gain.value = 0.9;
+      this.sfxBus.gain.value = this.sfxOn ? AudioEngine.SFX_LEVEL : 0;
       this.musicBus = this.ctx.createGain();
-      this.musicBus.gain.value = 0.22;
+      this.musicBus.gain.value = this.musicOn ? AudioEngine.MUSIC_LEVEL : 0;
       this.sfxBus.connect(this.comp);
       this.musicBus.connect(this.comp);
       this.comp.connect(this.master);
@@ -208,6 +208,21 @@ export class AudioEngine {
     this.muted = !this.muted;
     if (this.ctx) this.master.gain.setTargetAtTime(this.muted ? 0 : 0.8, this.ctx.currentTime, 0.02);
     return this.muted;
+  }
+
+  private static readonly SFX_LEVEL = 0.9;
+  private static readonly MUSIC_LEVEL = 0.22;
+  musicOn = true;
+  sfxOn = true;
+
+  setMusicEnabled(on: boolean): void {
+    this.musicOn = on;
+    if (this.ctx) this.musicBus.gain.setTargetAtTime(on ? AudioEngine.MUSIC_LEVEL : 0, this.ctx.currentTime, 0.03);
+  }
+
+  setSfxEnabled(on: boolean): void {
+    this.sfxOn = on;
+    if (this.ctx) this.sfxBus.gain.setTargetAtTime(on ? AudioEngine.SFX_LEVEL : 0, this.ctx.currentTime, 0.03);
   }
 
   /** Prevents the same effect stacking into a wall of noise when many hits land on one frame. */

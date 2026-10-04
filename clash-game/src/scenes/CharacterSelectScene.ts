@@ -50,6 +50,8 @@ const STORY_CONFIRM_FRAMES = 70;
 
 type Who = 'P1' | 'P2' | 'CPU';
 
+type Costume = 'normal' | 'alt';
+
 interface Cursor {
   who: Who;
   slot: number;
@@ -57,6 +59,7 @@ interface Cursor {
   locked: boolean;
   lockT: number;
   color: string;
+  costume: Costume;
 }
 
 type Phase = 'pick' | 'stage' | 'splash' | 'story';
@@ -76,10 +79,19 @@ export class CharacterSelectScene extends Scene {
   constructor(game: GameContext, private readonly params: SceneMap['select']) {
     super(game);
     this.roster = params.mode === 'story' ? STORY_CARDS : VS_CARDS;
-    const p1: Cursor = { who: 'P1', slot: 0, index: 0, locked: false, lockT: 0, color: COLORS.voidGlow };
+    const p1: Cursor = { who: 'P1', slot: 0, index: 0, locked: false, lockT: 0, color: COLORS.voidGlow, costume: 'normal' };
     if (params.mode === 'story') this.cursors = [p1];
-    else if (params.cpu) this.cursors = [p1, { who: 'CPU', slot: 0, index: 1, locked: false, lockT: 0, color: '#b8c0cc' }];
-    else this.cursors = [p1, { who: 'P2', slot: 1, index: 1, locked: false, lockT: 0, color: COLORS.bone }];
+    else if (params.cpu) this.cursors = [p1, { who: 'CPU', slot: 0, index: 1, locked: false, lockT: 0, color: '#b8c0cc', costume: 'normal' }];
+    else this.cursors = [p1, { who: 'P2', slot: 1, index: 1, locked: false, lockT: 0, color: COLORS.bone, costume: 'normal' }];
+  }
+
+  /** Final costumes for the two versus picks; a mirror match forces the second fighter into the other colour. */
+  private costumes(): [Costume, Costume] {
+    const [a, b] = this.cursors;
+    if (!b) return [a.costume, 'normal'];
+    let v2 = b.costume;
+    if (this.roster[a.index].id === this.roster[b.index].id && v2 === a.costume) v2 = v2 === 'alt' ? 'normal' : 'alt';
+    return [a.costume, v2];
   }
 
   enter(): void {
@@ -105,11 +117,14 @@ export class CharacterSelectScene extends Scene {
 
     if (this.phase === 'splash') {
       if (++this.phaseT >= SPLASH_FRAMES || (this.phaseT > 30 && input.menu().confirm)) {
+        const [v1, v2] = this.costumes();
         this.game.scenes.go('vs', {
           p1: this.roster[this.cursors[0].index].id,
           p2: this.roster[this.cursors[1].index].id,
           cpu: this.params.cpu,
           stage: this.stageChoice,
+          v1,
+          v2,
         });
       }
       return;
@@ -132,7 +147,16 @@ export class CharacterSelectScene extends Scene {
       const right = input.slotPressed(c.slot, 'right');
       if (left || right) {
         c.index = (c.index + (right ? 1 : this.roster.length - 1)) % this.roster.length;
+        if (!this.game.save.isAltUnlocked(this.roster[c.index].id)) c.costume = 'normal';
         audio.playSelect();
+      }
+      if (this.params.mode !== 'story' && (input.slotPressed(c.slot, 'up') || input.slotPressed(c.slot, 'down'))) {
+        if (this.game.save.isAltUnlocked(this.roster[c.index].id)) {
+          c.costume = c.costume === 'alt' ? 'normal' : 'alt';
+          audio.playSelect();
+        } else {
+          audio.playBack();
+        }
       }
       if (input.slotConfirm(c.slot)) {
         c.locked = true;
@@ -179,12 +203,14 @@ export class CharacterSelectScene extends Scene {
     }
     if (this.params.cpu) {
       const levels = CPU_DIFFICULTIES;
-      const cur = levels.indexOf(this.game.settings.cpuDifficulty);
+      const cur = levels.indexOf(this.game.save.settings.cpuDifficulty);
       if (input.slotPressed(0, 'up')) {
-        this.game.settings.cpuDifficulty = levels[(cur + 1) % levels.length];
+        this.game.save.settings.cpuDifficulty = levels[(cur + 1) % levels.length];
+        this.game.save.save();
         audio.playSelect();
       } else if (input.slotPressed(0, 'down')) {
-        this.game.settings.cpuDifficulty = levels[(cur + levels.length - 1) % levels.length];
+        this.game.save.settings.cpuDifficulty = levels[(cur + levels.length - 1) % levels.length];
+        this.game.save.save();
         audio.playSelect();
       }
     }
@@ -396,15 +422,17 @@ export class CharacterSelectScene extends Scene {
     const feetY = y + 150;
     const pose = idlePose(def.archetype, time + i * 37);
     const bounce = lockedHere.length > 0 ? Math.max(0, 6 - lockedHere[0].lockT) * 1.5 : 0;
+    const main = here[0]?.costume ?? 'normal';
+    const second = here.length > 1 ? (here[1].costume === main ? (main === 'alt' ? 'normal' : 'alt') : here[1].costume) : null;
     this.game.renderer.withSprites((s) => {
       s.fillStyle = 'rgba(0,0,0,0.5)';
       s.beginPath();
       s.ellipse(x + w / 2, feetY, 46, 8, 0, 0, Math.PI * 2);
       s.fill();
-      this.game.sprites.drawBody(s, def.archetype, 'normal', pose, x + w / 2 - 6, feetY - bounce, 1, 1.25, time, null);
-      if (lockedHere.length > 1) {
+      this.game.sprites.drawBody(s, def.archetype, main, pose, x + w / 2 - 6, feetY - bounce, 1, 1.25, time, null);
+      if (second) {
         s.globalAlpha = 0.85;
-        this.game.sprites.drawBody(s, def.archetype, 'alt', idlePose(def.archetype, time + 20), x + w / 2 + 40, feetY + 4, -1, 0.95, time, null);
+        this.game.sprites.drawBody(s, def.archetype, second, idlePose(def.archetype, time + 20), x + w / 2 + 40, feetY + 4, -1, 0.95, time, null);
       }
     });
   }
@@ -429,6 +457,8 @@ export class CharacterSelectScene extends Scene {
 
     ui.text(ctx, def.name, x + w / 2, y + h - 22, 18, '#ffffff', { stroke: '#000', strokeWidth: 4 });
     ui.text(ctx, def.title.toUpperCase(), x + w / 2, y + h - 8, 10, r.glow, { template: FONT_UI });
+    const altUnlocked = this.game.save.isAltUnlocked(r.id);
+    if (altUnlocked) ui.text(ctx, hovered ? '▲▼ COSTUME' : 'ALT ✓', x + w - 8, y + 22, 9, hovered ? COLORS.hazard : 'rgba(255,255,255,0.45)', { align: 'right', template: FONT_UI });
 
     here.forEach((c, k) => {
       const bx = x + 10 + k * 56;
@@ -445,6 +475,7 @@ export class CharacterSelectScene extends Scene {
       ctx.fill();
       ctx.restore();
       ui.text(ctx, c.who, bx + 21, by + 15 + bob, 13, '#0a0612');
+      if (c.costume === 'alt') ui.text(ctx, 'ALT', bx + 18, by + 34 + bob, 9, c.color, { template: FONT_UI, stroke: '#000', strokeWidth: 2 });
     });
 
     lockedHere.forEach((c, k) => {
@@ -506,12 +537,12 @@ export class CharacterSelectScene extends Scene {
     this.game.renderer.drawStage(theme, 0, 0, time, CANVAS_WIDTH);
     const a = this.roster[this.cursors[0].index].def;
     const b = this.roster[this.cursors[1].index].def;
-    const mirror = a.id === b.id;
+    const [v1, v2] = this.costumes();
     const floor = 392;
     this.game.renderer.withSprites((s) => {
       for (const [def, x, facing, variant] of [
-        [a, 330, 1, 'normal'],
-        [b, 630, -1, mirror ? 'alt' : 'normal'],
+        [a, 330, 1, v1],
+        [b, 630, -1, v2],
       ] as const) {
         s.fillStyle = 'rgba(0,0,0,0.45)';
         s.beginPath();
@@ -580,7 +611,7 @@ export class CharacterSelectScene extends Scene {
     ui.text(ctx, info ? info.tagline : 'Roll the dice. The city picks the battleground.', CANVAS_WIDTH / 2, 112, 13, 'rgba(255,255,255,0.8)', { template: FONT_UI });
 
     if (this.params.cpu) {
-      const d = CPU_DIFFICULTY[this.game.settings.cpuDifficulty];
+      const d = CPU_DIFFICULTY[this.game.save.settings.cpuDifficulty];
       const bob = Math.sin(time * 0.15) * 2;
       ui.panel(ctx, CANVAS_WIDTH / 2 - 190, 150, 380, 54, 'rgba(8,6,18,0.86)');
       ui.text(ctx, '▲', CANVAS_WIDTH / 2 - 160, 172 - bob, 10, COLORS.hazard);
@@ -611,8 +642,11 @@ export class CharacterSelectScene extends Scene {
     if (this.params.mode === 'story') {
       const c = this.cursors[0];
       const id = this.roster[c.index].id;
-      const route = ROUTES[isStoryChar(id) ? id : 'slade'];
-      ui.text(ctx, `OUTSKIRTS > HARBOR > FACILITY > SKYLINE > FOUNDRY > SANCTUARY   FOES: ${route.foes}   BOSS: ${route.boss}`, CANVAS_WIDTH / 2, y + 18, 12, COLORS.hazard, {
+      const storyId = isStoryChar(id) ? id : 'slade';
+      const route = ROUTES[storyId];
+      const high = this.game.save.records.storyHigh[storyId] ?? 0;
+      const best = high > 0 ? `   BEST: ${String(high).padStart(7, '0')}` : '';
+      ui.text(ctx, `OUTSKIRTS > HARBOR > FACILITY > SKYLINE > FOUNDRY > SANCTUARY   FOES: ${route.foes}   BOSS: ${route.boss}${best}`, CANVAS_WIDTH / 2, y + 18, 12, COLORS.hazard, {
         template: FONT_UI,
       });
       if (this.phase === 'story') {
@@ -644,7 +678,7 @@ export class CharacterSelectScene extends Scene {
     const sprites = this.game.sprites;
     const a = this.roster[this.cursors[0].index];
     const b = this.roster[this.cursors[1].index];
-    const mirror = a.id === b.id;
+    const [v1, v2] = this.costumes();
     const slideIn = Math.min(1, t / 16);
     const ease = 1 - (1 - slideIn) ** 3;
 
@@ -678,8 +712,8 @@ export class CharacterSelectScene extends Scene {
     ctx.fill();
     ctx.restore();
 
-    sprites.drawPortrait(ctx, a.def.archetype, 'normal', 40 - 400 * (1 - ease), 80, 380, 380, 1, time);
-    sprites.drawPortrait(ctx, b.def.archetype, mirror ? 'alt' : 'normal', CANVAS_WIDTH - 420 + 400 * (1 - ease), 80, 380, 380, -1, time);
+    sprites.drawPortrait(ctx, a.def.archetype, v1, 40 - 400 * (1 - ease), 80, 380, 380, 1, time);
+    sprites.drawPortrait(ctx, b.def.archetype, v2, CANVAS_WIDTH - 420 + 400 * (1 - ease), 80, 380, 380, -1, time);
 
     ui.text(ctx, a.def.name, 60 - 400 * (1 - ease), 450, 44, '#ffffff', { align: 'left', stroke: '#000', strokeWidth: 7 });
     ui.text(ctx, this.cursors[0].who, 62 - 400 * (1 - ease), 104, 22, a.glow, { align: 'left', stroke: '#000', strokeWidth: 5 });
@@ -699,7 +733,7 @@ export class CharacterSelectScene extends Scene {
       ctx.restore();
     }
     if (t > 40) {
-      const level = this.params.cpu ? `  ·  CPU ${CPU_DIFFICULTY[this.game.settings.cpuDifficulty].label}` : '';
+      const level = this.params.cpu ? `  ·  CPU ${CPU_DIFFICULTY[this.game.save.settings.cpuDifficulty].label}` : '';
       ui.text(ctx, `${STAGE_INFO[this.stageChoice].name}  ·  BEST OF 3${level}`, CANVAS_WIDTH / 2, 500, 14, 'rgba(255,255,255,0.75)', { template: FONT_UI });
     }
     ctx.restore();

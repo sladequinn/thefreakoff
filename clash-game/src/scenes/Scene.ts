@@ -17,6 +17,13 @@ export abstract class Scene {
   abstract render(ctx: CanvasRenderingContext2D, alpha: number): void;
 }
 
+interface PauseItem {
+  label: string;
+  /** Toggles flip a setting and keep the menu open. */
+  toggle: boolean;
+  act: () => void;
+}
+
 const TOKEN_STATES = new Set<FState>([FState.IDLE, FState.WALK, FState.RUN, FState.ATTACK, FState.PREJUMP, FState.JUMP, FState.LAND]);
 const PROJECTILE_HURTBOX = { offsetX: 0, offsetY: 0, width: 18, height: 18, zDepth: 10 };
 
@@ -67,6 +74,55 @@ export abstract class CombatScene extends Scene implements World {
     return { minX, maxX, minZ: STAGE_MIN_Z, maxZ: STAGE_MAX_Z };
   }
 
+  /** Scene-specific "leave the match" destination shown in the pause menu, e.g. the character select. */
+  protected pauseExit(): { label: string; go: () => void } | null {
+    return null;
+  }
+
+  /** Pause menu entries; toggles stay open, everything else closes the menu. */
+  private pauseItems(): PauseItem[] {
+    const g = this.game;
+    const s = g.save.settings;
+    const items: PauseItem[] = [
+      { label: 'RESUME', toggle: false, act: () => undefined },
+      { label: 'RESTART', toggle: false, act: () => this.restart() },
+      {
+        label: `MUSIC: ${s.musicOn ? 'ON' : 'OFF'}`,
+        toggle: true,
+        act: () => {
+          s.musicOn = !s.musicOn;
+          g.audio.setMusicEnabled(s.musicOn);
+          g.save.save();
+        },
+      },
+      {
+        label: `SOUND FX: ${s.sfxOn ? 'ON' : 'OFF'}`,
+        toggle: true,
+        act: () => {
+          s.sfxOn = !s.sfxOn;
+          g.audio.setSfxEnabled(s.sfxOn);
+          g.save.save();
+        },
+      },
+    ];
+    if (g.input.connectedPads() > 0) {
+      items.push({
+        label: `RUMBLE: ${s.rumble ? 'ON' : 'OFF'}`,
+        toggle: true,
+        act: () => {
+          s.rumble = !s.rumble;
+          g.input.rumbleEnabled = s.rumble;
+          g.save.save();
+          if (s.rumble) g.input.rumble(0, 0.6, 0.6, 180);
+        },
+      });
+    }
+    const exit = this.pauseExit();
+    if (exit) items.push({ label: exit.label, toggle: false, act: exit.go });
+    items.push({ label: 'QUIT TO TITLE', toggle: false, act: () => g.scenes.go('title', {}) });
+    return items;
+  }
+
   /** Returns true while the pause menu owns input. */
   protected handlePause(): boolean {
     const input = this.game.input;
@@ -84,19 +140,21 @@ export abstract class CombatScene extends Scene implements World {
       this.paused = false;
       return true;
     }
+    const items = this.pauseItems();
+    const n = items.length;
     if (m.up) {
-      this.pauseIndex = (this.pauseIndex + 2) % 3;
+      this.pauseIndex = (this.pauseIndex + n - 1) % n;
       this.audio.playSelect();
     }
     if (m.down) {
-      this.pauseIndex = (this.pauseIndex + 1) % 3;
+      this.pauseIndex = (this.pauseIndex + 1) % n;
       this.audio.playSelect();
     }
-    if (m.confirm) {
+    const item = items[this.pauseIndex];
+    if (m.confirm || (item.toggle && (m.left || m.right))) {
       this.audio.playConfirm();
-      this.paused = false;
-      if (this.pauseIndex === 1) this.restart();
-      if (this.pauseIndex === 2) this.game.scenes.go('title', {});
+      if (!item.toggle) this.paused = false;
+      item.act();
     }
     return true;
   }
@@ -240,6 +298,8 @@ export abstract class CombatScene extends Scene implements World {
       this.audio.playClank();
     }
     this.camera.shake(hb.hitstop * 0.7 + (heavy ? 3 : 0.6), dir, -hb.knockbackY * 0.25, heavy ? 12 : 7);
+    this.rumbleFor(t, t.hp <= 0 ? 1 : heavy ? 0.7 : 0.25, t.hp <= 0 ? 420 : heavy ? 160 : 70);
+    if (heavy) this.rumbleFor(a, 0.35, 90);
 
     if (t.hp <= 0) this.audio.playVoiceGrunt(t.def.voice, 'ko');
     else if (heavy || Math.random() < 0.25) this.audio.playVoiceGrunt(t.def.voice, 'pain');
@@ -258,6 +318,13 @@ export abstract class CombatScene extends Scene implements World {
 
   onHitLanded?(attacker: Fighter, target: Fighter, damage: number): void;
   onFighterKO?(f: Fighter, by: Fighter | null): void;
+
+  /** Haptics for whichever human (if any) is driving this fighter. */
+  protected rumbleFor(f: Fighter, strength: number, ms: number): void {
+    const slot = (f as { slot?: number }).slot;
+    if (typeof slot !== 'number') return;
+    this.game.input.rumble(slot, strength, Math.min(1, strength * 1.3), ms);
+  }
 
   private spawnAmbient(): void {
     const p = this.particles;
@@ -344,6 +411,7 @@ export abstract class CombatScene extends Scene implements World {
   }
 
   protected renderPause(ctx: CanvasRenderingContext2D): void {
-    if (this.paused) this.game.ui.pauseOverlay(ctx, this.pauseIndex, this.game.time, this.game.input.touchMode);
+    if (!this.paused) return;
+    this.game.ui.pauseOverlay(ctx, this.pauseItems().map((i) => i.label), this.pauseIndex, this.game.time, this.game.input.touchMode);
   }
 }

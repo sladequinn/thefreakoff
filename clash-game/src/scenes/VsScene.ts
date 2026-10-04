@@ -45,12 +45,15 @@ export class VsScene extends CombatScene {
     this.camera.reset(CANVAS_WIDTH, 0);
     this.maxTokens = 99;
     const mirror = params.p1 === params.p2;
-    this.p1 = new Player(defOf(params.p1), game.input, 0, TEAM_PLAYER);
+    const v1 = params.v1 ?? 'normal';
+    let v2 = params.v2 ?? 'normal';
+    if (mirror && v1 === v2) v2 = v1 === 'alt' ? 'normal' : 'alt';
+    this.p1 = new Player(defOf(params.p1), game.input, 0, TEAM_PLAYER, v1);
     if (params.cpu) {
-      const difficulty = CPU_DIFFICULTY[game.settings.cpuDifficulty].value;
-      this.p2 = new Boss(defOf(params.p2), { team: TEAM_ENEMY, hpMult: 1, versus: true, difficulty, variant: mirror ? 'alt' : 'normal' });
+      const difficulty = CPU_DIFFICULTY[game.save.settings.cpuDifficulty].value;
+      this.p2 = new Boss(defOf(params.p2), { team: TEAM_ENEMY, hpMult: 1, versus: true, difficulty, variant: v2 });
     } else {
-      this.p2 = new Player(defOf(params.p2), game.input, 1, TEAM_ENEMY, mirror ? 'alt' : 'normal');
+      this.p2 = new Player(defOf(params.p2), game.input, 1, TEAM_ENEMY, v2);
     }
     for (const f of [this.p1, this.p2]) f.canBlock = true;
     this.p1.autoFace = this.p2;
@@ -68,7 +71,11 @@ export class VsScene extends CombatScene {
   }
 
   protected restart(): void {
-    this.game.scenes.go('vs', { ...this.params });
+    this.game.scenes.go('vs', { ...this.params, stage: this.theme });
+  }
+
+  protected pauseExit(): { label: string; go: () => void } {
+    return { label: 'CHARACTER SELECT', go: () => this.game.scenes.go('select', { mode: 'versus', cpu: this.params.cpu }) };
   }
 
   boundsFor(): Bounds {
@@ -202,7 +209,12 @@ export class VsScene extends CombatScene {
     const p2Tag = this.params.cpu ? 'CPU' : '2P';
     const title = w === -1 ? 'DRAW GAME' : w === 0 ? '1P WINS' : `${p2Tag} WINS`;
     const stage = STAGE_INFO[this.theme].name;
-    const difficulty = this.params.cpu ? `  ·  CPU ${CPU_DIFFICULTY[this.game.settings.cpuDifficulty].label}` : '';
+    const difficulty = this.params.cpu ? `  ·  CPU ${CPU_DIFFICULTY[this.game.save.settings.cpuDifficulty].label}` : '';
+    const humanWinner = w === 0 || (!this.params.cpu && w === 1);
+    const rec = this.game.save.recordVs(humanWinner && winner ? (winner.def.id as CharId) : null, Math.max(this.p1.combat.maxCombo, this.p2.combat.maxCombo), this.params.cpu);
+    const extra: string[] = [];
+    if (rec.combo && Math.max(this.p1.combat.maxCombo, this.p2.combat.maxCombo) > 1) extra.push('★ NEW BEST COMBO');
+    if (rec.alt && winner) extra.push(`UNLOCKED: ${winner.name.toUpperCase()} ALT COSTUME`);
     this.game.scenes.go('gameover', {
       title,
       subtitle: winner ? `${winner.name} takes the match ${this.wins[w as 0 | 1]} – ${this.wins[w === 0 ? 1 : 0]}` : 'Nobody walks away from this one a winner.',
@@ -210,11 +222,12 @@ export class VsScene extends CombatScene {
       accent: w === 1 ? '#ff4d6d' : '#6fb6ff',
       victory: w === 0 || (!this.params.cpu && w === 1),
       portrait: winner ? (winner.def.id as CharId) : undefined,
-      portraitVariant: winner === this.p2 && this.p2.variant === 'alt' ? 'alt' : 'normal',
+      portraitVariant: winner?.variant === 'alt' ? 'alt' : 'normal',
       lines: [
         `1P ${this.p1.name}  ·  ${this.p1.combat.hitsLanded} hits  ·  best combo ${this.p1.combat.maxCombo}`,
         `${p2Tag} ${this.p2.name}  ·  ${this.p2.combat.hitsLanded} hits  ·  best combo ${this.p2.combat.maxCombo}`,
         `${stage}  ·  ${this.round} ROUNDS${difficulty}`,
+        ...extra,
       ],
       options: [
         { label: 'REMATCH', scene: 'vs', params: { ...this.params, stage: this.theme } },

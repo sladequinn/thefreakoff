@@ -3,8 +3,9 @@ import type { SpriteRenderer } from '../rendering/SpriteRenderer';
 import type { UIRenderer } from '../rendering/UIRenderer';
 import type { Scene } from '../scenes/Scene';
 import type { CharId, GameMode, StoryCharId } from '../physics/Types';
-import type { CpuDifficulty, StagePick } from '../config/stages';
+import type { StagePick } from '../config/stages';
 import type { AudioEngine } from './AudioEngine';
+import type { SaveData } from './SaveData';
 import type { InputManager } from './InputManager';
 import type { GameLoop } from './GameLoop';
 
@@ -31,16 +32,16 @@ export interface SceneMap {
   title: Record<string, never>;
   select: { mode: GameMode; cpu: boolean };
   story: { char: StoryCharId; stage: number; score: number; lives: number };
-  vs: { p1: CharId; p2: CharId; cpu: boolean; stage: StagePick };
+  vs: { p1: CharId; p2: CharId; cpu: boolean; stage: StagePick; v1?: 'normal' | 'alt'; v2?: 'normal' | 'alt' };
   gameover: GameOverParams;
 }
 
 export type SceneName = keyof SceneMap;
 export type SceneFactory<K extends SceneName> = (game: GameContext, params: SceneMap[K]) => Scene;
 
+/** Session-only toggles; anything that should survive a reload lives in `GameContext.save.settings`. */
 export interface GameSettings {
   debug: boolean;
-  cpuDifficulty: CpuDifficulty;
 }
 
 export interface GameContext {
@@ -52,6 +53,7 @@ export interface GameContext {
   scenes: StateManager;
   loop: GameLoop | null;
   settings: GameSettings;
+  save: SaveData;
   /** Frames since boot; used for UI animation. */
   time: number;
 }

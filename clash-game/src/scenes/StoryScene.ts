@@ -238,6 +238,10 @@ export class StoryScene extends CombatScene {
     this.game.scenes.go('story', { char: this.params.char, stage: this.stageIndex, score: this.startScore, lives: this.startLives });
   }
 
+  protected pauseExit(): { label: string; go: () => void } {
+    return { label: 'CHARACTER SELECT', go: () => this.game.scenes.go('select', { mode: 'story', cpu: false }) };
+  }
+
   private setupStage(i: number): void {
     this.stage = this.stages[i];
     this.theme = this.stage.theme;
@@ -456,13 +460,16 @@ export class StoryScene extends CombatScene {
     this.phase = 'gameover';
     const p = this.player;
     const secs = Math.floor((this.frame - this.startFrame) / 60);
+    const prevHigh = this.game.save.records.storyHigh[this.params.char] ?? 0;
+    const rec = this.game.save.recordStory(this.params.char, p.score, p.combat.maxCombo, victory);
     const lines = [
-      `SCORE  ${String(p.score).padStart(7, '0')}`,
+      `SCORE  ${String(p.score).padStart(7, '0')}${rec.highScore && prevHigh > 0 ? '  ★ NEW HIGH SCORE' : ''}`,
       `ROBOTS DESTROYED  ${p.combat.kos}`,
-      `BEST COMBO  ${p.combat.maxCombo} HITS`,
+      `BEST COMBO  ${p.combat.maxCombo} HITS${rec.combo && p.combat.maxCombo > 1 ? '  ★ NEW RECORD' : ''}`,
       `DAMAGE DEALT  ${Math.round(p.combat.damageDealt)}`,
     ];
     if (!victory) lines.push(`FELL IN ${this.stage.name} (${secs}s)`);
+    if (rec.alt) lines.push(`UNLOCKED: ${p.name.toUpperCase()} ALT COSTUME`);
     this.game.scenes.go('gameover', {
       title: victory ? 'VICTORY' : 'GAME OVER',
       subtitle: victory

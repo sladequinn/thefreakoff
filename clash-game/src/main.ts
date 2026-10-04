@@ -4,6 +4,7 @@ import { CANVAS_WIDTH, FONT_UI } from './config/constants';
 import { AudioEngine } from './core/AudioEngine';
 import { GameLoop } from './core/GameLoop';
 import { InputManager } from './core/InputManager';
+import { SaveData } from './core/SaveData';
 import { StateManager, type GameContext } from './core/StateManager';
 import { TouchControls } from './core/TouchControls';
 import { Renderer } from './rendering/Renderer';
@@ -28,6 +29,10 @@ const touch = new TouchControls(input, renderer.canvas);
 touch.setVisible(input.touchMode);
 const audio = new AudioEngine();
 const scenes = new StateManager();
+const save = new SaveData();
+audio.setMusicEnabled(save.settings.musicOn);
+audio.setSfxEnabled(save.settings.sfxOn);
+input.rumbleEnabled = save.settings.rumble;
 
 const game: GameContext = {
   renderer,
@@ -37,7 +42,8 @@ const game: GameContext = {
   audio,
   scenes,
   loop: null,
-  settings: { debug: false, cpuDifficulty: 'normal' },
+  settings: { debug: false },
+  save,
   time: 0,
 };
 scenes.game = game;
