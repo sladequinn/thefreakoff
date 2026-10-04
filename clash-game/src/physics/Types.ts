@@ -134,6 +134,10 @@ export interface CharacterDef {
   blurb?: string;
   moveList?: { name: string; input: string; desc: string }[];
   ratings?: { power: number; speed: number; range: number; defense: number };
+  /** Lines shown on the versus results screen when this character wins. */
+  winQuotes?: string[];
+  /** Opponent-specific victory lines, keyed by the loser's CharId. */
+  winQuotesVs?: Partial<Record<CharId, string[]>>;
 }
 
 export interface InputFrame {

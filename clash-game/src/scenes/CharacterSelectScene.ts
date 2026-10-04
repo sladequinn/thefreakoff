@@ -1,9 +1,13 @@
 import { CANVAS_HEIGHT, CANVAS_WIDTH, COLORS, FONT_UI, STORY_LIVES, font } from '../config/constants';
+import { CPU_DIFFICULTIES, CPU_DIFFICULTY, STAGE_INFO, STAGE_ORDER, resolveStage, type StagePick } from '../config/stages';
 import { CHARACTERS, STORY_ROSTER, VS_ROSTER, isStoryChar } from '../characters';
 import type { GameContext, SceneMap } from '../core/StateManager';
 import type { CharId, CharacterDef, StoryCharId } from '../physics/Types';
+import type { StageTheme } from '../rendering/Renderer';
 import { idlePose } from '../rendering/SpriteRenderer';
 import { Scene } from './Scene';
+
+const STAGE_PICKS: StagePick[] = [...STAGE_ORDER, 'random'];
 
 interface RosterEntry {
   id: CharId;
@@ -55,7 +59,7 @@ interface Cursor {
   color: string;
 }
 
-type Phase = 'pick' | 'splash' | 'story';
+type Phase = 'pick' | 'stage' | 'splash' | 'story';
 
 export class CharacterSelectScene extends Scene {
   private cursors: Cursor[];
@@ -65,6 +69,9 @@ export class CharacterSelectScene extends Scene {
   private flash = 0;
   /** Story mode offers the two protagonists; versus opens the full roster. */
   private readonly roster: RosterEntry[];
+  private stageIndex = STAGE_PICKS.indexOf('rooftop');
+  /** Concrete stage once the player confirms (random is rolled at that moment so the splash can name it). */
+  private stageChoice: StageTheme = 'rooftop';
 
   constructor(game: GameContext, private readonly params: SceneMap['select']) {
     super(game);
@@ -98,8 +105,18 @@ export class CharacterSelectScene extends Scene {
 
     if (this.phase === 'splash') {
       if (++this.phaseT >= SPLASH_FRAMES || (this.phaseT > 30 && input.menu().confirm)) {
-        this.game.scenes.go('vs', { p1: this.roster[this.cursors[0].index].id, p2: this.roster[this.cursors[1].index].id, cpu: this.params.cpu });
+        this.game.scenes.go('vs', {
+          p1: this.roster[this.cursors[0].index].id,
+          p2: this.roster[this.cursors[1].index].id,
+          cpu: this.params.cpu,
+          stage: this.stageChoice,
+        });
       }
+      return;
+    }
+    if (this.phase === 'stage') {
+      this.phaseT++;
+      this.updateStagePick();
       return;
     }
     if (this.phase === 'story') {
@@ -143,30 +160,80 @@ export class CharacterSelectScene extends Scene {
 
     if (this.cursors.every((c) => c.locked)) {
       this.phaseT = 0;
-      if (this.params.mode === 'story') {
-        this.phase = 'story';
-      } else {
-        this.phase = 'splash';
-        audio.playBell();
+      this.phase = this.params.mode === 'story' ? 'story' : 'stage';
+    }
+  }
+
+  /** Stage (and, against the CPU, difficulty) selection. Player 1 drives it; Back returns to the roster. */
+  private updateStagePick(): void {
+    const input = this.game.input;
+    const audio = this.game.audio;
+    const n = STAGE_PICKS.length;
+    if (input.slotPressed(0, 'left')) {
+      this.stageIndex = (this.stageIndex + n - 1) % n;
+      audio.playSelect();
+    }
+    if (input.slotPressed(0, 'right')) {
+      this.stageIndex = (this.stageIndex + 1) % n;
+      audio.playSelect();
+    }
+    if (this.params.cpu) {
+      const levels = CPU_DIFFICULTIES;
+      const cur = levels.indexOf(this.game.settings.cpuDifficulty);
+      if (input.slotPressed(0, 'up')) {
+        this.game.settings.cpuDifficulty = levels[(cur + 1) % levels.length];
+        audio.playSelect();
+      } else if (input.slotPressed(0, 'down')) {
+        this.game.settings.cpuDifficulty = levels[(cur + levels.length - 1) % levels.length];
+        audio.playSelect();
       }
     }
+    if (input.slotBack(0) || input.slotBack(1)) {
+      const locked = this.cursors.filter((c) => c.locked);
+      locked[locked.length - 1].locked = false;
+      this.phase = 'pick';
+      audio.playBack();
+      return;
+    }
+    if (this.phaseT > 8 && (input.slotConfirm(0) || input.slotConfirm(1))) {
+      this.stageChoice = resolveStage(STAGE_PICKS[this.stageIndex]);
+      this.phase = 'splash';
+      this.phaseT = 0;
+      this.flash = 10;
+      audio.playConfirm();
+      audio.playBell();
+    }
+  }
+
+  private hoveredStage(): StageTheme {
+    const pick = STAGE_PICKS[this.stageIndex];
+    if (pick !== 'random') return pick;
+    return STAGE_ORDER[Math.floor(this.t / 45) % STAGE_ORDER.length];
   }
 
   render(ctx: CanvasRenderingContext2D): void {
     const g = this.game;
     const time = g.time;
+    const stagePhase = this.phase === 'stage' || (this.phase === 'splash' && this.params.mode !== 'story');
     const w = g.renderer.beginWorld();
-    g.renderer.drawStage(this.params.mode === 'story' ? 'facility' : 'rooftop', 0, 0, time, CANVAS_WIDTH);
-    w.fillStyle = 'rgba(5,3,12,0.72)';
-    w.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     const story = this.params.mode === 'story';
-    if (story) this.roster.forEach((_, i) => this.drawCardBack(w, i, 60 + i * 430, 76, 410, 392, time));
-    else this.roster.forEach((_, i) => this.drawTileBack(w, i, TILE_X0 + i * TILE_STEP, TILE_Y, TILE_W, TILE_H, time));
+    if (stagePhase) {
+      this.drawStagePreviewWorld(w, time);
+    } else {
+      g.renderer.drawStage(story ? 'facility' : 'rooftop', 0, 0, time, CANVAS_WIDTH);
+      w.fillStyle = 'rgba(5,3,12,0.72)';
+      w.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+      if (story) this.roster.forEach((_, i) => this.drawCardBack(w, i, 60 + i * 430, 76, 410, 392, time));
+      else this.roster.forEach((_, i) => this.drawTileBack(w, i, TILE_X0 + i * TILE_STEP, TILE_Y, TILE_W, TILE_H, time));
+    }
     g.renderer.drawVignette();
     g.renderer.endWorld();
 
-    const heading =
-      this.params.mode === 'story'
+    const heading = stagePhase
+      ? this.params.cpu
+        ? 'CHOOSE YOUR STAGE  —  SET CPU LEVEL'
+        : 'CHOOSE YOUR STAGE'
+      : this.params.mode === 'story'
         ? 'STORY MODE  —  CHOOSE YOUR FIGHTER'
         : this.params.cpu
           ? this.cursors[0].locked
@@ -175,7 +242,9 @@ export class CharacterSelectScene extends Scene {
           : 'VERSUS  —  BOTH PLAYERS CHOOSE';
     g.ui.text(ctx, heading, CANVAS_WIDTH / 2, 48, 26, '#ffffff', { stroke: '#000', strokeWidth: 5, shadow: 'rgba(138,77,255,0.7)' });
 
-    if (story) this.roster.forEach((_, i) => this.drawCardFront(ctx, i, 60 + i * 430, 76, 410, 392, time));
+    if (stagePhase) {
+      if (this.phase === 'stage') this.drawStageCards(ctx, time);
+    } else if (story) this.roster.forEach((_, i) => this.drawCardFront(ctx, i, 60 + i * 430, 76, 410, 392, time));
     else {
       this.roster.forEach((_, i) => this.drawTileFront(ctx, i, TILE_X0 + i * TILE_STEP, TILE_Y, TILE_W, TILE_H, time));
       this.cursors.forEach((c, k) => this.drawDetail(ctx, c, 36 + k * 452, 268, 436, 202));
@@ -431,10 +500,114 @@ export class CharacterSelectScene extends Scene {
     });
   }
 
+  /** Live preview of the hovered stage with both picked fighters squaring off on it. */
+  private drawStagePreviewWorld(w: CanvasRenderingContext2D, time: number): void {
+    const theme = this.phase === 'splash' ? this.stageChoice : this.hoveredStage();
+    this.game.renderer.drawStage(theme, 0, 0, time, CANVAS_WIDTH);
+    const a = this.roster[this.cursors[0].index].def;
+    const b = this.roster[this.cursors[1].index].def;
+    const mirror = a.id === b.id;
+    const floor = 392;
+    this.game.renderer.withSprites((s) => {
+      for (const [def, x, facing, variant] of [
+        [a, 330, 1, 'normal'],
+        [b, 630, -1, mirror ? 'alt' : 'normal'],
+      ] as const) {
+        s.fillStyle = 'rgba(0,0,0,0.45)';
+        s.beginPath();
+        s.ellipse(x, floor, 30 * def.scale, 6, 0, 0, Math.PI * 2);
+        s.fill();
+        this.game.sprites.drawBody(s, def.archetype, variant, idlePose(def.archetype, time + (facing > 0 ? 0 : 30)), x, floor, facing, def.scale, time, null);
+      }
+    });
+    w.fillStyle = 'rgba(5,3,12,0.3)';
+    w.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  }
+
+  private drawStageCards(ctx: CanvasRenderingContext2D, time: number): void {
+    const ui = this.game.ui;
+    const n = STAGE_PICKS.length;
+    const cw = 118;
+    const ch = 58;
+    const gap = 8;
+    const x0 = (CANVAS_WIDTH - (n * cw + (n - 1) * gap)) / 2;
+    const y = 404;
+    STAGE_PICKS.forEach((pick, i) => {
+      const x = x0 + i * (cw + gap);
+      const hovered = i === this.stageIndex;
+      ctx.save();
+      if (pick === 'random') {
+        const hue = (time * 2) % 360;
+        const g = ctx.createLinearGradient(x, y, x + cw, y + ch);
+        g.addColorStop(0, `hsl(${hue}, 60%, 28%)`);
+        g.addColorStop(1, `hsl(${(hue + 90) % 360}, 60%, 18%)`);
+        ctx.fillStyle = g;
+        ctx.fillRect(x, y, cw, ch);
+        ui.text(ctx, '?', x + cw / 2, y + 30, 26, '#ffffff', { stroke: '#000', strokeWidth: 4 });
+      } else {
+        const info = STAGE_INFO[pick];
+        const g = ctx.createLinearGradient(0, y, 0, y + ch);
+        g.addColorStop(0, info.sky[0]);
+        g.addColorStop(0.7, info.sky[1]);
+        g.addColorStop(0.71, info.ground);
+        g.addColorStop(1, '#0a0810');
+        ctx.fillStyle = g;
+        ctx.fillRect(x, y, cw, ch);
+        ctx.fillStyle = 'rgba(0,0,0,0.35)';
+        for (let k = 0; k < 5; k++) {
+          const bw = 10 + ((i * 7 + k * 13) % 14);
+          const bh = 10 + ((i * 11 + k * 17) % 22);
+          ctx.fillRect(x + 6 + k * 22, y + ch * 0.7 - bh, bw, bh);
+        }
+      }
+      ctx.globalAlpha = hovered ? 1 : 0.55;
+      ctx.lineWidth = hovered ? 3 : 1;
+      ctx.strokeStyle = hovered ? '#ffffff' : 'rgba(255,255,255,0.3)';
+      if (hovered) {
+        ctx.shadowColor = pick === 'random' ? '#ffffff' : STAGE_INFO[pick].accent;
+        ctx.shadowBlur = 16 + 6 * Math.sin(time * 0.12);
+      }
+      ctx.strokeRect(x + 0.5, y + 0.5, cw - 1, ch - 1);
+      ctx.restore();
+      const label = pick === 'random' ? 'RANDOM' : STAGE_INFO[pick].name.replace('THE ', '');
+      ui.text(ctx, label, x + cw / 2, y + ch + 14, 9, hovered ? '#ffffff' : 'rgba(255,255,255,0.55)', { template: FONT_UI });
+    });
+
+    // name + tagline of the hovered stage, floating above the cards
+    const pick = STAGE_PICKS[this.stageIndex];
+    const info = pick === 'random' ? null : STAGE_INFO[pick];
+    ui.text(ctx, info ? info.name : 'RANDOM STAGE', CANVAS_WIDTH / 2, 92, 22, info ? info.accent : '#ffffff', { stroke: '#000', strokeWidth: 5 });
+    ui.text(ctx, info ? info.tagline : 'Roll the dice. The city picks the battleground.', CANVAS_WIDTH / 2, 112, 13, 'rgba(255,255,255,0.8)', { template: FONT_UI });
+
+    if (this.params.cpu) {
+      const d = CPU_DIFFICULTY[this.game.settings.cpuDifficulty];
+      const bob = Math.sin(time * 0.15) * 2;
+      ui.panel(ctx, CANVAS_WIDTH / 2 - 190, 150, 380, 54, 'rgba(8,6,18,0.86)');
+      ui.text(ctx, '▲', CANVAS_WIDTH / 2 - 160, 172 - bob, 10, COLORS.hazard);
+      ui.text(ctx, '▼', CANVAS_WIDTH / 2 - 160, 196 + bob, 10, COLORS.hazard);
+      ui.text(ctx, `CPU LEVEL: ${d.label}`, CANVAS_WIDTH / 2 + 10, 176, 16, '#ffffff', { stroke: '#000', strokeWidth: 3 });
+      ui.text(ctx, d.desc, CANVAS_WIDTH / 2 + 10, 195, 12, 'rgba(255,255,255,0.65)', { template: FONT_UI });
+    }
+
+    const a = this.roster[this.cursors[0].index];
+    const b = this.roster[this.cursors[1].index];
+    ui.text(ctx, a.def.name, 330, 272, 16, a.glow, { stroke: '#000', strokeWidth: 4 });
+    ui.text(ctx, b.def.name, 630, 272, 16, b.glow, { stroke: '#000', strokeWidth: 4 });
+  }
+
   private drawFooter(ctx: CanvasRenderingContext2D, time: number): void {
     const ui = this.game.ui;
     const y = 480;
     ui.panel(ctx, 60, y, CANVAS_WIDTH - 120, 44, 'rgba(8,6,18,0.9)');
+    if (this.phase === 'stage') {
+      const touch = this.game.input.touchMode;
+      const help = touch
+        ? `Stick left / right to choose a stage${this.params.cpu ? '   ·   up / down CPU level' : ''}   ·   ATK to fight   ·   II to go back`
+        : `A / D or ← / → choose a stage${this.params.cpu ? '   ·   W / S CPU level' : ''}   ·   J / Enter to fight   ·   Esc back to roster`;
+      ui.text(ctx, help, CANVAS_WIDTH / 2, y + 20, 13, '#ffffff', { template: FONT_UI });
+      ui.text(ctx, 'Best of 3 rounds  ·  99 second timer', CANVAS_WIDTH / 2, y + 37, 11, 'rgba(255,255,255,0.55)', { template: FONT_UI });
+      return;
+    }
     if (this.params.mode === 'story') {
       const c = this.cursors[0];
       const id = this.roster[c.index].id;
@@ -526,7 +699,8 @@ export class CharacterSelectScene extends Scene {
       ctx.restore();
     }
     if (t > 40) {
-      ui.text(ctx, 'ROOFTOP  ·  BEST OF 3', CANVAS_WIDTH / 2, 500, 14, 'rgba(255,255,255,0.75)', { template: FONT_UI });
+      const level = this.params.cpu ? `  ·  CPU ${CPU_DIFFICULTY[this.game.settings.cpuDifficulty].label}` : '';
+      ui.text(ctx, `${STAGE_INFO[this.stageChoice].name}  ·  BEST OF 3${level}`, CANVAS_WIDTH / 2, 500, 14, 'rgba(255,255,255,0.75)', { template: FONT_UI });
     }
     ctx.restore();
   }

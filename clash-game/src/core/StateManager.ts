@@ -3,6 +3,7 @@ import type { SpriteRenderer } from '../rendering/SpriteRenderer';
 import type { UIRenderer } from '../rendering/UIRenderer';
 import type { Scene } from '../scenes/Scene';
 import type { CharId, GameMode, StoryCharId } from '../physics/Types';
+import type { CpuDifficulty, StagePick } from '../config/stages';
 import type { AudioEngine } from './AudioEngine';
 import type { InputManager } from './InputManager';
 import type { GameLoop } from './GameLoop';
@@ -16,10 +17,13 @@ export interface GameOverOption<K extends SceneName = SceneName> {
 export interface GameOverParams {
   title: string;
   subtitle: string;
+  /** Winner's victory line, shown in quotes under the subtitle. */
+  quote?: string;
   accent: string;
   victory: boolean;
   lines: string[];
   portrait?: CharId;
+  portraitVariant?: 'normal' | 'alt';
   options: GameOverOption[];
 }
 
@@ -27,7 +31,7 @@ export interface SceneMap {
   title: Record<string, never>;
   select: { mode: GameMode; cpu: boolean };
   story: { char: StoryCharId; stage: number; score: number; lives: number };
-  vs: { p1: CharId; p2: CharId; cpu: boolean };
+  vs: { p1: CharId; p2: CharId; cpu: boolean; stage: StagePick };
   gameover: GameOverParams;
 }
 
@@ -36,6 +40,7 @@ export type SceneFactory<K extends SceneName> = (game: GameContext, params: Scen
 
 export interface GameSettings {
   debug: boolean;
+  cpuDifficulty: CpuDifficulty;
 }
 
 export interface GameContext {

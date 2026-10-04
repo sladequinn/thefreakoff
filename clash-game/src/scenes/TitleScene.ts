@@ -61,7 +61,7 @@ export class TitleScene extends Scene {
       },
       {
         label: 'VERSUS: 1P vs CPU',
-        hint: 'Duel an adaptive CPU rival that blocks, punishes and reads your habits.',
+        hint: 'Duel an adaptive CPU rival. Pick any fighter, any stage, and set the CPU level.',
         go: () => this.game.scenes.go('select', { mode: 'versus', cpu: true }),
       },
       {

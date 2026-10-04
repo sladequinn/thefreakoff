@@ -208,6 +208,18 @@ export const SLADE: CharacterDef = {
   scale: 1,
   blurb: 'Elusive arcane zoner. Blinks through smoke, carves space with a void-lit ninjato and detonates sigils when crowded.',
   ratings: { power: 3, speed: 5, range: 4, defense: 2 },
+  winQuotes: [
+    'You were fighting smoke. I was already behind you.',
+    'The void keeps what it cuts.',
+    'Blink. That was the whole match.',
+    'Study the sigils. Then study them again.',
+  ],
+  winQuotesVs: {
+    freckles: ['Dry your eyes, Freckles. The city was never yours.', 'Your bells rang the whole time. Easy to track.'],
+    whitelie: ['Big suit, bigger target.', 'Platinum dents like anything else.'],
+    fiddlejay: ['Nice tune. Shame about the tempo.', 'Your bow is a stick. Mine is a blade.'],
+    slade: ['Only one of us is the original.'],
+  },
   moveList: [
     { name: 'Ninjato Triple Flurry', input: 'J, J, J', desc: 'Slash → arcane palm → launching void crescent' },
     { name: 'Shadow Step', input: 'Run + J', desc: 'Vanish into smoke, reappear with a tripping sweep' },

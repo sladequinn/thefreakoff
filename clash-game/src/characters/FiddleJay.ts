@@ -254,6 +254,18 @@ export const FIDDLE_JAY: CharacterDef = {
   scale: 1,
   blurb: 'Backwoods fiddle virtuoso and fifth-dan karateka. Whips his bow like a blade and plays riffs hot enough to floor you.',
   ratings: { power: 3, speed: 5, range: 4, defense: 2 },
+  winQuotes: [
+    "That's the whole song. Thanks for coming out.",
+    'Fifth dan, first chair. Pick your poison.',
+    'Rosin up, friend. You were a half-step flat.',
+    'Every bruise is a note. You\'re a symphony.',
+  ],
+  winQuotesVs: {
+    slade: ['Shadows can\'t hide from a good ear.', 'Blink all you like, the beat finds you.'],
+    freckles: ['I\'ll play you a lullaby. Sleep it off.', 'Sad song, sadder fight.'],
+    whitelie: ['Big man, no rhythm.', 'That cane plays worse than it swings.'],
+    fiddlejay: ['Only one of us practised today.'],
+  },
   moveList: [
     { name: 'Hoedown String', input: 'J, J, J, J', desc: 'Bow lash → snap kick → hook kick → launching thrust' },
     { name: 'Devil Went Down', input: 'Run + J', desc: 'Sliding sweep kick that trips' },

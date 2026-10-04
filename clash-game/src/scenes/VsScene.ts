@@ -1,4 +1,5 @@
 import { CANVAS_WIDTH, FONT_UI, TEAM_ENEMY, TEAM_PLAYER, VS_ARENA_MARGIN, VS_ROUNDS_TO_WIN, VS_ROUND_SECONDS } from '../config/constants';
+import { CPU_DIFFICULTY, STAGE_INFO, nextStage, resolveStage } from '../config/stages';
 import { charDef } from '../characters';
 import type { GameContext, SceneMap } from '../core/StateManager';
 import { Boss } from '../entities/Boss';
@@ -10,6 +11,15 @@ import { CombatScene } from './Scene';
 type RoundPhase = 'intro' | 'fight' | 'ko' | 'timeup' | 'roundEnd' | 'matchEnd';
 
 const defOf = charDef;
+
+/** Picks a victory line, preferring one aimed at the specific opponent when the character has it. */
+export function winQuote(winner: Fighter, loser: Fighter, seed: number): string {
+  const vs = winner.def.winQuotesVs?.[loser.def.id as CharId];
+  if (vs && vs.length > 0) return vs[seed % vs.length];
+  const pool = winner.def.winQuotes ?? [];
+  if (pool.length === 0) return '';
+  return pool[seed % pool.length];
+}
 
 export class VsScene extends CombatScene {
   readonly mode = 'versus' as const;
@@ -30,14 +40,15 @@ export class VsScene extends CombatScene {
   constructor(game: GameContext, params: SceneMap['vs']) {
     super(game);
     this.params = params;
-    this.theme = 'rooftop';
+    this.theme = resolveStage(params.stage);
     this.stageWidth = CANVAS_WIDTH;
     this.camera.reset(CANVAS_WIDTH, 0);
     this.maxTokens = 99;
     const mirror = params.p1 === params.p2;
     this.p1 = new Player(defOf(params.p1), game.input, 0, TEAM_PLAYER);
     if (params.cpu) {
-      this.p2 = new Boss(defOf(params.p2), { team: TEAM_ENEMY, hpMult: 1, versus: true, difficulty: 0.85, variant: mirror ? 'alt' : 'normal' });
+      const difficulty = CPU_DIFFICULTY[game.settings.cpuDifficulty].value;
+      this.p2 = new Boss(defOf(params.p2), { team: TEAM_ENEMY, hpMult: 1, versus: true, difficulty, variant: mirror ? 'alt' : 'normal' });
     } else {
       this.p2 = new Player(defOf(params.p2), game.input, 1, TEAM_ENEMY, mirror ? 'alt' : 'normal');
     }
@@ -187,21 +198,27 @@ export class VsScene extends CombatScene {
     if (this.game.scenes.transitioning) return;
     const w = this.matchWinner;
     const winner = w === 0 ? this.p1 : w === 1 ? this.p2 : null;
+    const loser = w === 0 ? this.p2 : this.p1;
     const p2Tag = this.params.cpu ? 'CPU' : '2P';
     const title = w === -1 ? 'DRAW GAME' : w === 0 ? '1P WINS' : `${p2Tag} WINS`;
+    const stage = STAGE_INFO[this.theme].name;
+    const difficulty = this.params.cpu ? `  ·  CPU ${CPU_DIFFICULTY[this.game.settings.cpuDifficulty].label}` : '';
     this.game.scenes.go('gameover', {
       title,
-      subtitle: winner ? `${winner.name} takes the match ${this.wins[w as 0 | 1]} – ${this.wins[w === 0 ? 1 : 0]}` : 'Nobody walks off this rooftop a winner.',
+      subtitle: winner ? `${winner.name} takes the match ${this.wins[w as 0 | 1]} – ${this.wins[w === 0 ? 1 : 0]}` : 'Nobody walks away from this one a winner.',
+      quote: winner ? winQuote(winner, loser, this.p1.combat.hitsLanded + this.p2.combat.hitsLanded + this.round) : undefined,
       accent: w === 1 ? '#ff4d6d' : '#6fb6ff',
       victory: w === 0 || (!this.params.cpu && w === 1),
       portrait: winner ? (winner.def.id as CharId) : undefined,
+      portraitVariant: winner === this.p2 && this.p2.variant === 'alt' ? 'alt' : 'normal',
       lines: [
         `1P ${this.p1.name}  ·  ${this.p1.combat.hitsLanded} hits  ·  best combo ${this.p1.combat.maxCombo}`,
         `${p2Tag} ${this.p2.name}  ·  ${this.p2.combat.hitsLanded} hits  ·  best combo ${this.p2.combat.maxCombo}`,
-        `ROUNDS PLAYED  ${this.round}`,
+        `${stage}  ·  ${this.round} ROUNDS${difficulty}`,
       ],
       options: [
-        { label: 'REMATCH', scene: 'vs', params: { ...this.params } },
+        { label: 'REMATCH', scene: 'vs', params: { ...this.params, stage: this.theme } },
+        { label: 'NEXT STAGE', scene: 'vs', params: { ...this.params, stage: nextStage(this.theme) } },
         { label: 'CHARACTER SELECT', scene: 'select', params: { mode: 'versus', cpu: this.params.cpu } },
         { label: 'TITLE SCREEN', scene: 'title', params: {} },
       ],

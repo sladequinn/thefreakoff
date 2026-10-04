@@ -255,6 +255,18 @@ export const FRECKLES: CharacterDef = {
   scale: 1,
   blurb: 'Teary-eyed carnival queen with a wicked right hook. Spiked-knuckle strings, armored tackles and seismic slams.',
   ratings: { power: 5, speed: 3, range: 2, defense: 5 },
+  winQuotes: [
+    "Don't look at me like that. I'm sorry. I'm not sorry.",
+    'Everyone laughs until the bells stop ringing.',
+    'I cried the whole time. You still lost.',
+    'The show must go on. Without you.',
+  ],
+  winQuotesVs: {
+    slade: ["You can't blink away a broken jaw, Slade.", 'Smoke and mirrors. I brought a fist.'],
+    whitelie: ['All that gold and not one true word.', 'Big man, glass chin.'],
+    fiddlejay: ['Play something sad for yourself for once.', 'I liked the song. I liked hitting you more.'],
+    freckles: ['There was only ever room for one of us.'],
+  },
   moveList: [
     { name: 'Scrap Iron Combination', input: 'J, J, J, J', desc: 'Jab → liver → uppercut → knockdown haymaker' },
     { name: 'Bull Charge', input: 'Run + J', desc: 'Armored tackle; wall-bounces near stage edges' },

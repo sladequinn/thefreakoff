@@ -101,7 +101,7 @@ export class GameOverScene extends Scene {
         s.ellipse(px, 470, 80, 13, 0, 0, Math.PI * 2);
         s.fill();
         if (!p.victory) s.globalAlpha = 0.75;
-        g.sprites.drawBody(s, def.archetype, 'normal', idlePose(def.archetype, p.victory ? time : time * 0.4), px, 470, 1, 2.1, time);
+        g.sprites.drawBody(s, def.archetype, p.portraitVariant ?? 'normal', idlePose(def.archetype, p.victory ? time : time * 0.4), px, 470, 1, 2.1, time);
       });
     }
     this.drawConfetti(ctx);
@@ -117,9 +117,14 @@ export class GameOverScene extends Scene {
     g.ui.text(ctx, p.title, 0, 0, 64, '#ffffff', { stroke: '#000', strokeWidth: 8, shadow: p.accent, alpha: drop });
     ctx.restore();
     g.ui.text(ctx, p.subtitle, cx, 156, 14, p.accent, { template: FONT_UI, alpha: drop });
+    let panelY = 180;
+    if (p.quote) {
+      const appear = Math.min(1, Math.max(0, (this.t - 12) / 12));
+      g.ui.text(ctx, `“${p.quote}”`, cx, 178, 15, '#ffffff', { template: FONT_UI, alpha: appear * 0.9 });
+      panelY = 196;
+    }
 
     const panelW = 420;
-    const panelY = 180;
     const panelH = 30 + p.lines.length * 26;
     g.ui.panel(ctx, cx - panelW / 2, panelY, panelW, panelH, 'rgba(8,6,18,0.86)');
     p.lines.forEach((line, i) => {
@@ -136,7 +141,7 @@ export class GameOverScene extends Scene {
       cx,
       menuY,
       time,
-      38,
+      p.options.length > 3 ? 32 : 38,
       p.options.map(() => !ready),
     );
 

@@ -37,7 +37,7 @@ const game: GameContext = {
   audio,
   scenes,
   loop: null,
-  settings: { debug: false },
+  settings: { debug: false, cpuDifficulty: 'normal' },
   time: 0,
 };
 scenes.game = game;
