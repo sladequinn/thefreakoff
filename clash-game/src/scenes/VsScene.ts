@@ -1,5 +1,7 @@
 import { CANVAS_WIDTH, FONT_UI, TEAM_ENEMY, TEAM_PLAYER, VS_ARENA_MARGIN, VS_ROUNDS_TO_WIN, VS_ROUND_SECONDS } from '../config/constants';
 import { CPU_DIFFICULTY, STAGE_INFO, nextStage, resolveStage } from '../config/stages';
+import { ARCADE_BOSS_HP, ARCADE_DIFFICULTY, ARCADE_RUNG_LABEL, arcadeMatchScore, arcadeStage, isArcadeFinal, type ArcadeRun } from '../config/arcade';
+import type { GameOverOption } from '../core/StateManager';
 import { charDef } from '../characters';
 import type { GameContext, SceneMap } from '../core/StateManager';
 import { Boss } from '../entities/Boss';
@@ -22,8 +24,11 @@ export function winQuote(winner: Fighter, loser: Fighter, seed: number): string 
 }
 
 export class VsScene extends CombatScene {
-  readonly mode = 'versus' as const;
+  readonly mode: 'versus' | 'arcade';
   private readonly params: SceneMap['vs'];
+  private readonly arcade: ArcadeRun | null;
+  private perfectRounds = 0;
+  private roundsLost = 0;
   private readonly p1: Player;
   private readonly p2: Fighter;
   private round = 1;
@@ -40,7 +45,9 @@ export class VsScene extends CombatScene {
   constructor(game: GameContext, params: SceneMap['vs']) {
     super(game);
     this.params = params;
-    this.theme = resolveStage(params.stage);
+    this.arcade = params.arcade ?? null;
+    this.mode = this.arcade ? 'arcade' : 'versus';
+    this.theme = this.arcade ? arcadeStage(this.arcade) : resolveStage(params.stage);
     this.stageWidth = CANVAS_WIDTH;
     this.camera.reset(CANVAS_WIDTH, 0);
     this.maxTokens = 99;
@@ -49,7 +56,11 @@ export class VsScene extends CombatScene {
     let v2 = params.v2 ?? 'normal';
     if (mirror && v1 === v2) v2 = v1 === 'alt' ? 'normal' : 'alt';
     this.p1 = new Player(defOf(params.p1), game.input, 0, TEAM_PLAYER, v1);
-    if (params.cpu) {
+    if (this.arcade) {
+      const final = isArcadeFinal(this.arcade);
+      const difficulty = ARCADE_DIFFICULTY[Math.min(this.arcade.index, ARCADE_DIFFICULTY.length - 1)];
+      this.p2 = new Boss(defOf(params.p2), { team: TEAM_ENEMY, hpMult: final ? ARCADE_BOSS_HP : 1, versus: true, difficulty, variant: final ? 'boss' : v2, aura: final });
+    } else if (params.cpu) {
       const difficulty = CPU_DIFFICULTY[game.save.settings.cpuDifficulty].value;
       this.p2 = new Boss(defOf(params.p2), { team: TEAM_ENEMY, hpMult: 1, versus: true, difficulty, variant: v2 });
     } else {
@@ -75,7 +86,12 @@ export class VsScene extends CombatScene {
   }
 
   protected pauseExit(): { label: string; go: () => void } {
+    if (this.arcade) return { label: 'ABANDON RUN', go: () => this.game.scenes.go('select', { mode: 'arcade', cpu: true }) };
     return { label: 'CHARACTER SELECT', go: () => this.game.scenes.go('select', { mode: 'versus', cpu: this.params.cpu }) };
+  }
+
+  private get p2Tag(): string {
+    return this.arcade ? 'CPU' : this.params.cpu ? 'CPU' : '2P';
   }
 
   boundsFor(): Bounds {
@@ -121,6 +137,8 @@ export class VsScene extends CombatScene {
       this.wins[this.roundWinner]++;
       const w = this.roundWinner === 0 ? this.p1 : this.p2;
       this.perfect = w.hp >= w.maxHp - 0.01;
+      if (this.roundWinner === 0 && this.perfect) this.perfectRounds++;
+      if (this.roundWinner === 1) this.roundsLost++;
       w.move = null;
       w.setState(FState.VICTORY);
       this.audio.playTaunt(w.def.voice);
@@ -204,10 +222,11 @@ export class VsScene extends CombatScene {
 
   private toResults(): void {
     if (this.game.scenes.transitioning) return;
+    if (this.arcade) return this.toArcadeResults(this.arcade);
     const w = this.matchWinner;
     const winner = w === 0 ? this.p1 : w === 1 ? this.p2 : null;
     const loser = w === 0 ? this.p2 : this.p1;
-    const p2Tag = this.params.cpu ? 'CPU' : '2P';
+    const p2Tag = this.p2Tag;
     const title = w === -1 ? 'DRAW GAME' : w === 0 ? '1P WINS' : `${p2Tag} WINS`;
     const stage = STAGE_INFO[this.theme].name;
     const difficulty = this.params.cpu ? `  ·  CPU ${CPU_DIFFICULTY[this.game.save.settings.cpuDifficulty].label}` : '';
@@ -239,18 +258,101 @@ export class VsScene extends CombatScene {
     });
   }
 
+  /** Arcade ladders chain matches: a win advances the rung, a loss burns a continue, the finale banks the score. */
+  private toArcadeResults(run: ArcadeRun): void {
+    const won = this.matchWinner === 0;
+    const final = isArcadeFinal(run);
+    const rung = `${run.index + 1} / ${run.ladder.length}`;
+    const combo = this.p1.combat.maxCombo;
+    const quote = winQuote(won ? this.p1 : this.p2, won ? this.p2 : this.p1, this.p1.combat.hitsLanded + this.p2.combat.hitsLanded + this.round);
+    const titleOpt: GameOverOption = { label: 'TITLE SCREEN', scene: 'title', params: {} };
+    const selectOpt: GameOverOption = { label: 'CHARACTER SELECT', scene: 'select', params: { mode: 'arcade', cpu: true } };
+    const fighterLine = `${this.p1.name}  ·  ${this.p1.combat.hitsLanded} hits  ·  best combo ${combo}`;
+
+    if (won) {
+      const gained = arcadeMatchScore(run, this.p1.hp / this.p1.maxHp, this.roundsLost, this.perfectRounds, this.timer);
+      const next: ArcadeRun = { ...run, score: run.score + gained, index: run.index + 1 };
+      if (final) {
+        const rec = this.game.save.recordArcade(this.params.p1, next.score, combo, true);
+        const extra: string[] = [];
+        if (rec.highScore) extra.push('★ NEW ARCADE HIGH SCORE');
+        if (rec.combo && combo > 1) extra.push('★ NEW BEST COMBO');
+        if (rec.alt) extra.push(`UNLOCKED: ${this.p1.name.toUpperCase()} ALT COSTUME`);
+        this.game.scenes.go('gameover', {
+          title: 'ARCADE CLEAR',
+          subtitle: `${this.p1.name} beat the whole ladder and the shadow at the end of it.`,
+          quote,
+          accent: '#ffd21f',
+          victory: true,
+          portrait: this.params.p1,
+          portraitVariant: this.p1.variant === 'alt' ? 'alt' : 'normal',
+          lines: [`FINAL SCORE  ${String(next.score).padStart(7, '0')}`, fighterLine, `${run.continues} continues left  ·  +${gained} for the finale`, ...extra],
+          options: [{ label: 'RUN IT BACK', scene: 'select', params: { mode: 'arcade', cpu: true } }, titleOpt],
+        });
+        return;
+      }
+      const upcoming = defOf(next.ladder[next.index]);
+      this.game.scenes.go('gameover', {
+        title: `MATCH ${rung} WON`,
+        subtitle: `Next up: ${upcoming.name}, ${ARCADE_RUNG_LABEL[Math.min(next.index, ARCADE_RUNG_LABEL.length - 1)].toLowerCase()} in ${STAGE_INFO[arcadeStage(next)].name.replace('THE ', 'the ')}.`,
+        quote,
+        accent: '#6fb6ff',
+        victory: true,
+        portrait: this.params.p1,
+        portraitVariant: this.p1.variant === 'alt' ? 'alt' : 'normal',
+        lines: [`SCORE  ${String(next.score).padStart(7, '0')}   (+${gained})`, fighterLine, `${this.wins[0]} – ${this.wins[1]} in ${this.round} rounds  ·  ${run.continues} continues`],
+        options: [
+          { label: 'NEXT OPPONENT', scene: 'vs', params: { ...this.params, p2: next.ladder[next.index], arcade: next } },
+          selectOpt,
+          titleOpt,
+        ],
+      });
+      return;
+    }
+
+    const rec = this.game.save.recordArcade(this.params.p1, run.score, combo, false);
+    const canContinue = run.continues > 0;
+    const retry: ArcadeRun = { ...run, continues: run.continues - 1 };
+    const options: GameOverOption[] = [];
+    if (canContinue) options.push({ label: `CONTINUE (${run.continues} LEFT)`, scene: 'vs', params: { ...this.params, arcade: retry } });
+    options.push(selectOpt, titleOpt);
+    this.game.scenes.go('gameover', {
+      title: canContinue ? 'DEFEATED' : 'GAME OVER',
+      subtitle: `${this.p2.name} ends the run on match ${rung}.${canContinue ? ' Spend a continue to try the rung again.' : ' No continues left.'}`,
+      quote,
+      accent: '#ff4d6d',
+      victory: false,
+      portrait: this.params.p2,
+      portraitVariant: this.p2.variant === 'alt' ? 'alt' : 'normal',
+      lines: [`SCORE  ${String(run.score).padStart(7, '0')}`, fighterLine, ...(rec.highScore && run.score > 0 ? ['★ NEW ARCADE HIGH SCORE'] : [])],
+      options,
+    });
+  }
+
   render(ctx: CanvasRenderingContext2D): void {
     const ui = this.game.ui;
     const t = this.game.time;
     this.renderWorld(ctx);
-    ui.vsHud(ctx, this.p1, this.p2, this.wins, VS_ROUNDS_TO_WIN, this.timer, t, this.params.cpu ? 'CPU' : '2P');
+    ui.vsHud(ctx, this.p1, this.p2, this.wins, VS_ROUNDS_TO_WIN, this.timer, t, this.p2Tag);
+    if (this.arcade) {
+      const final = isArcadeFinal(this.arcade);
+      const label = final ? 'FINAL BOSS' : `MATCH ${this.arcade.index + 1} OF ${this.arcade.ladder.length}`;
+      ui.text(ctx, `ARCADE  ·  ${label}  ·  ${String(this.arcade.score).padStart(7, '0')}`, CANVAS_WIDTH / 2, 86, 11, final ? '#ffd21f' : 'rgba(255,255,255,0.7)', {
+        template: FONT_UI,
+        stroke: '#000',
+        strokeWidth: 3,
+      });
+    }
     ui.comboCounter(ctx, this.comboShow[0], 40, 170, 'left', Math.min(1, this.comboFade[0] / 30), '#6fb6ff');
     ui.comboCounter(ctx, this.comboShow[1], CANVAS_WIDTH - 40, 170, 'right', Math.min(1, this.comboFade[1] / 30), '#ff7a8a');
 
     const pt = this.phaseTimer;
     switch (this.phase) {
       case 'intro':
-        if (pt < 90) ui.banner(ctx, this.round >= 3 && this.wins[0] === this.wins[1] ? 'FINAL ROUND' : `ROUND ${this.round}`, '', pt, '#b98aff');
+        if (pt < 90) {
+          const sub = this.arcade && this.round === 1 ? (isArcadeFinal(this.arcade) ? 'The shadow wears your face' : ARCADE_RUNG_LABEL[Math.min(this.arcade.index, ARCADE_RUNG_LABEL.length - 1)]) : '';
+          ui.banner(ctx, this.round >= 3 && this.wins[0] === this.wins[1] ? 'FINAL ROUND' : `ROUND ${this.round}`, sub, pt, this.arcade && isArcadeFinal(this.arcade) ? '#ffd21f' : '#b98aff');
+        }
         else ui.banner(ctx, 'FIGHT!', '', pt - 90, '#ffd21f');
         break;
       case 'ko':

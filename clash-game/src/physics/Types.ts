@@ -188,7 +188,7 @@ export interface Bounds {
   maxZ: number;
 }
 
-export type GameMode = 'story' | 'versus';
+export type GameMode = 'story' | 'versus' | 'training' | 'arcade';
 
 export interface World {
   frame: number;

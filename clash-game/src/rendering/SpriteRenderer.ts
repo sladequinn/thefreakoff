@@ -589,13 +589,15 @@ const PALETTES: Record<Archetype, Partial<Record<Variant, Palette>> & { normal: 
     // White three-piece suit over a black shirt, gold chain and rings, white cane with a gold head.
     normal: { suit: '#f4f4f6', suit2: '#d8d8dc', shirt: '#15121a', tie: '#b8102e', skin: '#efd6c3', skinDark: '#cfae95', shades: '#0b090e', gold: '#ffd21f', shoe: '#15121a', shoeShine: '#ffffff', cane: '#f6f2f8', mouth: '#5a2a2a', beard: '#6a4a3a', glow: '#ffd21f' },
     alt: { suit: '#1a1620', suit2: '#0d0b10', shirt: '#f4f4f6', tie: '#ffd21f', skin: '#efd6c3', skinDark: '#cfae95', shades: '#0b090e', gold: '#dfe6f0', shoe: '#f4f4f6', shoeShine: '#ffffff', cane: '#15121a', mouth: '#5a2a2a', beard: '#6a4a3a', glow: '#dfe6f0' },
-    boss: { suit: '#f4f4f6', suit2: '#d8d8dc', shirt: '#15121a', tie: '#8a2be2', skin: '#efd6c3', skinDark: '#cfae95', shades: '#0b090e', gold: '#ffd21f', shoe: '#15121a', shoeShine: '#ffffff', cane: '#f6f2f8', mouth: '#5a2a2a', beard: '#6a4a3a', glow: '#b066ff' },
+    // Shadow mogul: violet-black suit, silver chain, a cane that glows like a plasma tube.
+    boss: { suit: '#2a1740', suit2: '#160b26', shirt: '#0b090e', tie: '#b066ff', skin: '#d8c2b4', skinDark: '#b89a8a', shades: '#0b090e', gold: '#dfe6f0', shoe: '#0b090e', shoeShine: '#b066ff', cane: '#e0c4ff', mouth: '#5a2a2a', beard: '#3a2a3a', glow: '#b066ff' },
   },
   fiddler: {
     // Cream karate gi, indigo pants, black belt, red headband, chestnut ponytail, a maple fiddle and a rosin-glowing bow.
     normal: { gi: '#e9e2cc', giDark: '#bfb496', pants: '#2b3f5c', pants2: '#1c2a3e', belt: '#15121a', skin: '#d9a06c', skinDark: '#b07a4c', hair: '#4a2410', band: '#b8102e', wood: '#9a4e1c', woodDark: '#5c2a0e', strings: '#f3e9cc', bow: '#efe3c8', bowHair: '#fff8e0', frog: '#15121a', eye: '#2a1a10', mouth: '#6b3a2a', glow: '#ffb13b' },
     alt: { gi: '#1a1620', giDark: '#0d0b10', pants: '#1a1620', pants2: '#0d0b10', belt: '#ffd21f', skin: '#d9a06c', skinDark: '#b07a4c', hair: '#1a1010', band: '#f2eff5', wood: '#2a1a10', woodDark: '#0d0b10', strings: '#ffd21f', bow: '#d8d0c0', bowHair: '#ffffff', frog: '#ffd21f', eye: '#2a1a10', mouth: '#6b3a2a', glow: '#39f3ff' },
-    boss: { gi: '#e9e2cc', giDark: '#bfb496', pants: '#2b3f5c', pants2: '#1c2a3e', belt: '#15121a', skin: '#d9a06c', skinDark: '#b07a4c', hair: '#4a2410', band: '#b8102e', wood: '#9a4e1c', woodDark: '#5c2a0e', strings: '#f3e9cc', bow: '#efe3c8', bowHair: '#fff8e0', frog: '#15121a', eye: '#2a1a10', mouth: '#6b3a2a', glow: '#ff4d6d' },
+    // Shadow fiddler: ash-black gi, blood-red belt and headband, a charred fiddle strung with light.
+    boss: { gi: '#2a2230', giDark: '#17121c', pants: '#120c18', pants2: '#07050a', belt: '#b8102e', skin: '#c9946a', skinDark: '#9a6a44', hair: '#1a1010', band: '#ff4d6d', wood: '#3a1a1a', woodDark: '#1a0a0a', strings: '#ff9ab0', bow: '#4a2a2a', bowHair: '#ff4d6d', frog: '#ff4d6d', eye: '#ff4d6d', mouth: '#6b3a2a', glow: '#ff4d6d' },
   },
   ninjabot: {
     normal: { chrome1: '#eef3f8', chrome2: '#7d8896', dark: '#1b2129', mesh: '#2a3440', visor: '#39f3ff', blade: '#c9fbff', joint: '#39f3ff' },

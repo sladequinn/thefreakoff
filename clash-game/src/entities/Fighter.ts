@@ -118,6 +118,8 @@ export class Fighter extends Entity {
 
   input: InputFrame = emptyInput();
   canBlock = false;
+  /** Training dummy: guard without having to hold away. */
+  autoGuard = false;
   autoFace: Fighter | null = null;
   /** Attacker currently holding this fighter in a command grab. */
   grabbedBy: Fighter | null = null;
@@ -429,7 +431,7 @@ export class Fighter extends Entity {
       return;
     }
 
-    if (this.canBlock && opp && inp.moveX !== 0 && inp.moveX === -this.facing) this.guarding = true;
+    if (this.canBlock && opp && ((inp.moveX !== 0 && inp.moveX === -this.facing) || this.autoGuard)) this.guarding = true;
 
     let run = inp.run && inp.moveX !== 0 && (!opp || inp.moveX === this.facing);
     if (inp.dashDir !== 0 && (!opp || inp.dashDir === this.facing)) {

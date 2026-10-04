@@ -1,6 +1,7 @@
 import { CANVAS_HEIGHT, CANVAS_WIDTH, COLORS, FONT_UI, STORY_LIVES, font } from '../config/constants';
 import { CPU_DIFFICULTIES, CPU_DIFFICULTY, STAGE_INFO, STAGE_ORDER, resolveStage, type StagePick } from '../config/stages';
 import { CHARACTERS, STORY_ROSTER, VS_ROSTER, isStoryChar } from '../characters';
+import { ARCADE_RUNG_LABEL, newArcadeRun, type ArcadeRun } from '../config/arcade';
 import type { GameContext, SceneMap } from '../core/StateManager';
 import type { CharId, CharacterDef, StoryCharId } from '../physics/Types';
 import type { StageTheme } from '../rendering/Renderer';
@@ -48,7 +49,7 @@ const TILE_W = 210;
 const TILE_H = 190;
 const STORY_CONFIRM_FRAMES = 70;
 
-type Who = 'P1' | 'P2' | 'CPU';
+type Who = 'P1' | 'P2' | 'CPU' | 'DUMMY';
 
 type Costume = 'normal' | 'alt';
 
@@ -75,14 +76,32 @@ export class CharacterSelectScene extends Scene {
   private stageIndex = STAGE_PICKS.indexOf('rooftop');
   /** Concrete stage once the player confirms (random is rolled at that moment so the splash can name it). */
   private stageChoice: StageTheme = 'rooftop';
+  /** Arcade: the ladder is rolled when Player 1 locks so the footer can preview it. */
+  private arcadeRun: ArcadeRun | null = null;
 
   constructor(game: GameContext, private readonly params: SceneMap['select']) {
     super(game);
     this.roster = params.mode === 'story' ? STORY_CARDS : VS_CARDS;
     const p1: Cursor = { who: 'P1', slot: 0, index: 0, locked: false, lockT: 0, color: COLORS.voidGlow, costume: 'normal' };
-    if (params.mode === 'story') this.cursors = [p1];
+    if (params.mode === 'story' || params.mode === 'arcade') this.cursors = [p1];
+    else if (params.mode === 'training') this.cursors = [p1, { who: 'DUMMY', slot: 0, index: 1, locked: false, lockT: 0, color: '#b8c0cc', costume: 'normal' }];
     else if (params.cpu) this.cursors = [p1, { who: 'CPU', slot: 0, index: 1, locked: false, lockT: 0, color: '#b8c0cc', costume: 'normal' }];
     else this.cursors = [p1, { who: 'P2', slot: 1, index: 1, locked: false, lockT: 0, color: COLORS.bone, costume: 'normal' }];
+  }
+
+  private get mode() {
+    return this.params.mode;
+  }
+
+  /** The fighter on the right of the preview: the second cursor, or the first arcade opponent. */
+  private second(): RosterEntry {
+    if (this.cursors.length > 1) return this.roster[this.cursors[1].index];
+    const id = this.arcadeRun?.ladder[0] ?? this.roster[(this.cursors[0].index + 1) % this.roster.length].id;
+    return this.roster.find((r) => r.id === id) ?? this.roster[0];
+  }
+
+  private secondWho(): string {
+    return this.cursors.length > 1 ? this.cursors[1].who : 'CPU';
   }
 
   /** Final costumes for the two versus picks; a mirror match forces the second fighter into the other colour. */
@@ -94,13 +113,30 @@ export class CharacterSelectScene extends Scene {
     return [a.costume, v2];
   }
 
+  /** Ladders fight all four, so the start-stage pick is where the tour begins; the finale is always the Sanctuary. */
+  private launch(): void {
+    const [v1, v2] = this.costumes();
+    const p1 = this.roster[this.cursors[0].index].id;
+    if (this.mode === 'training') {
+      this.game.scenes.go('training', { p1, p2: this.second().id, stage: this.stageChoice, v1, v2 });
+      return;
+    }
+    if (this.mode === 'arcade') {
+      const run = this.arcadeRun ?? newArcadeRun(p1, this.stageChoice);
+      run.startStage = this.stageChoice;
+      this.game.scenes.go('vs', { p1, p2: run.ladder[0], cpu: true, stage: this.stageChoice, v1, arcade: run });
+      return;
+    }
+    this.game.scenes.go('vs', { p1, p2: this.second().id, cpu: this.params.cpu, stage: this.stageChoice, v1, v2 });
+  }
+
   enter(): void {
     this.game.audio.startMusic(this.params.mode === 'story' ? 'title' : 'versus');
   }
 
   /** In CPU mode the human picks both fighters in sequence; the CPU cursor is only live once P1 has locked. */
   private activeCursors(): Cursor[] {
-    if (this.params.cpu) {
+    if (this.params.cpu && this.cursors.length > 1) {
       const [p1, cpu] = this.cursors;
       return p1.locked ? (cpu.locked ? [] : [cpu]) : [p1];
     }
@@ -116,17 +152,7 @@ export class CharacterSelectScene extends Scene {
     const input = this.game.input;
 
     if (this.phase === 'splash') {
-      if (++this.phaseT >= SPLASH_FRAMES || (this.phaseT > 30 && input.menu().confirm)) {
-        const [v1, v2] = this.costumes();
-        this.game.scenes.go('vs', {
-          p1: this.roster[this.cursors[0].index].id,
-          p2: this.roster[this.cursors[1].index].id,
-          cpu: this.params.cpu,
-          stage: this.stageChoice,
-          v1,
-          v2,
-        });
-      }
+      if (++this.phaseT >= SPLASH_FRAMES || (this.phaseT > 30 && input.menu().confirm)) this.launch();
       return;
     }
     if (this.phase === 'stage') {
@@ -150,7 +176,7 @@ export class CharacterSelectScene extends Scene {
         if (!this.game.save.isAltUnlocked(this.roster[c.index].id)) c.costume = 'normal';
         audio.playSelect();
       }
-      if (this.params.mode !== 'story' && (input.slotPressed(c.slot, 'up') || input.slotPressed(c.slot, 'down'))) {
+      if (this.mode !== 'story' && (input.slotPressed(c.slot, 'up') || input.slotPressed(c.slot, 'down'))) {
         if (this.game.save.isAltUnlocked(this.roster[c.index].id)) {
           c.costume = c.costume === 'alt' ? 'normal' : 'alt';
           audio.playSelect();
@@ -164,7 +190,8 @@ export class CharacterSelectScene extends Scene {
         this.flash = 10;
         audio.playConfirm();
         audio.playTaunt(this.roster[c.index].def.voice, 0);
-        if (c.who === 'CPU') return;
+        if (this.mode === 'arcade' && c.who === 'P1') this.arcadeRun = newArcadeRun(this.roster[c.index].id, this.stageChoice);
+        if (c.who !== 'P1') return;
       }
     }
 
@@ -184,7 +211,7 @@ export class CharacterSelectScene extends Scene {
 
     if (this.cursors.every((c) => c.locked)) {
       this.phaseT = 0;
-      this.phase = this.params.mode === 'story' ? 'story' : 'stage';
+      this.phase = this.mode === 'story' ? 'story' : 'stage';
     }
   }
 
@@ -201,7 +228,7 @@ export class CharacterSelectScene extends Scene {
       this.stageIndex = (this.stageIndex + 1) % n;
       audio.playSelect();
     }
-    if (this.params.cpu) {
+    if (this.mode === 'versus' && this.params.cpu) {
       const levels = CPU_DIFFICULTIES;
       const cur = levels.indexOf(this.game.save.settings.cpuDifficulty);
       if (input.slotPressed(0, 'up')) {
@@ -240,9 +267,9 @@ export class CharacterSelectScene extends Scene {
   render(ctx: CanvasRenderingContext2D): void {
     const g = this.game;
     const time = g.time;
-    const stagePhase = this.phase === 'stage' || (this.phase === 'splash' && this.params.mode !== 'story');
+    const stagePhase = this.phase === 'stage' || (this.phase === 'splash' && this.mode !== 'story');
     const w = g.renderer.beginWorld();
-    const story = this.params.mode === 'story';
+    const story = this.mode === 'story';
     if (stagePhase) {
       this.drawStagePreviewWorld(w, time);
     } else {
@@ -256,16 +283,26 @@ export class CharacterSelectScene extends Scene {
     g.renderer.endWorld();
 
     const heading = stagePhase
-      ? this.params.cpu
-        ? 'CHOOSE YOUR STAGE  —  SET CPU LEVEL'
-        : 'CHOOSE YOUR STAGE'
-      : this.params.mode === 'story'
+      ? this.mode === 'arcade'
+        ? 'ARCADE LADDER  —  CHOOSE YOUR STARTING STAGE'
+        : this.mode === 'training'
+          ? 'TRAINING  —  CHOOSE YOUR ROOM'
+          : this.params.cpu
+            ? 'CHOOSE YOUR STAGE  —  SET CPU LEVEL'
+            : 'CHOOSE YOUR STAGE'
+      : this.mode === 'story'
         ? 'STORY MODE  —  CHOOSE YOUR FIGHTER'
-        : this.params.cpu
-          ? this.cursors[0].locked
-            ? 'VERSUS CPU  —  CHOOSE YOUR OPPONENT'
-            : 'VERSUS CPU  —  CHOOSE YOUR FIGHTER'
-          : 'VERSUS  —  BOTH PLAYERS CHOOSE';
+        : this.mode === 'arcade'
+          ? 'ARCADE LADDER  —  CHOOSE YOUR FIGHTER'
+          : this.mode === 'training'
+            ? this.cursors[0].locked
+              ? 'TRAINING  —  CHOOSE THE DUMMY'
+              : 'TRAINING  —  CHOOSE YOUR FIGHTER'
+            : this.params.cpu
+              ? this.cursors[0].locked
+                ? 'VERSUS CPU  —  CHOOSE YOUR OPPONENT'
+                : 'VERSUS CPU  —  CHOOSE YOUR FIGHTER'
+              : 'VERSUS  —  BOTH PLAYERS CHOOSE';
     g.ui.text(ctx, heading, CANVAS_WIDTH / 2, 48, 26, '#ffffff', { stroke: '#000', strokeWidth: 5, shadow: 'rgba(138,77,255,0.7)' });
 
     if (stagePhase) {
@@ -274,6 +311,7 @@ export class CharacterSelectScene extends Scene {
     else {
       this.roster.forEach((_, i) => this.drawTileFront(ctx, i, TILE_X0 + i * TILE_STEP, TILE_Y, TILE_W, TILE_H, time));
       this.cursors.forEach((c, k) => this.drawDetail(ctx, c, 36 + k * 452, 268, 436, 202));
+      if (this.mode === 'arcade') this.drawLadderCard(ctx, 488, 268, 436, 202, time);
     }
     this.drawFooter(ctx, time);
 
@@ -362,8 +400,10 @@ export class CharacterSelectScene extends Scene {
     ctx.fillStyle = 'rgba(255,255,255,0.08)';
     ctx.fillRect(x + 12, my - 14, w - 24, 1);
     ctx.restore();
-    (def.moveList ?? []).forEach((m, k) => {
-      const yy = my + 6 + k * 24;
+    const moves = def.moveList ?? [];
+    const step = moves.length > 4 ? 20 : 24;
+    moves.forEach((m, k) => {
+      const yy = my + 6 + k * step;
       ui.text(ctx, m.name, x + 18, yy, 12, '#ffffff', { align: 'left', template: FONT_UI });
       ui.text(ctx, m.input, x + w - 18, yy, 12, COLORS.hazard, { align: 'right', template: FONT_UI });
       ui.text(ctx, m.desc, x + 18, yy + 12, 10, 'rgba(255,255,255,0.5)', { align: 'left', template: FONT_UI });
@@ -523,11 +563,48 @@ export class CharacterSelectScene extends Scene {
     ctx.fillStyle = 'rgba(255,255,255,0.08)';
     ctx.fillRect(mx - 12, y + 14, 1, h - 28);
     ctx.restore();
-    (def.moveList ?? []).forEach((m, k) => {
-      const yy = y + 30 + k * 42;
+    const moves = def.moveList ?? [];
+    const dense = moves.length > 4;
+    const step = dense ? 34 : 42;
+    moves.forEach((m, k) => {
+      const yy = y + 30 + k * step;
       ui.text(ctx, m.name, mx, yy, 12, '#ffffff', { align: 'left', template: FONT_UI });
       ui.text(ctx, m.input, x + w - 14, yy, 11, COLORS.hazard, { align: 'right', template: FONT_UI });
-      this.wrap(ctx, m.desc, mx, yy + 13, w - 232 - 14, 11, 9, 'rgba(255,255,255,0.5)');
+      if (dense) ui.text(ctx, this.ellipsis(ctx, m.desc, w - 232 - 14, 9), mx, yy + 13, 9, 'rgba(255,255,255,0.5)', { align: 'left', template: FONT_UI });
+      else this.wrap(ctx, m.desc, mx, yy + 13, w - 232 - 14, 11, 9, 'rgba(255,255,255,0.5)');
+    });
+  }
+
+  /** Arcade: the rungs ahead, revealed once Player 1 has locked in. */
+  private drawLadderCard(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, time: number): void {
+    const ui = this.game.ui;
+    ui.panel(ctx, x, y, w, h, 'rgba(8,6,18,0.9)');
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,210,31,0.5)';
+    ctx.strokeRect(x + 0.5, y + 0.5, w - 1, h - 1);
+    ctx.fillStyle = COLORS.hazard;
+    ctx.fillRect(x, y, 6, h);
+    ctx.restore();
+    ui.text(ctx, 'THE LADDER', x + 20, y + 30, 24, '#ffffff', { align: 'left', stroke: '#000', strokeWidth: 4 });
+    const run = this.arcadeRun;
+    if (!run) {
+      ui.text(ctx, 'LOCK IN TO SEE YOUR BRACKET', x + 20, y + 50, 11, COLORS.hazard, { align: 'left', template: FONT_UI });
+      this.wrap(ctx, 'Three rivals in a random order, each one a level tougher than the last. Beat them all and a shadow wearing your own colours waits in the Sanctuary.', x + 20, y + 76, w - 40, 15, 12, 'rgba(255,255,255,0.75)');
+      return;
+    }
+    run.ladder.forEach((id, i) => {
+      const def = CHARACTERS[id];
+      const final = i === run.ladder.length - 1;
+      const yy = y + 62 + i * 34;
+      const glow = final ? COLORS.hazard : STYLE[id].glow;
+      ctx.save();
+      ctx.fillStyle = final ? 'rgba(255,210,31,0.12)' : 'rgba(255,255,255,0.06)';
+      ctx.fillRect(x + 20, yy - 10, 32, 32);
+      ctx.restore();
+      this.game.sprites.drawBust(ctx, def.archetype, final ? 'boss' : 'normal', x + 20, yy - 10, 32, 1, time + i * 23);
+      ui.text(ctx, `${i + 1}`, x + 70, yy + 4, 12, 'rgba(255,255,255,0.45)', { align: 'left', template: FONT_UI });
+      ui.text(ctx, final ? `SHADOW ${def.name}` : def.name, x + 90, yy + 5, 15, '#ffffff', { align: 'left', stroke: '#000', strokeWidth: 3 });
+      ui.text(ctx, ARCADE_RUNG_LABEL[Math.min(i, ARCADE_RUNG_LABEL.length - 1)], x + w - 16, yy + 4, 11, glow, { align: 'right', template: FONT_UI });
     });
   }
 
@@ -536,7 +613,7 @@ export class CharacterSelectScene extends Scene {
     const theme = this.phase === 'splash' ? this.stageChoice : this.hoveredStage();
     this.game.renderer.drawStage(theme, 0, 0, time, CANVAS_WIDTH);
     const a = this.roster[this.cursors[0].index].def;
-    const b = this.roster[this.cursors[1].index].def;
+    const b = this.second().def;
     const [v1, v2] = this.costumes();
     const floor = 392;
     this.game.renderer.withSprites((s) => {
@@ -610,7 +687,16 @@ export class CharacterSelectScene extends Scene {
     ui.text(ctx, info ? info.name : 'RANDOM STAGE', CANVAS_WIDTH / 2, 92, 22, info ? info.accent : '#ffffff', { stroke: '#000', strokeWidth: 5 });
     ui.text(ctx, info ? info.tagline : 'Roll the dice. The city picks the battleground.', CANVAS_WIDTH / 2, 112, 13, 'rgba(255,255,255,0.8)', { template: FONT_UI });
 
-    if (this.params.cpu) {
+    if (this.mode === 'arcade' && this.arcadeRun) {
+      const names = this.arcadeRun.ladder.map((id, i) => (i === this.arcadeRun!.ladder.length - 1 ? `SHADOW ${CHARACTERS[id].name}` : CHARACTERS[id].name));
+      ui.panel(ctx, CANVAS_WIDTH / 2 - 250, 150, 500, 54, 'rgba(8,6,18,0.86)');
+      ui.text(ctx, 'THE LADDER', CANVAS_WIDTH / 2, 170, 12, COLORS.hazard, { template: FONT_UI });
+      ui.text(ctx, names.join('  ›  '), CANVAS_WIDTH / 2, 192, 13, '#ffffff', { stroke: '#000', strokeWidth: 3 });
+    } else if (this.mode === 'training') {
+      ui.panel(ctx, CANVAS_WIDTH / 2 - 250, 150, 500, 54, 'rgba(8,6,18,0.86)');
+      ui.text(ctx, 'TRAINING ROOM', CANVAS_WIDTH / 2, 170, 12, COLORS.hazard, { template: FONT_UI });
+      ui.text(ctx, 'Infinite health  ·  hitboxes  ·  frame data  ·  dummy record & playback', CANVAS_WIDTH / 2, 192, 12, 'rgba(255,255,255,0.8)', { template: FONT_UI });
+    } else if (this.params.cpu) {
       const d = CPU_DIFFICULTY[this.game.save.settings.cpuDifficulty];
       const bob = Math.sin(time * 0.15) * 2;
       ui.panel(ctx, CANVAS_WIDTH / 2 - 190, 150, 380, 54, 'rgba(8,6,18,0.86)');
@@ -621,7 +707,7 @@ export class CharacterSelectScene extends Scene {
     }
 
     const a = this.roster[this.cursors[0].index];
-    const b = this.roster[this.cursors[1].index];
+    const b = this.second();
     ui.text(ctx, a.def.name, 330, 272, 16, a.glow, { stroke: '#000', strokeWidth: 4 });
     ui.text(ctx, b.def.name, 630, 272, 16, b.glow, { stroke: '#000', strokeWidth: 4 });
   }
@@ -632,14 +718,31 @@ export class CharacterSelectScene extends Scene {
     ui.panel(ctx, 60, y, CANVAS_WIDTH - 120, 44, 'rgba(8,6,18,0.9)');
     if (this.phase === 'stage') {
       const touch = this.game.input.touchMode;
+      const level = this.mode === 'versus' && this.params.cpu;
       const help = touch
-        ? `Stick left / right to choose a stage${this.params.cpu ? '   ·   up / down CPU level' : ''}   ·   ATK to fight   ·   II to go back`
-        : `A / D or ← / → choose a stage${this.params.cpu ? '   ·   W / S CPU level' : ''}   ·   J / Enter to fight   ·   Esc back to roster`;
+        ? `Stick left / right to choose a stage${level ? '   ·   up / down CPU level' : ''}   ·   ATK to ${this.mode === 'training' ? 'train' : 'fight'}   ·   II to go back`
+        : `A / D or ← / → choose a stage${level ? '   ·   W / S CPU level' : ''}   ·   J / Enter to ${this.mode === 'training' ? 'train' : 'fight'}   ·   Esc back to roster`;
       ui.text(ctx, help, CANVAS_WIDTH / 2, y + 20, 13, '#ffffff', { template: FONT_UI });
-      ui.text(ctx, 'Best of 3 rounds  ·  99 second timer', CANVAS_WIDTH / 2, y + 37, 11, 'rgba(255,255,255,0.55)', { template: FONT_UI });
+      const sub =
+        this.mode === 'arcade'
+          ? 'Four matches, best of 3 each  ·  three continues  ·  the finale is always the Sanctuary'
+          : this.mode === 'training'
+            ? 'No timer, no rounds  ·  pause for dummy, hitbox and frame data options'
+            : 'Best of 3 rounds  ·  99 second timer';
+      ui.text(ctx, sub, CANVAS_WIDTH / 2, y + 37, 11, 'rgba(255,255,255,0.55)', { template: FONT_UI });
       return;
     }
-    if (this.params.mode === 'story') {
+    if (this.mode === 'arcade') {
+      const id = this.roster[this.cursors[0].index].id;
+      const high = this.game.save.records.arcadeHigh[id] ?? 0;
+      const clears = this.game.save.records.arcadeClears[id] ?? 0;
+      const best = high > 0 ? `   BEST: ${String(high).padStart(7, '0')}` : '';
+      const help = this.game.input.touchMode ? 'Stick left / right to choose   ·   ATK to lock   ·   II to go back' : 'A / D choose your fighter   ·   W / S costume   ·   J confirm   ·   Esc back';
+      ui.text(ctx, help, CANVAS_WIDTH / 2, y + 20, 13, '#ffffff', { template: FONT_UI });
+      ui.text(ctx, `${ARCADE_RUNG_LABEL.join(' > ')}   ·   CLEARS: ${clears}${best}`, CANVAS_WIDTH / 2, y + 37, 11, COLORS.hazard, { template: FONT_UI });
+      return;
+    }
+    if (this.mode === 'story') {
       const c = this.cursors[0];
       const id = this.roster[c.index].id;
       const storyId = isStoryChar(id) ? id : 'slade';
@@ -657,17 +760,19 @@ export class CharacterSelectScene extends Scene {
       }
       return;
     }
+    const other = this.mode === 'training' ? 'the dummy' : 'the CPU fighter';
     const help = this.game.input.touchMode
       ? this.params.cpu && this.cursors[0].locked
-        ? 'Stick left / right to choose the CPU fighter   ·   ATK to lock   ·   II to undo'
+        ? `Stick left / right to choose ${other}   ·   ATK to lock   ·   II to undo`
         : 'Stick left / right to choose   ·   ATK to lock   ·   II to go back'
       : this.params.cpu
       ? this.cursors[0].locked
-        ? 'A / D choose the CPU fighter   ·   J confirm   ·   Esc undo'
-        : 'A / D choose your fighter   ·   J confirm   ·   Esc back'
+        ? `A / D choose ${other}   ·   J confirm   ·   Esc undo`
+        : 'A / D choose your fighter   ·   W / S costume   ·   J confirm   ·   Esc back'
       : 'P1: A / D + J to lock   ·   P2: ← / → + Numpad 1 or , to lock   ·   Esc / gamepad Back undo';
     ui.text(ctx, help, CANVAS_WIDTH / 2, y + 20, 13, '#ffffff', { template: FONT_UI });
-    ui.text(ctx, 'Best of 3 rounds  ·  99 second timer  ·  Hold away from your opponent to block', CANVAS_WIDTH / 2, y + 37, 11, 'rgba(255,255,255,0.55)', {
+    const sub = this.mode === 'training' ? 'Pick who you practise as, then who stands in front of you' : 'Best of 3 rounds  ·  99 second timer  ·  Hold away from your opponent to block';
+    ui.text(ctx, sub, CANVAS_WIDTH / 2, y + 37, 11, 'rgba(255,255,255,0.55)', {
       template: FONT_UI,
     });
   }
@@ -677,7 +782,7 @@ export class CharacterSelectScene extends Scene {
     const ui = this.game.ui;
     const sprites = this.game.sprites;
     const a = this.roster[this.cursors[0].index];
-    const b = this.roster[this.cursors[1].index];
+    const b = this.second();
     const [v1, v2] = this.costumes();
     const slideIn = Math.min(1, t / 16);
     const ease = 1 - (1 - slideIn) ** 3;
@@ -718,7 +823,7 @@ export class CharacterSelectScene extends Scene {
     ui.text(ctx, a.def.name, 60 - 400 * (1 - ease), 450, 44, '#ffffff', { align: 'left', stroke: '#000', strokeWidth: 7 });
     ui.text(ctx, this.cursors[0].who, 62 - 400 * (1 - ease), 104, 22, a.glow, { align: 'left', stroke: '#000', strokeWidth: 5 });
     ui.text(ctx, b.def.name, CANVAS_WIDTH - 60 + 400 * (1 - ease), 450, 44, '#ffffff', { align: 'right', stroke: '#000', strokeWidth: 7 });
-    ui.text(ctx, this.cursors[1].who, CANVAS_WIDTH - 62 + 400 * (1 - ease), 104, 22, b.glow, { align: 'right', stroke: '#000', strokeWidth: 5 });
+    ui.text(ctx, this.secondWho(), CANVAS_WIDTH - 62 + 400 * (1 - ease), 104, 22, b.glow, { align: 'right', stroke: '#000', strokeWidth: 5 });
 
     if (t > 12) {
       const pop = Math.min(1, (t - 12) / 8);
@@ -733,8 +838,9 @@ export class CharacterSelectScene extends Scene {
       ctx.restore();
     }
     if (t > 40) {
-      const level = this.params.cpu ? `  ·  CPU ${CPU_DIFFICULTY[this.game.save.settings.cpuDifficulty].label}` : '';
-      ui.text(ctx, `${STAGE_INFO[this.stageChoice].name}  ·  BEST OF 3${level}`, CANVAS_WIDTH / 2, 500, 14, 'rgba(255,255,255,0.75)', { template: FONT_UI });
+      const level = this.mode === 'versus' && this.params.cpu ? `  ·  CPU ${CPU_DIFFICULTY[this.game.save.settings.cpuDifficulty].label}` : '';
+      const rules = this.mode === 'arcade' ? `ARCADE  ·  MATCH 1 OF ${this.arcadeRun?.ladder.length ?? 4}` : this.mode === 'training' ? 'TRAINING ROOM' : 'BEST OF 3';
+      ui.text(ctx, `${STAGE_INFO[this.stageChoice].name}  ·  ${rules}${level}`, CANVAS_WIDTH / 2, 500, 14, 'rgba(255,255,255,0.75)', { template: FONT_UI });
     }
     ctx.restore();
   }
@@ -755,6 +861,15 @@ export class CharacterSelectScene extends Scene {
     }
     if (line) this.game.ui.text(ctx, line, x, yy, size, color, { align: 'left', template: FONT_UI });
     ctx.restore();
+  }
+
+  private ellipsis(ctx: CanvasRenderingContext2D, text: string, maxW: number, size: number): string {
+    ctx.save();
+    ctx.font = font(FONT_UI, size);
+    let str = text;
+    while (ctx.measureText(`${str}…`).width > maxW && str.length > 4) str = str.slice(0, -1).trimEnd();
+    ctx.restore();
+    return str === text ? text : `${str}…`;
   }
 
   private wrapCentered(ctx: CanvasRenderingContext2D, text: string, x: number, y: number, size: number, color: string): void {

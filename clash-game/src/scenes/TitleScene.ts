@@ -65,6 +65,16 @@ export class TitleScene extends Scene {
         go: () => this.game.scenes.go('select', { mode: 'versus', cpu: true }),
       },
       {
+        label: 'ARCADE LADDER',
+        hint: 'Climb four CPU rungs that get meaner each match, then face your own shadow.',
+        go: () => this.game.scenes.go('select', { mode: 'arcade', cpu: true }),
+      },
+      {
+        label: 'TRAINING',
+        hint: 'Infinite health, hitbox overlay, frame data and a dummy that can record and replay.',
+        go: () => this.game.scenes.go('select', { mode: 'training', cpu: true }),
+      },
+      {
         label: 'CONTROLS',
         hint: 'Keyboard and gamepad layouts for both players.',
         go: () => {
@@ -187,7 +197,7 @@ export class TitleScene extends Scene {
       this.drawControls(ctx);
     } else {
       const disabled = this.disabled();
-      g.ui.menu(ctx, this.items.map((i) => i.label), this.index, CANVAS_WIDTH / 2, 262, time, 42, disabled);
+      g.ui.menu(ctx, this.items.map((i) => i.label), this.index, CANVAS_WIDTH / 2, 238, time, 36, disabled);
       g.ui.panel(ctx, CANVAS_WIDTH / 2 - 300, 440, 600, 30);
       const hint = disabled[this.index] ? 'Player 2 needs a keyboard or gamepad. Connect one to play local versus.' : this.items[this.index].hint;
       g.ui.text(ctx, hint, CANVAS_WIDTH / 2, 460, 13, 'rgba(255,255,255,0.82)', { template: FONT_UI });

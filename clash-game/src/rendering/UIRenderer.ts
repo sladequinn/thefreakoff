@@ -427,14 +427,15 @@ export class UIRenderer {
     });
   }
 
-  pauseOverlay(ctx: Ctx, items: string[], index: number, time: number, touch = false): void {
+  pauseOverlay(ctx: Ctx, items: string[], index: number, time: number, touch = false, title = 'PAUSED'): void {
     ctx.save();
     ctx.fillStyle = 'rgba(4,2,10,0.72)';
     ctx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     ctx.restore();
-    this.text(ctx, 'PAUSED', CANVAS_WIDTH / 2, 150, 56, '#ffffff', { stroke: '#000', strokeWidth: 6, shadow: 'rgba(138,77,255,0.8)' });
-    const spacing = items.length > 5 ? 34 : 40;
-    this.menu(ctx, items, index, CANVAS_WIDTH / 2, 215, time, spacing);
+    const tall = items.length > 8;
+    this.text(ctx, title, CANVAS_WIDTH / 2, tall ? 92 : 150, tall ? 44 : 56, '#ffffff', { stroke: '#000', strokeWidth: 6, shadow: 'rgba(138,77,255,0.8)' });
+    const spacing = tall ? 30 : items.length > 5 ? 34 : 40;
+    this.menu(ctx, items, index, CANVAS_WIDTH / 2, tall ? 150 : 215, time, spacing);
     const help = touch ? 'Stick up / down to choose   ·   ATK to select   ·   II to resume' : '`  toggles hitbox debug overlay   ·   M  mutes audio   ·   Esc resumes';
     this.text(ctx, help, CANVAS_WIDTH / 2, CANVAS_HEIGHT - 40, 12, 'rgba(255,255,255,0.5)', { template: FONT_UI });
   }

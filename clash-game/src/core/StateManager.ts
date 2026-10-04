@@ -4,6 +4,7 @@ import type { UIRenderer } from '../rendering/UIRenderer';
 import type { Scene } from '../scenes/Scene';
 import type { CharId, GameMode, StoryCharId } from '../physics/Types';
 import type { StagePick } from '../config/stages';
+import type { ArcadeRun } from '../config/arcade';
 import type { AudioEngine } from './AudioEngine';
 import type { SaveData } from './SaveData';
 import type { InputManager } from './InputManager';
@@ -32,7 +33,8 @@ export interface SceneMap {
   title: Record<string, never>;
   select: { mode: GameMode; cpu: boolean };
   story: { char: StoryCharId; stage: number; score: number; lives: number };
-  vs: { p1: CharId; p2: CharId; cpu: boolean; stage: StagePick; v1?: 'normal' | 'alt'; v2?: 'normal' | 'alt' };
+  vs: { p1: CharId; p2: CharId; cpu: boolean; stage: StagePick; v1?: 'normal' | 'alt'; v2?: 'normal' | 'alt'; arcade?: ArcadeRun };
+  training: { p1: CharId; p2: CharId; stage: StagePick; v1?: 'normal' | 'alt'; v2?: 'normal' | 'alt' };
   gameover: GameOverParams;
 }
 

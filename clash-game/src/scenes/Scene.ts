@@ -17,7 +17,7 @@ export abstract class Scene {
   abstract render(ctx: CanvasRenderingContext2D, alpha: number): void;
 }
 
-interface PauseItem {
+export interface PauseItem {
   label: string;
   /** Toggles flip a setting and keep the menu open. */
   toggle: boolean;
@@ -79,6 +79,16 @@ export abstract class CombatScene extends Scene implements World {
     return null;
   }
 
+  /** Mode-specific entries inserted after RESTART (training options, arcade info). */
+  protected extraPauseItems(): PauseItem[] {
+    return [];
+  }
+
+  /** Title shown over the pause menu; training mode relabels it. */
+  protected pauseTitle(): string {
+    return 'PAUSED';
+  }
+
   /** Pause menu entries; toggles stay open, everything else closes the menu. */
   private pauseItems(): PauseItem[] {
     const g = this.game;
@@ -86,6 +96,7 @@ export abstract class CombatScene extends Scene implements World {
     const items: PauseItem[] = [
       { label: 'RESUME', toggle: false, act: () => undefined },
       { label: 'RESTART', toggle: false, act: () => this.restart() },
+      ...this.extraPauseItems(),
       {
         label: `MUSIC: ${s.musicOn ? 'ON' : 'OFF'}`,
         toggle: true,
@@ -417,6 +428,6 @@ export abstract class CombatScene extends Scene implements World {
 
   protected renderPause(ctx: CanvasRenderingContext2D): void {
     if (!this.paused) return;
-    this.game.ui.pauseOverlay(ctx, this.pauseItems().map((i) => i.label), this.pauseIndex, this.game.time, this.game.input.touchMode);
+    this.game.ui.pauseOverlay(ctx, this.pauseItems().map((i) => i.label), this.pauseIndex, this.game.time, this.game.input.touchMode, this.pauseTitle());
   }
 }

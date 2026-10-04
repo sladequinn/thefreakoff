@@ -15,6 +15,7 @@ import { GameOverScene } from './scenes/GameOverScene';
 import { StoryScene } from './scenes/StoryScene';
 import { TitleScene } from './scenes/TitleScene';
 import { VsScene } from './scenes/VsScene';
+import { TrainingScene } from './scenes/TrainingScene';
 
 const root = document.getElementById('app');
 if (!root) throw new Error('Missing #app container');
@@ -53,6 +54,7 @@ scenes.register('title', (g, p) => new TitleScene(g, p));
 scenes.register('select', (g, p) => new CharacterSelectScene(g, p));
 scenes.register('story', (g, p) => new StoryScene(g, p));
 scenes.register('vs', (g, p) => new VsScene(g, p));
+scenes.register('training', (g, p) => new TrainingScene(g, p));
 scenes.register('gameover', (g, p) => new GameOverScene(g, p));
 
 let toast = '';

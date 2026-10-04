@@ -16,6 +16,8 @@ export interface SavedRecords {
   bestCombo: number;
   vsWins: Partial<Record<CharId, number>>;
   vsMatches: number;
+  arcadeHigh: Partial<Record<CharId, number>>;
+  arcadeClears: Partial<Record<CharId, number>>;
 }
 
 export interface SaveState {
@@ -28,7 +30,7 @@ export interface SaveState {
 const DEFAULTS: SaveState = {
   version: 1,
   settings: { cpuDifficulty: 'normal', musicOn: true, sfxOn: true, rumble: true },
-  records: { storyHigh: {}, storyClears: {}, bestCombo: 0, vsWins: {}, vsMatches: 0 },
+  records: { storyHigh: {}, storyClears: {}, bestCombo: 0, vsWins: {}, vsMatches: 0, arcadeHigh: {}, arcadeClears: {} },
   unlocks: { alt: [] },
 };
 
@@ -129,5 +131,22 @@ export class SaveData {
     }
     this.save();
     return { combo: comboBest, alt };
+  }
+
+  /** Records an arcade run; clearing the ladder unlocks the character's alt costume. */
+  recordArcade(char: CharId, score: number, combo: number, cleared: boolean): { highScore: boolean; combo: boolean; alt: boolean } {
+    const r = this.state.records;
+    const prev = r.arcadeHigh[char] ?? 0;
+    const highScore = score > prev;
+    if (highScore) r.arcadeHigh[char] = score;
+    const comboBest = combo > r.bestCombo;
+    if (comboBest) r.bestCombo = combo;
+    let alt = false;
+    if (cleared) {
+      r.arcadeClears[char] = (r.arcadeClears[char] ?? 0) + 1;
+      alt = this.unlockAlt(char);
+    }
+    this.save();
+    return { highScore, combo: comboBest, alt };
   }
 }
