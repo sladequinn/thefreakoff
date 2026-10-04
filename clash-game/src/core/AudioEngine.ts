@@ -15,7 +15,7 @@ const VOICE_PITCH: Record<VoiceId, number> = {
   slade: 150,
   freckles: 190,
   ninjabot: 210,
-  frecklebot: 78,
+  clownbot: 78,
 };
 
 export type GruntType = 'hah' | 'take' | 'pain' | 'ko' | 'hyah';
@@ -576,7 +576,7 @@ export class AudioEngine {
   /** Retro formant-synthesised voice clips: "Hah!", "Take this!", pain grunts and KO screams. */
   playVoiceGrunt(char: VoiceId, type: GruntType): void {
     if (!this.ctx || !this.throttle(`voice-${char}`, type === 'pain' ? 180 : 120)) return;
-    const robot = char === 'ninjabot' || char === 'frecklebot';
+    const robot = char === 'ninjabot' || char === 'clownbot';
     const p = VOICE_PITCH[char] * (0.95 + Math.random() * 0.1);
     const t = this.now + 0.005;
     const vol = robot ? 0.16 : 0.22;

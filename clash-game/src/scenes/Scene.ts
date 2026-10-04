@@ -212,7 +212,7 @@ export abstract class CombatScene extends Scene implements World {
     if (arch === 'ninjabot') {
       p.burst(sx, sy, sz, dir, COLORS.cyan, 6, 5);
       p.splatter(sx, sy, sz, dir, COLORS.oil, heavy ? 5 : 2);
-    } else if (arch === 'frecklebot') {
+    } else if (arch === 'clownbot') {
       p.burst(sx, sy, sz, dir, '#ffe38a', 8, 6);
       p.splatter(sx, sy, sz, dir, COLORS.oil, heavy ? 6 : 3);
       if (Math.random() < 0.5) p.arc(sx, sy, sz, 24, COLORS.cyan);

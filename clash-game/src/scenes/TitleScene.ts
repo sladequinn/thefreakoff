@@ -35,7 +35,7 @@ export class TitleScene extends Scene {
     this.items = [
       {
         label: 'STORY MODE',
-        hint: 'Carve through six stages of Frecklebots and Ninjabots to reach your rival.',
+        hint: 'Carve through six stages of Clownbots and Ninjabots to reach your rival.',
         go: () => this.game.scenes.go('select', { mode: 'story', cpu: false }),
       },
       {

@@ -13,9 +13,9 @@ const ROSTER: { id: CharId; def: CharacterDef; accent: string; glow: string }[] 
 
 const ROUTES: Record<CharId, { foes: string; boss: string; story: string }> = {
   slade: {
-    foes: 'FRECKLEBOTS',
+    foes: 'CLOWNBOTS',
     boss: 'FRECKLES',
-    story: 'The Iron Syndicate cloned Freckles into an army of spike-fisted Frecklebots. Cut through them and reach the real one.',
+    story: 'The Iron Syndicate cloned Freckles into an army of spike-fisted Clownbots. Cut through them and reach the real one.',
   },
   freckles: {
     foes: 'NINJABOTS',

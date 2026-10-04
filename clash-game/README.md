@@ -1,11 +1,11 @@
 # THE FREAKOFF: SHADOW WARS
 
-Frecklebot and Ninjabot armies flood the streets while the two real figureheads tear the city apart to settle who actually runs it.
+Clownbot and Ninjabot armies flood the streets while the two real figureheads tear the city apart to settle who actually runs it.
 
 A 2.5D arcade beat 'em up and 1v1 versus fighter built in TypeScript on a plain Canvas 2D renderer. Every sprite, background, sound effect, voice grunt and music track is generated procedurally at runtime; there are no image or audio assets.
 
 - **Slade, the Magick Ninja**: fast arcane zoner with a ninjato, smoke teleports and sigil eruptions.
-- **Freckles, the Gothic Jester**: a black-and-crimson harlequin in a corset, striped stockings and a belled cap, with spiked-knuckle strings, armored tackles and seismic slams.
+- **Freckles, the Gothic Jester**: a black-and-crimson harlequin with a belled hood, dark twin-tails, a laced corset, striped stockings and spiked knuckles, fighting with four-hit strings, armored tackles and seismic slams.
 
 ## Run it
 
@@ -27,7 +27,7 @@ Click or press any key once to enable sound (browsers block audio until then).
 
 ## Modes
 
-- **Story Mode**: six stages, each with its own look and music: The Outskirts, Pier 9 Harbor, The Core Facility, Neon Skyline, The Iron Foundry and The Sanctuary. Playing as Freckles you fight Ninjabots and then Slade. Playing as Slade you fight Frecklebots and then Freckles. The Harbor and Foundry end with a Warden mid-boss (SHOGUN-X or FOREMAN MK-II). You start with three lives and earn an extra one after stages 3 and 5. Each cleared stage restores some health.
+- **Story Mode**: six stages, each with its own look and music: The Outskirts, Pier 9 Harbor, The Core Facility, Neon Skyline, The Iron Foundry and The Sanctuary. Playing as Freckles you fight Ninjabots and then Slade. Playing as Slade you fight Clownbots and then Freckles. The Harbor and Foundry end with a Warden mid-boss (SHOGUN-X or FOREMAN MK-II). You start with three lives and earn an extra one after stages 3 and 5. Each cleared stage restores some health.
 - **Versus: 1P vs 2P**: local head-to-head, best of three rounds with a 99-second timer. Combo damage scales down the longer a combo runs.
 - **Versus: 1P vs CPU**: pick your fighter, then pick the CPU's. The CPU blocks, punishes and uses specials.
 
@@ -60,7 +60,7 @@ src/
   physics/    shared types and 3-axis (X, Y, Z-depth) collision
   entities/   Fighter state machine, Player, Enemy, Boss, projectiles, particles
   characters/ Slade and Freckles frame data
-  ai/         Ninjabot, Frecklebot and boss/CPU controllers
+  ai/         Ninjabot, Clownbot and boss/CPU controllers
   rendering/  stage painter, procedural skeletal sprites, HUD
   scenes/     title, character select, story, versus, results
 ```

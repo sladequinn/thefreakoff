@@ -1,5 +1,5 @@
 import { COLORS, DEFAULT_Z_RANGE, TEAM_ENEMY } from '../config/constants';
-import { FrecklebotAI } from '../ai/FrecklebotAI';
+import { ClownbotAI } from '../ai/ClownbotAI';
 import { NinjabotAI } from '../ai/NinjabotAI';
 import { FState, type CharacterDef, type MoveData, type Variant, type World } from '../physics/Types';
 import { Fighter } from './Fighter';
@@ -77,7 +77,7 @@ const ninjabotMoves: Record<string, MoveData> = {
   },
 };
 
-const frecklebotMoves: Record<string, MoveData> = {
+const clownbotMoves: Record<string, MoveData> = {
   fb_punch1: {
     id: 'fb_punch1',
     name: 'Piston Jab',
@@ -200,20 +200,20 @@ export const NINJABOT_DEF: CharacterDef = {
   scale: 1,
 };
 
-export const FRECKLEBOT_DEF: CharacterDef = {
-  id: 'frecklebot',
-  name: 'FRECKLEBOT',
-  title: 'Industrial Boxing Automaton',
-  archetype: 'frecklebot',
-  voice: 'frecklebot',
+export const CLOWNBOT_DEF: CharacterDef = {
+  id: 'clownbot',
+  name: 'CLOWNBOT',
+  title: 'Carnival Boxing Automaton',
+  archetype: 'clownbot',
+  voice: 'clownbot',
   stats: { speed: 2.5, maxHp: 55, defense: 1.1, jumpPower: 6 },
   combo: ['fb_punch1', 'fb_punch2'],
-  moves: frecklebotMoves,
+  moves: clownbotMoves,
   hurtbox: { offsetX: 0, offsetY: 46, width: 40, height: 92, zDepth: 14 },
   scale: 1,
 };
 
-export type EnemyKind = 'ninjabot' | 'frecklebot';
+export type EnemyKind = 'ninjabot' | 'clownbot';
 
 interface VariantTuning {
   label: string;
@@ -231,10 +231,10 @@ const TUNING: Record<EnemyKind, Partial<Record<Variant, VariantTuning>>> = {
     elite: { label: 'ELITE NINJABOT', hpMult: 1.9, scale: 1.08, speed: 1.15, damage: 1.25, score: 1500 },
     boss: { label: 'SHOGUN-X', hpMult: 6, scale: 1.34, speed: 1.1, damage: 1.45, score: 6000 },
   },
-  frecklebot: {
-    normal: { label: 'FRECKLEBOT', hpMult: 1, scale: 1, speed: 1, damage: 1, score: 400 },
-    heavy: { label: 'FRECKLEBOT // HEAVY', hpMult: 1.7, scale: 1.16, speed: 0.8, damage: 1.25, score: 700 },
-    elite: { label: 'ELITE FRECKLEBOT', hpMult: 1.7, scale: 1.1, speed: 1.1, damage: 1.25, score: 1500 },
+  clownbot: {
+    normal: { label: 'CLOWNBOT', hpMult: 1, scale: 1, speed: 1, damage: 1, score: 400 },
+    heavy: { label: 'CLOWNBOT // HEAVY', hpMult: 1.7, scale: 1.16, speed: 0.8, damage: 1.25, score: 700 },
+    elite: { label: 'ELITE CLOWNBOT', hpMult: 1.7, scale: 1.1, speed: 1.1, damage: 1.25, score: 1500 },
     boss: { label: 'FOREMAN MK-II', hpMult: 5.5, scale: 1.4, speed: 0.95, damage: 1.5, score: 6000 },
   },
 };
@@ -246,9 +246,9 @@ export class Enemy extends Fighter {
   readonly scoreValue: number;
 
   constructor(kind: EnemyKind, variant: Variant, x: number, z: number) {
-    const def = kind === 'ninjabot' ? NINJABOT_DEF : FRECKLEBOT_DEF;
+    const def = kind === 'ninjabot' ? NINJABOT_DEF : CLOWNBOT_DEF;
     const tune = TUNING[kind][variant] ?? TUNING[kind].normal!;
-    const controller = kind === 'ninjabot' ? new NinjabotAI(variant) : new FrecklebotAI(variant);
+    const controller = kind === 'ninjabot' ? new NinjabotAI(variant) : new ClownbotAI(variant);
     super(def, { team: TEAM_ENEMY, controller, variant, scale: tune.scale, hpMult: tune.hpMult, name: tune.label });
     this.kind = kind;
     this.x = x;

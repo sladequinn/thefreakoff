@@ -111,9 +111,9 @@ export interface CharacterStats {
 }
 
 export type CharId = 'slade' | 'freckles';
-export type Archetype = 'ninja' | 'brawler' | 'ninjabot' | 'frecklebot';
+export type Archetype = 'ninja' | 'brawler' | 'ninjabot' | 'clownbot';
 export type Variant = 'normal' | 'alt' | 'elite' | 'heavy' | 'boss';
-export type VoiceId = 'slade' | 'freckles' | 'ninjabot' | 'frecklebot';
+export type VoiceId = 'slade' | 'freckles' | 'ninjabot' | 'clownbot';
 
 export interface CharacterDef {
   id: string;

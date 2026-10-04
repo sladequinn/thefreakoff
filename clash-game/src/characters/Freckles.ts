@@ -253,7 +253,7 @@ export const FRECKLES: CharacterDef = {
   moves,
   hurtbox: { offsetX: 0, offsetY: 46, width: 34, height: 92, zDepth: 14 },
   scale: 1,
-  blurb: 'Carnival nightmare in a corset. Spiked-knuckle four-hit strings, armored shoulder tackles and seismic slams that crack concrete.',
+  blurb: 'Carnival queen with a wicked right hook. Spiked-knuckle four-hit strings, armored shoulder tackles and seismic slams that crack concrete.',
   ratings: { power: 5, speed: 3, range: 2, defense: 5 },
   moveList: [
     { name: 'Scrap Iron Combination', input: 'J, J, J, J', desc: 'Jab → liver → uppercut → knockdown haymaker' },

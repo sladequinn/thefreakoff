@@ -151,11 +151,11 @@ const STORY: Record<CharId, { pre: Page[][]; boss: string[]; ending: Page[] }> =
   slade: {
     pre: [
       [
-        { speaker: 'NEO-KASAI, 2089', arch: null, text: 'Hydraulic boxers stalk the Outskirts: Frecklebots, forged by the Iron Syndicate from the fight data of one legendary carnival brawler.' },
+        { speaker: 'NEO-KASAI, 2089', arch: null, text: 'Hydraulic boxers stalk the Outskirts: Clownbots, forged by the Iron Syndicate from the fight data of one legendary carnival brawler.' },
         { speaker: 'SLADE', arch: 'ninja', text: 'Their pistons shake the old shrine every night. Someone taught iron to throw punches. I will unmake the lesson, one sigil at a time.' },
       ],
       [
-        { speaker: 'SLADE', arch: 'ninja', text: 'The Frecklebots arrive packed in shipping crates at Pier 9. The docks smell of brine and machine oil, and something large is waking in the hold.' },
+        { speaker: 'SLADE', arch: 'ninja', text: 'The Clownbots arrive packed in shipping crates at Pier 9. The docks smell of brine and machine oil, and something large is waking in the hold.' },
         { speaker: 'SYNDICATE PA', arch: null, text: 'PIER 9 ALERT. FOREMAN MK-II ONLINE. SECURE THE SHIPMENT. THE NINJA IS NOT TO REACH THE CORE.' },
       ],
       [
@@ -219,7 +219,7 @@ export class StoryScene extends CombatScene {
     this.player = new Player(def, game.input, 0, TEAM_PLAYER);
     this.player.score = params.score;
     this.player.lives = params.lives;
-    this.enemyKind = params.char === 'slade' ? 'frecklebot' : 'ninjabot';
+    this.enemyKind = params.char === 'slade' ? 'clownbot' : 'ninjabot';
     this.stages = stagesFor(this.enemyKind);
     this.stageIndex = Math.max(0, Math.min(this.stages.length - 1, params.stage));
     this.setupStage(this.stageIndex);
@@ -253,7 +253,7 @@ export class StoryScene extends CombatScene {
     this.boss = null;
     this.midBoss = null;
     this.focus = null;
-    this.maxTokens = this.enemyKind === 'frecklebot' ? 3 : 2;
+    this.maxTokens = this.enemyKind === 'clownbot' ? 3 : 2;
     const p = this.player;
     p.x = 140;
     p.z = 430;
@@ -467,7 +467,7 @@ export class StoryScene extends CombatScene {
       title: victory ? 'VICTORY' : 'GAME OVER',
       subtitle: victory
         ? `${p.name} conquered the Sanctuary — the Syndicate's vault awaits.`
-        : `The ${this.enemyKind === 'ninjabot' ? 'Ninjabots' : 'Frecklebots'} overran ${p.name}.`,
+        : `The ${this.enemyKind === 'ninjabot' ? 'Ninjabots' : 'Clownbots'} overran ${p.name}.`,
       accent: victory ? '#ffd21f' : '#ff3b3b',
       victory,
       portrait: this.params.char,
@@ -628,7 +628,7 @@ export class StoryScene extends CombatScene {
     ctx.restore();
     const title = this.epilogue ? 'EPILOGUE' : `${this.stage.label}  ·  ${this.stage.name}`;
     ui.text(ctx, title, CANVAS_WIDTH / 2, 90, 30, '#ffffff', { stroke: '#000', strokeWidth: 5, shadow: 'rgba(138,77,255,0.8)' });
-    const route = this.params.char === 'slade' ? 'SLADE ROUTE · FRECKLEBOT UPRISING' : 'FRECKLES ROUTE · NINJABOT PURGE';
+    const route = this.params.char === 'slade' ? 'SLADE ROUTE · CLOWNBOT UPRISING' : 'FRECKLES ROUTE · NINJABOT PURGE';
     ui.text(ctx, route, CANVAS_WIDTH / 2, 118, 12, 'rgba(255,255,255,0.55)', { template: FONT_UI });
 
     const px = 90;

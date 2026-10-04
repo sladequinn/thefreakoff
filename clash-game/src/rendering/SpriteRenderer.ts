@@ -66,9 +66,9 @@ function sample(keys: Keys, f: number): Pose {
 
 const IDLE: Record<Archetype, Pose> = {
   ninja: P(0.18, -0.1, -0.5, 1.4, 1.0, 0.7, -0.35, -0.12, 0.45, -0.5, 0, 0.7),
-  brawler: P(0.14, 0.04, 0.25, 1.35, -1.45, 1.95, -0.4, -0.15, 0.4, -0.4),
+  brawler: P(0.12, 0.04, 0.25, 1.35, -0.95, 0.75, -0.4, -0.15, 0.4, -0.4),
   ninjabot: P(0.15, 0, -0.2, 1.1, 0.8, 0.9, -0.3, -0.1, 0.35, -0.4, 0, 0.9),
-  frecklebot: P(0.08, 0, 0.3, 1.5, 0.5, 1.4, -0.25, -0.1, 0.25, -0.2),
+  clownbot: P(0.08, 0, 0.3, 1.5, 0.5, 1.4, -0.25, -0.1, 0.25, -0.2),
 };
 
 const withLegs = (p: Pose, hL: number, kL: number, hR: number, kR: number): Pose => ({ ...p, hL, kL, hR, kR });
@@ -80,19 +80,19 @@ const GUARD: Record<Archetype, Pose> = {
   ninja: P(-0.05, 0.1, 1.2, 1.8, 1.0, 1.6, -0.4, -0.2, 0.4, -0.4, 0, 1.4),
   brawler: P(0.1, 0.2, 1.0, 2.3, 1.2, 2.2, -0.45, -0.2, 0.4, -0.4),
   ninjabot: P(-0.05, 0.1, 1.2, 1.6, 1.0, 1.6, -0.4, -0.2, 0.4, -0.4, 0, 1.4),
-  frecklebot: P(0.05, 0.1, 1.0, 2.0, 1.2, 1.9, -0.3, -0.1, 0.3, -0.2),
+  clownbot: P(0.05, 0.1, 1.0, 2.0, 1.2, 1.9, -0.3, -0.1, 0.3, -0.2),
 };
 const VICTORY: Record<Archetype, Pose> = {
   ninja: P(-0.05, -0.15, -0.4, 1.2, 3.0, 0, -0.3, -0.05, 0.3, -0.05, 0, 0),
   brawler: P(-0.05, -0.2, 0.5, 2.0, 3.0, 0.3, -0.3, -0.05, 0.3, -0.05),
   ninjabot: IDLE.ninjabot,
-  frecklebot: IDLE.frecklebot,
+  clownbot: IDLE.clownbot,
 };
 
 const NI = IDLE.ninja;
 const BI = IDLE.brawler;
 const NB = IDLE.ninjabot;
-const FB = IDLE.frecklebot;
+const FB = IDLE.clownbot;
 
 const MOVE_KEYS: Record<string, Keys> = {
   slade_slash: [
@@ -362,9 +362,9 @@ interface Dims {
 
 const DIMS: Record<Archetype, Dims> = {
   ninja: { thigh: 22, shin: 22, torso: 30, upper: 16, fore: 16, headR: 9, neck: 11, hipW: 8, chestW: 10, blade: 46 },
-  brawler: { thigh: 21, shin: 21, torso: 32, upper: 17, fore: 16, headR: 10, neck: 12, hipW: 9, chestW: 12, blade: 0 },
+  brawler: { thigh: 24, shin: 24, torso: 31, upper: 15, fore: 15, headR: 8, neck: 10, hipW: 9.5, chestW: 10, blade: 0 },
   ninjabot: { thigh: 22, shin: 23, torso: 29, upper: 16, fore: 15, headR: 8.5, neck: 11, hipW: 7, chestW: 11, blade: 28 },
-  frecklebot: { thigh: 19, shin: 20, torso: 34, upper: 16, fore: 17, headR: 8, neck: 10, hipW: 12, chestW: 17, blade: 0 },
+  clownbot: { thigh: 19, shin: 20, torso: 34, upper: 16, fore: 17, headR: 8, neck: 10, hipW: 12, chestW: 17, blade: 0 },
 };
 
 interface V {
@@ -432,10 +432,10 @@ const PALETTES: Record<Archetype, Partial<Record<Variant, Palette>> & { normal: 
     boss: { gi: '#120e18', giDark: '#07050a', gi2: '#2a1740', trim: '#b066ff', scarf: '#7a1fe0', scarfTip: '#e0c4ff', skin: '#e0b48f', eye: '#ff4dff', blade: '#f2eaff', glow: '#c070ff', wrap: '#5a2aa0', hilt: '#2a1f3a' },
   },
   brawler: {
-    // Gothic jester: black-and-crimson motley, bone-white greasepaint, striped stockings, gold bells.
-    normal: { dark: '#17101e', dark2: '#2a1c33', red: '#b0102c', red2: '#6e0a1c', skin: '#f2eaf5', skinDark: '#d6c4dc', stock1: '#17101e', stock2: '#e6dfe9', boots: '#0d0a12', bell: '#ffd21f', ruff: '#f6f2f8', lace: '#ff3b5c', knuckle: '#d8dfe8', paint: '#0a0710', lips: '#8a0a22', glow: '#ff3b5c', buckle: '#c0c8d4', hair: '#120c18' },
-    alt: { dark: '#ece6f1', dark2: '#cfc5d8', red: '#5a1aa8', red2: '#3a0f70', skin: '#f6f1f8', skinDark: '#dccfe2', stock1: '#5a1aa8', stock2: '#ece6f1', boots: '#1a1424', bell: '#9fe8ff', ruff: '#ffffff', lace: '#9d5cff', knuckle: '#9fe8ff', paint: '#2a0f4a', lips: '#5a1aa8', glow: '#9d5cff', buckle: '#9fe8ff', hair: '#ece6f1' },
-    boss: { dark: '#14101c', dark2: '#261a30', red: '#c8102c', red2: '#7a0a1c', skin: '#f2eaf5', skinDark: '#d6c4dc', stock1: '#14101c', stock2: '#ffd21f', boots: '#0d0a12', bell: '#ffd21f', ruff: '#fff6d0', lace: '#ffd21f', knuckle: '#ffd86a', paint: '#0a0710', lips: '#8a0a22', glow: '#ffb13b', buckle: '#ffd21f', hair: '#120c18' },
+    // Gothic harlequin: black-and-crimson motley, porcelain skin, dark twin-tails, striped stockings, gold bells.
+    normal: { dark: '#17101e', dark2: '#2a1c33', red: '#b8102e', red2: '#6e0a1c', skin: '#f4e7ee', skinDark: '#e0c0cc', stock1: '#17101e', stock2: '#e9e2ea', boots: '#0d0a12', bell: '#ffd21f', hair: '#1a1020', hairTip: '#b8102e', lace: '#ff3b5c', knuckle: '#d8dfe8', paint: '#120a16', iris: '#c0102c', lips: '#8a0a22', glow: '#ff3b5c', buckle: '#c0c8d4' },
+    alt: { dark: '#ece6f1', dark2: '#cfc5d8', red: '#5a1aa8', red2: '#3a0f70', skin: '#f7f1f6', skinDark: '#dccfe2', stock1: '#5a1aa8', stock2: '#ece6f1', boots: '#1a1424', bell: '#9fe8ff', hair: '#f2ecf5', hairTip: '#5a1aa8', lace: '#9d5cff', knuckle: '#9fe8ff', paint: '#2a0f4a', iris: '#7a3cff', lips: '#5a1aa8', glow: '#9d5cff', buckle: '#9fe8ff' },
+    boss: { dark: '#14101c', dark2: '#261a30', red: '#c8102c', red2: '#7a0a1c', skin: '#f4e7ee', skinDark: '#e0c0cc', stock1: '#14101c', stock2: '#ffd21f', boots: '#0d0a12', bell: '#ffd21f', hair: '#1a1020', hairTip: '#ffd21f', lace: '#ffd21f', knuckle: '#ffd86a', paint: '#120a16', iris: '#ffb13b', lips: '#8a0a22', glow: '#ffb13b', buckle: '#ffd21f' },
   },
   ninjabot: {
     normal: { chrome1: '#eef3f8', chrome2: '#7d8896', dark: '#1b2129', mesh: '#2a3440', visor: '#39f3ff', blade: '#c9fbff', joint: '#39f3ff' },
@@ -443,11 +443,11 @@ const PALETTES: Record<Archetype, Partial<Record<Variant, Palette>> & { normal: 
     elite: { chrome1: '#5b6170', chrome2: '#262a33', dark: '#0d0f14', mesh: '#1a1d24', visor: '#ff4d6d', blade: '#ffd0d8', joint: '#ffc857' },
     boss: { chrome1: '#ffe08a', chrome2: '#a8741f', dark: '#141008', mesh: '#2a2010', visor: '#ff2a2a', blade: '#fff4c8', joint: '#ff2a2a' },
   },
-  frecklebot: {
-    normal: { rust: '#93512c', rust2: '#5c2f18', steel: '#a4adb6', steel2: '#525a64', hazard: '#ffd21f', eye: '#ffd21f', fist: '#b0452a', fist2: '#6e2412' },
-    heavy: { rust: '#56633f', rust2: '#343d24', steel: '#8d959c', steel2: '#3f454b', hazard: '#ff9a1f', eye: '#ff8a1f', fist: '#6f7a4a', fist2: '#3c4426' },
-    elite: { rust: '#8a1f22', rust2: '#4f0f12', steel: '#b8b0a8', steel2: '#5a4e48', hazard: '#ff3b3b', eye: '#ff3b3b', fist: '#d8a23a', fist2: '#7a5214' },
-    boss: { rust: '#26221e', rust2: '#12100e', steel: '#e0b04a', steel2: '#8a6420', hazard: '#ffd21f', eye: '#ff2a2a', fist: '#ffd21f', fist2: '#a87a10' },
+  clownbot: {
+    normal: { rust: '#93512c', rust2: '#5c2f18', steel: '#a4adb6', steel2: '#525a64', hazard: '#d8102c', band: '#efe6ea', eye: '#ffd21f', fist: '#b0452a', fist2: '#6e2412', face: '#efe6ea', nose: '#ff2a2a', bell: '#ffd21f' },
+    heavy: { rust: '#56633f', rust2: '#343d24', steel: '#8d959c', steel2: '#3f454b', hazard: '#ff9a1f', band: '#141414', eye: '#ff8a1f', fist: '#6f7a4a', fist2: '#3c4426', face: '#d8d0cc', nose: '#ff6a1f', bell: '#ff9a1f' },
+    elite: { rust: '#8a1f22', rust2: '#4f0f12', steel: '#b8b0a8', steel2: '#5a4e48', hazard: '#141414', band: '#efe6ea', eye: '#ff3b3b', fist: '#d8a23a', fist2: '#7a5214', face: '#efe6ea', nose: '#ff3b3b', bell: '#ffd21f' },
+    boss: { rust: '#26221e', rust2: '#12100e', steel: '#e0b04a', steel2: '#8a6420', hazard: '#ffd21f', band: '#141414', eye: '#ff2a2a', fist: '#ffd21f', fist2: '#a87a10', face: '#fff3d0', nose: '#ff2a2a', bell: '#ffd21f' },
   },
 };
 
@@ -619,166 +619,210 @@ function drawBrawler(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: D
   const fwd: V = { x: 1, y: 0 };
   ctx.lineCap = 'round';
 
-  const striped = (a: V, b: V, w: number, n: number): void => {
-    seg(ctx, a, b, w, T(pal.stock1));
+  const striped = (a: V, b: V, w1: number, w2: number, n: number): void => {
+    taper(ctx, a, b, w1, w2, T(pal.stock1));
+    dot(ctx, a, w1 / 2, T(pal.stock1));
     if (o.tint) return;
     ctx.lineCap = 'butt';
-    for (let i = 0; i < n; i++) seg(ctx, mix(a, b, (i + 0.15) / n), mix(a, b, (i + 0.58) / n), w, pal.stock2);
+    for (let i = 0; i < n; i++) {
+      const t0 = (i + 0.2) / n;
+      const t1 = (i + 0.6) / n;
+      seg(ctx, mix(a, b, t0), mix(a, b, t1), w1 + (w2 - w1) * (t0 + t1) * 0.5, pal.stock2);
+    }
     ctx.lineCap = 'round';
   };
-  const boot = (knee: V, foot: V, w: number, front: boolean): void => {
-    seg(ctx, mix(knee, foot, 0.42), foot, w, T(pal.boots));
-    seg(ctx, add(foot, fwd, -3), add(foot, fwd, front ? 9 : 8), w * 0.72, T(pal.boots));
-    if (!o.tint) {
-      const strap = mix(knee, foot, 0.62);
-      seg(ctx, add(strap, fwd, -w * 0.45), add(strap, fwd, w * 0.45), 1.6, pal.red2);
-      dot(ctx, add(strap, fwd, w * 0.3), 1.4, pal.buckle);
-    }
+  const boot = (knee: V, foot: V, w: number): void => {
+    seg(ctx, mix(knee, foot, 0.68), foot, w, T(pal.boots));
+    seg(ctx, add(foot, fwd, -2), add(foot, fwd, 7), w * 0.6, T(pal.boots));
+    seg(ctx, add(foot, fwd, -2.5), add(add(foot, fwd, -2.5), { x: 0, y: -1 }, 3.5), 2.4, T(pal.boots));
+    if (!o.tint) dot(ctx, add(mix(knee, foot, 0.8), fwd, w * 0.3), 1.1, pal.buckle);
   };
-  const sleeve = (sh: V, el: V, hd: V, w: number, front: boolean): void => {
-    seg(ctx, sh, el, w, T(front ? pal.red : pal.red2));
-    dot(ctx, el, w * 0.55, T(front ? pal.red : pal.red2));
-    seg(ctx, el, hd, w * 0.78, T(front ? pal.dark : pal.dark2));
-    seg(ctx, mix(el, hd, 0.72), mix(el, hd, 0.8), w * 0.86, T(pal.red));
-    dot(ctx, hd, w * 0.58, T(front ? pal.dark : pal.dark2));
+  const sleeve = (sh: V, el: V, hd: V, front: boolean): void => {
+    dot(ctx, add(sh, up, 1), 4.6, T(front ? pal.red : pal.red2));
+    seg(ctx, sh, el, 6.5, T(front ? pal.red : pal.red2));
+    seg(ctx, el, hd, 5.6, T(front ? pal.dark : pal.dark2));
+    seg(ctx, mix(el, hd, 0.7), mix(el, hd, 0.78), 6.4, T(pal.red));
+    dot(ctx, hd, 4.2, T(front ? pal.dark : pal.dark2));
   };
   const spikes = (hd: V, fore: number): void => {
     const fd = dirv(fore);
-    const k = add(hd, fd, 4);
+    const k = add(hd, fd, 3.2);
     const side = { x: -fd.y, y: fd.x };
     if (!o.tint) {
       ctx.globalCompositeOperation = 'lighter';
-      const g = ctx.createRadialGradient(k.x, k.y, 0, k.x, k.y, 9);
+      const g = ctx.createRadialGradient(k.x, k.y, 0, k.x, k.y, 8);
       g.addColorStop(0, pal.glow);
       g.addColorStop(1, 'rgba(0,0,0,0)');
       ctx.fillStyle = g;
-      ctx.fillRect(k.x - 9, k.y - 9, 18, 18);
+      ctx.fillRect(k.x - 8, k.y - 8, 16, 16);
       ctx.globalCompositeOperation = 'source-over';
     }
-    seg(ctx, add(k, side, -4), add(k, side, 4), 3, T(pal.knuckle));
-    for (const s of [-3, 0, 3]) dot(ctx, add(add(k, side, s), fd, 2.2), 1.1, T(pal.knuckle));
+    seg(ctx, add(k, side, -3.4), add(k, side, 3.4), 2.4, T(pal.knuckle));
+    for (const s of [-2.4, 0, 2.4]) dot(ctx, add(add(k, side, s), fd, 1.8), 0.9, T(pal.knuckle));
   };
 
-  // back arm and back leg
-  sleeve(J.shL, J.elL, J.hdL, 10, false);
-  spikes(J.hdL, J.foreL);
-  striped(J.hip, J.kneeL, 10, 3);
-  striped(J.kneeL, J.footL, 9, 3);
-  boot(J.kneeL, J.footL, 11, false);
+  // twin-tails trail behind the head
+  const sway = Math.sin(t * 0.14) * 2.5 + o.motion * 7;
+  const tailBase = add(J.head, perp, -d.headR + 2);
+  for (const [dy, len] of [
+    [-2, 30],
+    [3, 26],
+  ]) {
+    const b0 = add(tailBase, up, -dy);
+    const tip = { x: b0.x - 9 - sway * 1.3, y: b0.y + len - o.motion * 8 };
+    const ctrl = { x: b0.x - 14 - sway, y: b0.y + len * 0.35 };
+    for (const [w, col, k] of [
+      [5.5, pal.hair, 1],
+      [3, pal.hairTip, 0.3],
+    ] as [number, string, number][]) {
+      ctx.strokeStyle = T(col);
+      ctx.lineWidth = w;
+      ctx.beginPath();
+      const s0 = k === 1 ? b0 : { x: b0.x + (tip.x - b0.x) * (1 - k), y: b0.y + (tip.y - b0.y) * (1 - k) };
+      ctx.moveTo(s0.x, s0.y);
+      ctx.quadraticCurveTo(ctrl.x, ctrl.y, tip.x, tip.y);
+      ctx.stroke();
+    }
+  }
 
-  // corset torso
-  torsoQuad(ctx, J, d.hipW, d.chestW, T(pal.dark));
-  const cb = mix(J.hip, J.neck, 0.76);
-  dot(ctx, add(cb, perp, 2.5), 8, T(pal.skin));
-  dot(ctx, add(cb, perp, 9), 9, T(pal.skin));
+  // back arm and back leg
+  sleeve(J.shL, J.elL, J.hdL, false);
+  spikes(J.hdL, J.foreL);
+  striped(J.hip, J.kneeL, 9, 7, 2);
+  striped(J.kneeL, J.footL, 7, 5.5, 2);
+  boot(J.kneeL, J.footL, 7.5);
+
+  // hourglass corset torso with sweetheart neckline
+  const waist = mix(J.hip, J.neck, 0.42);
+  const waistW = 5.5;
+  const poly = (pts: V[], color: string): void => {
+    ctx.fillStyle = T(color);
+    ctx.beginPath();
+    pts.forEach((q, i) => (i === 0 ? ctx.moveTo(q.x, q.y) : ctx.lineTo(q.x, q.y)));
+    ctx.closePath();
+    ctx.fill();
+  };
+  poly(
+    [add(J.hip, perp, -d.hipW), add(waist, perp, -waistW), add(J.neck, perp, -d.chestW), add(J.neck, perp, d.chestW), add(waist, perp, waistW), add(J.hip, perp, d.hipW)],
+    pal.dark,
+  );
+  const cb = mix(J.hip, J.neck, 0.78);
+  poly([add(J.neck, perp, -d.chestW + 1), add(J.neck, perp, d.chestW), add(cb, perp, 3)], pal.skin);
+  dot(ctx, add(cb, perp, 1.5), 6.8, T(pal.skin));
+  dot(ctx, add(cb, perp, 8), 7.4, T(pal.skin));
   if (!o.tint) {
-    seg(ctx, add(add(cb, perp, 7), up, 4), add(add(cb, perp, 7.5), up, -4), 1.4, pal.skinDark);
-    dot(ctx, add(add(cb, perp, 12), up, 3), 1.6, '#ffffff');
+    seg(ctx, add(add(cb, perp, 6.2), up, 3.5), add(add(cb, perp, 6.6), up, -3), 1.2, pal.skinDark);
+    dot(ctx, add(add(cb, perp, 10.5), up, 2.5), 1.3, '#ffffff');
   }
   const bustLine = add(cb, up, -4);
-  seg(ctx, add(bustLine, perp, -d.chestW), add(bustLine, perp, d.chestW + 7), 9, T(pal.dark));
+  seg(ctx, add(bustLine, perp, -d.chestW + 1), add(bustLine, perp, d.chestW + 5), 7, T(pal.dark));
   if (!o.tint) {
-    seg(ctx, add(add(bustLine, up, 4), perp, -d.chestW + 1), add(add(bustLine, up, 4), perp, d.chestW + 8), 1.6, pal.lace);
+    seg(ctx, add(add(bustLine, up, 3.2), perp, -d.chestW + 1), add(add(bustLine, up, 3.2), perp, d.chestW + 6), 1.4, pal.lace);
     ctx.strokeStyle = pal.lace;
-    ctx.lineWidth = 1.1;
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    for (let i = 0; i <= 6; i++) {
-      const c = mix(add(J.hip, up, 3), add(bustLine, up, -2), i / 6);
-      const q = add(c, perp, i % 2 === 0 ? 3 : -3);
+    for (let i = 0; i <= 5; i++) {
+      const c = mix(add(J.hip, up, 4), add(bustLine, up, -1.5), i / 5);
+      const q = add(c, perp, i % 2 === 0 ? 2.2 : -2.2);
       if (i === 0) ctx.moveTo(q.x, q.y);
       else ctx.lineTo(q.x, q.y);
     }
     ctx.stroke();
   }
 
-  // front leg, then the ruffled skirt over both thighs
-  striped(J.hip, J.kneeR, 11, 3);
-  striped(J.kneeR, J.footR, 10, 3);
-  boot(J.kneeR, J.footR, 12, true);
+  // front leg, then the flared skirt over both thighs
+  striped(J.hip, J.kneeR, 9.5, 7.5, 2);
+  striped(J.kneeR, J.footR, 7.5, 6, 2);
+  boot(J.kneeR, J.footR, 8);
   const skirt = (len: number, w0: number, w1: number, color: string): void => {
-    ctx.fillStyle = T(color);
-    ctx.beginPath();
-    const a = add(J.hip, perp, -w0);
-    const b = add(J.hip, perp, w0);
-    ctx.moveTo(a.x, a.y);
-    ctx.lineTo(b.x, b.y);
-    for (let i = 0; i <= 6; i++) {
-      const base = add(add(J.hip, up, -len), perp, w1 - (i / 6) * 2 * w1);
-      const pt = i % 2 === 0 ? base : add(base, up, 4);
-      ctx.lineTo(pt.x, pt.y);
+    const pts: V[] = [add(J.hip, perp, -w0), add(J.hip, perp, w0)];
+    for (let i = 0; i <= 5; i++) {
+      const base = add(add(J.hip, up, -len), perp, w1 - (i / 5) * 2 * w1);
+      pts.push(i % 2 === 0 ? base : add(base, up, 3.5));
     }
-    ctx.closePath();
-    ctx.fill();
+    poly(pts, color);
   };
-  skirt(15, d.hipW + 1, d.hipW + 9, pal.red2);
-  skirt(11, d.hipW + 1, d.hipW + 7, pal.dark);
-  seg(ctx, add(J.hip, perp, -d.hipW - 1), add(J.hip, perp, d.hipW + 1), 3.5, T(pal.red));
+  skirt(13, d.hipW, d.hipW + 9, pal.red2);
+  skirt(10, d.hipW, d.hipW + 7, pal.dark);
+  seg(ctx, add(J.hip, perp, -d.hipW - 1), add(J.hip, perp, d.hipW + 1), 3, T(pal.red));
 
-  // neck and ruff collar
-  seg(ctx, J.neck, J.head, 6, T(pal.skin));
-  for (let i = 0; i < 7; i++) {
-    const a = (i / 7) * Math.PI * 2;
-    const c = add(add(J.neck, perp, Math.cos(a) * 7.5), up, Math.sin(a) * 1.8 + 4);
-    dot(ctx, c, 2.1, T(i % 2 === 0 ? pal.ruff : pal.dark2));
-  }
+  // neck with choker
+  seg(ctx, J.neck, J.head, 5, T(pal.skin));
+  const ch = mix(J.neck, J.head, 0.42);
+  seg(ctx, add(ch, perp, -3.2), add(ch, perp, 3.2), 1.8, T(pal.dark));
+  dot(ctx, add(ch, perp, 1.8), 1.1, T(pal.bell));
 
-  // head: greasepaint face, painted eye, jester cap with bells
+  // head: porcelain face, winged eye, heart mark, harlequin hood with bells
   const ang = p.lean + p.head;
-  const sway = Math.sin(t * 0.15) * 2 + o.motion * 5;
   ctx.save();
   ctx.translate(J.head.x, J.head.y);
   ctx.rotate(ang);
   const r = d.headR;
-  seg(ctx, { x: -r + 1, y: 0 }, { x: -r - 3 - sway * 0.4, y: 8 }, 2.4, T(pal.hair));
   dot(ctx, { x: 0, y: 0 }, r, T(pal.skin));
-  const point = (bx: number, by: number, tx: number, ty: number, color: string): void => {
-    taper(ctx, { x: bx, y: by }, { x: tx, y: ty }, 9, 2, T(color));
-    dot(ctx, { x: tx, y: ty }, 2.4, T(pal.bell));
+  const point = (bx: number, by: number, tx: number, ty: number, w: number, color: string): void => {
+    taper(ctx, { x: bx, y: by }, { x: tx, y: ty }, w, 1.6, T(color));
+    dot(ctx, { x: tx, y: ty }, 2, T(pal.bell));
   };
-  point(-4, -6, -17 - sway, -2 + Math.abs(sway) * 0.4, pal.red);
-  point(1, -8, -5 - sway * 0.6, -22, pal.dark);
-  point(6, -5, 16 - sway * 0.3, -11 + sway * 0.5, pal.red);
+  point(-4, -4, -17 - sway * 0.8, 1 + Math.abs(sway) * 0.5, 8, pal.red);
+  point(3, -6, 11 - sway * 0.3, -15 + sway * 0.4, 7, pal.dark);
   ctx.fillStyle = T(pal.dark);
   ctx.beginPath();
-  ctx.arc(0, 0, r + 1.5, Math.PI, Math.PI * 2);
+  ctx.arc(0, 0, r + 1.2, Math.PI * 0.95, Math.PI * 2.05);
   ctx.closePath();
   ctx.fill();
   ctx.fillStyle = T(pal.red);
   ctx.beginPath();
-  ctx.moveTo(0, 0);
-  ctx.arc(0, 0, r + 1.5, -Math.PI / 2, 0);
+  ctx.moveTo(0, -r - 1.2);
+  ctx.arc(0, 0, r + 1.2, -Math.PI / 2, Math.PI * 0.05);
+  ctx.lineTo(0, 0);
   ctx.closePath();
   ctx.fill();
-  seg(ctx, { x: -r - 1.5, y: -0.5 }, { x: r + 1.5, y: -0.5 }, 2.2, T(pal.red2));
+  seg(ctx, { x: -r - 1.2, y: -1 }, { x: r + 1.2, y: -0.4 }, 1.6, T(pal.red2));
   if (!o.tint) {
-    ctx.fillStyle = pal.paint;
+    ctx.fillStyle = pal.hair;
     ctx.beginPath();
-    ctx.moveTo(5, -5.5);
-    ctx.lineTo(8.2, -1.5);
-    ctx.lineTo(5, 2.5);
-    ctx.lineTo(1.8, -1.5);
+    ctx.moveTo(-r + 1, -1);
+    ctx.lineTo(3, -1.2);
+    ctx.lineTo(1.5, 1.8);
+    ctx.lineTo(-r, 2.5);
     ctx.closePath();
     ctx.fill();
-    ctx.fillRect(4.5, 2.5, 1, 3);
-    dot(ctx, { x: 5.4, y: -1.6 }, 1, pal.lips);
-    ctx.strokeStyle = pal.lips;
-    ctx.lineWidth = 1.4;
+    ctx.fillStyle = pal.paint;
     ctx.beginPath();
-    ctx.arc(5.5, 4.2, 2.8, 0.2, Math.PI - 0.2);
+    ctx.ellipse(4, 0.2, 3.1, 1.9, -0.15, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath();
+    ctx.ellipse(4.3, 0.4, 2.2, 1.2, -0.15, 0, Math.PI * 2);
+    ctx.fill();
+    dot(ctx, { x: 4.9, y: 0.4 }, 0.95, pal.iris);
+    ctx.strokeStyle = pal.paint;
+    ctx.lineWidth = 0.9;
+    ctx.beginPath();
+    ctx.moveTo(6.6, -0.8);
+    ctx.lineTo(8.2, -2.4);
+    ctx.moveTo(1.6, -2.6);
+    ctx.quadraticCurveTo(4.5, -4.2, 7.2, -2.8);
     ctx.stroke();
-    ctx.fillStyle = pal.lips;
-    for (const [fx, fy] of [
-      [7.6, 0.6],
-      [8.6, 2.0],
-      [7.2, 2.6],
-    ]) {
-      ctx.fillRect(fx, fy, 1, 1);
-    }
+    ctx.fillStyle = pal.iris;
+    dot(ctx, { x: 5.6, y: 2.7 }, 0.75, pal.iris);
+    dot(ctx, { x: 6.7, y: 2.7 }, 0.75, pal.iris);
+    ctx.beginPath();
+    ctx.moveTo(4.9, 2.9);
+    ctx.lineTo(7.4, 2.9);
+    ctx.lineTo(6.15, 4.3);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = pal.lips;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.arc(6.3, 4.6, 1.5, 0.35, Math.PI - 0.35);
+    ctx.stroke();
   }
   ctx.restore();
 
   // front arm with spiked knuckles
-  sleeve(J.shR, J.elR, J.hdR, 10.5, true);
+  sleeve(J.shR, J.elR, J.hdR, true);
   spikes(J.hdR, J.foreR);
 }
 
@@ -903,7 +947,7 @@ function drawNinjabot(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: 
   katana(J.hdR, J.foreR, d.blade, false);
 }
 
-function drawFrecklebot(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: DrawOpts): void {
+function drawClownbot(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: DrawOpts): void {
   const T = (c: string): string => o.tint ?? c;
   ctx.lineCap = 'round';
   const piston = (el: V, hd: V, fore: number, w: number, fistR: number, front: boolean): void => {
@@ -945,7 +989,7 @@ function drawFrecklebot(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o
     ctx.lineTo(b1.x + J.perp.x * w1, b1.y + J.perp.y * w1);
     ctx.lineTo(b1.x - J.perp.x * w1, b1.y - J.perp.y * w1);
     ctx.closePath();
-    ctx.fillStyle = '#141414';
+    ctx.fillStyle = pal.band;
     ctx.fill();
     ctx.clip();
     ctx.strokeStyle = pal.hazard;
@@ -1007,12 +1051,21 @@ function drawFrecklebot(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o
   ctx.fill();
   seg(ctx, { x: -2, y: -r - 1 }, { x: -3, y: -r - 7 }, 1.5, T(pal.steel2));
   if (!o.tint) {
-    dot(ctx, { x: -3, y: -r - 7.5 }, 1.8, pal.eye);
+    dot(ctx, { x: -3, y: -r - 7.5 }, 2.1, pal.bell);
+    // painted clown faceplate: white panel, dark visor eye, red nose, stencilled grin
+    ctx.fillStyle = pal.face;
+    ctx.fillRect(-0.5, -3.5, r + 2, 7.5);
     ctx.fillStyle = '#111';
-    ctx.fillRect(-1, -2.5, r + 2, 4);
+    ctx.fillRect(1, -2.5, r - 1.5, 2.6);
+    dot(ctx, { x: r + 0.6, y: 1.2 }, 1.7, pal.nose);
+    ctx.strokeStyle = pal.nose;
+    ctx.lineWidth = 0.9;
+    ctx.beginPath();
+    ctx.arc(r * 0.45, 1.6, 2.2, 0.25, Math.PI - 0.25);
+    ctx.stroke();
     ctx.globalCompositeOperation = 'lighter';
     ctx.fillStyle = pal.eye;
-    ctx.fillRect(1.5, -1.5, r - 1, 2);
+    ctx.fillRect(1.5, -2, r - 2.5, 1.6);
     const g = ctx.createRadialGradient(r * 0.6, -0.5, 0, r * 0.6, -0.5, 9);
     g.addColorStop(0, pal.eye);
     g.addColorStop(1, 'rgba(0,0,0,0)');
@@ -1032,14 +1085,14 @@ const PAINTERS: Record<Archetype, (ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal:
   ninja: drawNinja,
   brawler: drawBrawler,
   ninjabot: drawNinjabot,
-  frecklebot: drawFrecklebot,
+  clownbot: drawClownbot,
 };
 
 const TRAIL_TINT: Record<Archetype, string> = {
   ninja: '#6a2fd6',
   brawler: '#b0102c',
   ninjabot: '#39f3ff',
-  frecklebot: '#ffd21f',
+  clownbot: '#ffd21f',
 };
 
 // ============================================================================ public renderer

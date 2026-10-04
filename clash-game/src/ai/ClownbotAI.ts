@@ -5,10 +5,10 @@ import type { Fighter } from '../entities/Fighter';
 const rand = (a: number, b: number): number => a + Math.random() * (b - a);
 
 /**
- * Frecklebots swarm: each picks a flank slot around the player, closes in, trades piston punches,
+ * Clownbots swarm: each picks a flank slot around the player, closes in, trades piston punches,
  * launches armored rushes from mid-range and detonates shock pulses when critically damaged.
  */
-export class FrecklebotAI implements Controller {
+export class ClownbotAI implements Controller {
   private out: InputFrame = emptyInput();
   private think = 0;
   private tackleCd: number;
