@@ -67,8 +67,8 @@ function sample(keys: Keys, f: number): Pose {
 const IDLE: Record<Archetype, Pose> = {
   ninja: P(0.18, -0.1, -0.5, 1.4, 1.0, 0.7, -0.35, -0.12, 0.45, -0.5, 0, 0.7),
   brawler: P(0.12, 0.04, -0.6, 0.5, 0.3, 0.9, -0.4, -0.15, 0.4, -0.4),
-  // White Lie plants wide, hands low, cane resting straight down from the right fist.
-  kingpin: P(0.05, 0.05, 0.4, 0.6, 0.5, 1.2, -0.38, -0.1, 0.38, -0.3, 0, -1.6),
+  // White Lie plants wide, mic fist folded up to the beard, far hand gesturing forward at belly height.
+  kingpin: P(0.05, 0.05, 0.5, 1.0, 0.2, 2.2, -0.38, -0.1, 0.38, -0.3, 0, 0.94),
   // Fiddle Jay holds the fiddle up at the chin with the far arm and rests the bow across the strings.
   fiddler: P(0.15, -0.05, 1.45, 0.75, 0.75, 1.97, -0.4, -0.12, 0.45, -0.5, 0, 0.18),
   ninjabot: P(0.15, 0, -0.2, 1.1, 0.8, 0.9, -0.3, -0.1, 0.35, -0.4, 0, 0.9),
@@ -84,7 +84,7 @@ const SAD_INTRO = P(0.3, 0.62, 0.05, 0.15, 0.1, 0.25, -0.3, -0.08, 0.3, -0.12);
 const GUARD: Record<Archetype, Pose> = {
   ninja: P(-0.05, 0.1, 1.2, 1.8, 1.0, 1.6, -0.4, -0.2, 0.4, -0.4, 0, 1.4),
   brawler: P(0.1, 0.2, 1.0, 2.3, 1.2, 2.2, -0.45, -0.2, 0.4, -0.4),
-  kingpin: P(0.05, 0.1, 1.0, 2.0, 1.1, 2.0, -0.38, -0.1, 0.38, -0.3, 0, -1.6),
+  kingpin: P(0.05, 0.1, 1.0, 2.0, 1.1, 2.0, -0.38, -0.1, 0.38, -0.3, 0, 0.6),
   fiddler: P(-0.05, 0.1, 1.2, 1.8, 1.0, 1.6, -0.4, -0.2, 0.4, -0.4, 0, -1.0),
   ninjabot: P(-0.05, 0.1, 1.2, 1.6, 1.0, 1.6, -0.4, -0.2, 0.4, -0.4, 0, 1.4),
   clownbot: P(0.05, 0.1, 1.0, 2.0, 1.2, 1.9, -0.3, -0.1, 0.3, -0.2),
@@ -93,7 +93,8 @@ const VICTORY: Record<Archetype, Pose> = {
   ninja: P(-0.05, -0.15, -0.4, 1.2, 3.0, 0, -0.3, -0.05, 0.3, -0.05, 0, 0),
   // Freckles doesn't celebrate: head hung, far arm limp, near hand wiping a tear.
   brawler: P(0.1, 0.32, 0.2, 0.3, 2.25, 2.45, -0.3, -0.05, 0.3, -0.05),
-  kingpin: P(-0.05, -0.1, -0.6, 0.3, 2.6, 0.3, -0.3, -0.05, 0.3, -0.05, 0, -1.6),
+  // Mic thrust to the sky, far arm spread wide.
+  kingpin: P(-0.05, -0.1, -0.6, 0.3, 2.6, 0.3, -0.3, -0.05, 0.3, -0.05, 0, 0.3),
   fiddler: P(0.05, -0.25, 1.45, 0.75, 0.75, 1.97, -0.3, -0.05, 0.3, -0.05, 0, 0.18),
   ninjabot: IDLE.ninjabot,
   clownbot: IDLE.clownbot,
@@ -251,54 +252,56 @@ const MOVE_KEYS: Record<string, Keys> = {
     [50, P(0.5, 0.3, 0.9, 0.1, 0.9, 0.1, 0.8, -1.5, 0.9, -1.4)],
     [62, FB],
   ],
+  // White Lie: the near fist keeps the mic, so punches land mic-first (weapon ~0.6 keeps the mic in line with the forearm).
   wl_slap: [
     [0, KI],
-    [2, P(-0.05, 0, 0.4, 0.6, -0.6, 0.8, -0.38, -0.1, 0.38, -0.3, 0, -1.6)],
-    [4, P(0.3, 0.05, 0.4, 0.6, 1.7, 0.1, -0.5, -0.1, 0.5, -0.3, 0, -1.6)],
-    [9, P(0.3, 0.05, 0.4, 0.6, 1.65, 0.15, -0.5, -0.1, 0.5, -0.3, 0, -1.6)],
+    [2, P(-0.05, 0, 0.5, 1.0, -0.6, 0.8, -0.38, -0.1, 0.38, -0.3, 0, 0.6)],
+    [4, P(0.3, 0.05, 0.5, 1.0, 1.7, 0.1, -0.5, -0.1, 0.5, -0.3, 0, 0.6)],
+    [9, P(0.3, 0.05, 0.5, 1.0, 1.65, 0.15, -0.5, -0.1, 0.5, -0.3, 0, 0.6)],
     [18, KI],
   ],
   wl_hook: [
     [0, KI],
-    [3, P(-0.1, 0, 0.4, 0.6, -0.9, 1.4, -0.4, -0.1, 0.4, -0.3, 0, -1.6)],
-    [6, P(0.5, 0.15, 0.4, 0.6, 1.6, 0.2, -0.7, -0.05, 0.8, -0.5, 0, -0.2)],
-    [12, P(0.45, 0.15, 0.4, 0.6, 1.5, 0.3, -0.7, -0.05, 0.8, -0.5, 0, -0.3)],
+    [3, P(-0.1, 0, 0.5, 1.0, -0.9, 1.4, -0.4, -0.1, 0.4, -0.3, 0, 0.6)],
+    [6, P(0.5, 0.15, 0.5, 1.0, 1.6, 0.2, -0.7, -0.05, 0.8, -0.5, 0, 0.6)],
+    [12, P(0.45, 0.15, 0.5, 1.0, 1.5, 0.3, -0.7, -0.05, 0.8, -0.5, 0, 0.6)],
     [24, KI],
   ],
   wl_bump: [
     [0, KI],
-    [5, P(-0.3, -0.1, -0.6, 0.4, -0.5, 0.4, -0.3, -0.1, 0.4, -0.3, 0, -1.6)],
-    [8, P(0.55, 0.15, -0.9, 0.3, -0.8, 0.3, -0.7, -0.05, 0.9, -0.5, 0, -1.6)],
-    [15, P(0.5, 0.15, -0.9, 0.3, -0.8, 0.3, -0.7, -0.05, 0.9, -0.5, 0, -1.6)],
+    [5, P(-0.3, -0.1, -0.6, 0.4, -0.5, 0.4, -0.3, -0.1, 0.4, -0.3, 0, 0.6)],
+    [8, P(0.55, 0.15, -0.9, 0.3, -0.8, 0.3, -0.7, -0.05, 0.9, -0.5, 0, 0.6)],
+    [15, P(0.5, 0.15, -0.9, 0.3, -0.8, 0.3, -0.7, -0.05, 0.9, -0.5, 0, 0.6)],
     [32, KI],
   ],
   wl_rush: [
-    [0, P(0.4, 0.1, -0.4, 1.0, 0.2, 1.6, -0.5, -0.2, 0.6, -0.6, 0, -1.6)],
-    [5, P(0.75, 0.25, -0.7, 0.9, 0.2, 1.5, -0.8, -0.3, 0.9, -0.9, 0, -1.6)],
-    [26, P(0.75, 0.25, -0.7, 0.9, 0.2, 1.5, -0.8, -0.3, 0.9, -0.9, 0, -1.6)],
+    [0, P(0.4, 0.1, -0.4, 1.0, 0.2, 1.6, -0.5, -0.2, 0.6, -0.6, 0, 0.6)],
+    [5, P(0.75, 0.25, -0.7, 0.9, 0.2, 1.5, -0.8, -0.3, 0.9, -0.9, 0, 0.6)],
+    [26, P(0.75, 0.25, -0.7, 0.9, 0.2, 1.5, -0.8, -0.3, 0.9, -0.9, 0, 0.6)],
     [40, KI],
   ],
   wl_drop: [
-    [0, P(-0.1, -0.2, 3.0, 0.2, 2.8, 0.3, 0.8, -1.5, 1.0, -1.4, 0, -1.6)],
-    [8, P(0.6, 0.3, 1.2, 0.1, 1.3, 0.1, 0.5, -0.7, 0.6, -0.6, 0, -1.6)],
-    [70, P(0.6, 0.3, 1.2, 0.1, 1.3, 0.1, 0.5, -0.7, 0.6, -0.6, 0, -1.6)],
+    [0, P(-0.1, -0.2, 3.0, 0.2, 2.8, 0.3, 0.8, -1.5, 1.0, -1.4, 0, 0.3)],
+    [8, P(0.6, 0.3, 1.2, 0.1, 1.3, 0.1, 0.5, -0.7, 0.6, -0.6, 0, 0.6)],
+    [70, P(0.6, 0.3, 1.2, 0.1, 1.3, 0.1, 0.5, -0.7, 0.6, -0.6, 0, 0.6)],
   ],
+  // Mic Drop: hoist the mic overhead, then let it fall straight down from the fist.
   wl_mic: [
     [0, KI],
-    [10, P(-0.15, -0.2, 0.4, 0.6, 3.0, 0.1, -0.35, -0.1, 0.35, -0.3, 0, -1.4)],
-    [20, P(-0.15, -0.2, 0.4, 0.6, 3.05, 0.1, -0.35, -0.1, 0.35, -0.3, 0, -1.4)],
-    [24, P(0.7, 0.35, 0.4, 0.6, 1.1, 0.1, 0.8, -1.5, 0.9, -1.4, 0, -1.2)],
-    [50, P(0.7, 0.35, 0.4, 0.6, 1.1, 0.1, 0.8, -1.5, 0.9, -1.4, 0, -1.2)],
+    [10, P(-0.15, -0.2, 0.5, 1.0, 3.0, 0.1, -0.35, -0.1, 0.35, -0.3, 0, 0.1)],
+    [20, P(-0.15, -0.2, 0.5, 1.0, 3.05, 0.1, -0.35, -0.1, 0.35, -0.3, 0, 0.1)],
+    [24, P(0.7, 0.35, 0.5, 1.0, 1.1, 0.1, 0.8, -1.5, 0.9, -1.4, 0, -1.2)],
+    [50, P(0.7, 0.35, 0.5, 1.0, 1.1, 0.1, 0.8, -1.5, 0.9, -1.4, 0, -1.2)],
     [72, KI],
   ],
   wl_grab: [
     [0, KI],
-    [2, P(0.1, 0.05, 0.6, 0.9, 1.3, 0.4, -0.4, -0.1, 0.4, -0.3, 0, -1.6)],
-    [6, P(0.45, 0.15, 1.4, 0.3, 1.7, 0.1, -0.6, -0.05, 0.8, -0.5, 0, -1.6)],
-    [11, P(0.45, 0.15, 1.4, 0.3, 1.7, 0.1, -0.6, -0.05, 0.8, -0.5, 0, -1.6)],
-    [16, P(0.0, -0.1, 2.3, 0.2, 2.5, 0.1, -0.4, -0.1, 0.4, -0.3, 0, -1.6)],
-    [22, P(-0.25, -0.25, 3.0, 0.1, 3.1, 0.05, -0.35, -0.1, 0.35, -0.3, 0, -1.6)],
-    [34, P(-0.3, -0.3, 3.05, 0.1, 3.15, 0.05, -0.35, -0.1, 0.35, -0.3, 0, -1.6)],
+    [2, P(0.1, 0.05, 0.6, 0.9, 1.3, 0.4, -0.4, -0.1, 0.4, -0.3, 0, 0.6)],
+    [6, P(0.45, 0.15, 1.4, 0.3, 1.7, 0.1, -0.6, -0.05, 0.8, -0.5, 0, 0.6)],
+    [11, P(0.45, 0.15, 1.4, 0.3, 1.7, 0.1, -0.6, -0.05, 0.8, -0.5, 0, 0.6)],
+    [16, P(0.0, -0.1, 2.3, 0.2, 2.5, 0.1, -0.4, -0.1, 0.4, -0.3, 0, 0.3)],
+    [22, P(-0.25, -0.25, 3.0, 0.1, 3.1, 0.05, -0.35, -0.1, 0.35, -0.3, 0, 0.1)],
+    [34, P(-0.3, -0.3, 3.05, 0.1, 3.15, 0.05, -0.35, -0.1, 0.35, -0.3, 0, 0.1)],
     [37, P(0.7, 0.35, 1.3, 0.2, 1.4, 0.1, 0.8, -1.5, 0.9, -1.4, 0, -1.2)],
     [48, P(0.7, 0.35, 1.3, 0.2, 1.4, 0.1, 0.8, -1.5, 0.9, -1.4, 0, -1.2)],
     [64, KI],
@@ -386,8 +389,10 @@ export function idlePose(a: Archetype, t: number): Pose {
     return { ...b, kL: b.kL - bounce * 0.3, kR: b.kR - bounce * 0.3, hL: b.hL + bounce * 0.1, hR: b.hR + bounce * 0.12, eR: b.eR + breathe * 0.06 };
   }
   if (a === 'kingpin') {
+    // slow heave, the far hand talking with the beat, the mic fist rocking at the chin
     const heave = Math.sin(t * 0.05);
-    return { ...b, lean: b.lean + heave * 0.02, head: b.head - heave * 0.03, sL: b.sL + heave * 0.04, sR: b.sR - heave * 0.03 };
+    const talk = Math.sin(t * 0.14);
+    return { ...b, lean: b.lean + heave * 0.02, head: b.head - heave * 0.03 + talk * 0.02, sL: b.sL + talk * 0.08, eL: b.eL - talk * 0.12, sR: b.sR - heave * 0.03, eR: b.eR + heave * 0.05 };
   }
   if (a === 'fiddler') {
     // idly bowing the fiddle
@@ -507,7 +512,7 @@ interface Dims {
 const DIMS: Record<Archetype, Dims> = {
   ninja: { thigh: 22, shin: 22, torso: 30, upper: 16, fore: 16, headR: 9, neck: 11, hipW: 8, chestW: 10, blade: 46 },
   brawler: { thigh: 24, shin: 24, torso: 31, upper: 15, fore: 15, headR: 8, neck: 10, hipW: 9.5, chestW: 10, blade: 0 },
-  kingpin: { thigh: 22, shin: 21, torso: 36, upper: 16, fore: 16, headR: 9, neck: 6, hipW: 15, chestW: 20, blade: 34 },
+  kingpin: { thigh: 22, shin: 21, torso: 36, upper: 16, fore: 16, headR: 10, neck: 8, hipW: 15, chestW: 20, blade: 7 },
   fiddler: { thigh: 23, shin: 23, torso: 29, upper: 15, fore: 15, headR: 8.5, neck: 10, hipW: 7.5, chestW: 10, blade: 32 },
   ninjabot: { thigh: 22, shin: 23, torso: 29, upper: 16, fore: 15, headR: 8.5, neck: 11, hipW: 7, chestW: 11, blade: 28 },
   clownbot: { thigh: 19, shin: 20, torso: 34, upper: 16, fore: 17, headR: 8, neck: 10, hipW: 12, chestW: 17, blade: 0 },
@@ -586,11 +591,14 @@ const PALETTES: Record<Archetype, Partial<Record<Variant, Palette>> & { normal: 
     boss: { dark: '#15121a', dark2: '#49454f', white: '#f2eff5', white2: '#cfc9d6', hood: '#f2eff5', hood2: '#15121a', glove: '#f2eff5', glove2: '#cfc9d6', skin: '#dfd8de', skinDark: '#c4bcc4', stock1: '#15121a', stock2: '#f2eff5', boots: '#0d0b10', bell: '#ffd21f', hair1: '#15121a', hair2: '#f2eff5', lace: '#ffd21f', knuckle: '#ffd86a', paint: '#0b090e', lips: '#15121a', glow: '#ffb13b', buckle: '#ffd21f' },
   },
   kingpin: {
-    // White three-piece suit over a black shirt, gold chain and rings, white cane with a gold head.
-    normal: { suit: '#f4f4f6', suit2: '#d8d8dc', shirt: '#15121a', tie: '#b8102e', skin: '#efd6c3', skinDark: '#cfae95', shades: '#0b090e', gold: '#ffd21f', shoe: '#15121a', shoeShine: '#ffffff', cane: '#f6f2f8', mouth: '#5a2a2a', beard: '#6a4a3a', glow: '#ffd21f' },
-    alt: { suit: '#1a1620', suit2: '#0d0b10', shirt: '#f4f4f6', tie: '#ffd21f', skin: '#efd6c3', skinDark: '#cfae95', shades: '#0b090e', gold: '#dfe6f0', shoe: '#f4f4f6', shoeShine: '#ffffff', cane: '#15121a', mouth: '#5a2a2a', beard: '#6a4a3a', glow: '#dfe6f0' },
-    // Shadow mogul: violet-black suit, silver chain, a cane that glows like a plasma tube.
-    boss: { suit: '#2a1740', suit2: '#160b26', shirt: '#0b090e', tie: '#b066ff', skin: '#d8c2b4', skinDark: '#b89a8a', shades: '#0b090e', gold: '#dfe6f0', shoe: '#0b090e', shoeShine: '#b066ff', cane: '#e0c4ff', mouth: '#5a2a2a', beard: '#3a2a3a', glow: '#b066ff' },
+    // Tan textured overshirt hanging open over a black tee, black jeans and sneakers, beige fitted cap with a small
+    // dark logo, black rectangular glasses, full dark beard, blue-grey ink on the neck and knuckles, two gold chains,
+    // and a wired handheld mic in the near fist.
+    normal: { shirt: '#d2bf9b', shirt2: '#a99674', tee: '#15121a', pants: '#2a2730', pants2: '#1a1820', cap: '#dccdb0', capBrim: '#b9a884', logo: '#3a3028', skin: '#f1dccb', skinDark: '#d2b49e', glasses: '#0b090e', gold: '#ffd21f', shoe: '#15121a', sole: '#f2eff5', mic: '#1c1c22', micHead: '#b4bcc8', micHead2: '#6d7582', ink: '#3f5068', beard: '#3a2a20', mouth: '#8a4a48', glow: '#ffd21f' },
+    // Alt: black overshirt and white tee, white cap, silver chains.
+    alt: { shirt: '#241f2c', shirt2: '#0d0b10', tee: '#f4f4f6', pants: '#2a2730', pants2: '#1a1820', cap: '#f4f4f6', capBrim: '#cfc9d6', logo: '#15121a', skin: '#f1dccb', skinDark: '#d2b49e', glasses: '#0b090e', gold: '#dfe6f0', shoe: '#f4f4f6', sole: '#15121a', mic: '#1c1c22', micHead: '#dfe6f0', micHead2: '#8a93a2', ink: '#3f5068', beard: '#3a2a20', mouth: '#8a4a48', glow: '#dfe6f0' },
+    // Shadow mogul: violet-black overshirt, silver chains, a mic head that glows like a plasma bulb.
+    boss: { shirt: '#2a1740', shirt2: '#160b26', tee: '#0b090e', pants: '#120c18', pants2: '#07050a', cap: '#160b26', capBrim: '#2a1740', logo: '#b066ff', skin: '#d8c2b4', skinDark: '#b89a8a', glasses: '#0b090e', gold: '#dfe6f0', shoe: '#0b090e', sole: '#b066ff', mic: '#1c1c22', micHead: '#e0c4ff', micHead2: '#8a4dc0', ink: '#5a3a7a', beard: '#1a1018', mouth: '#5a2a2a', glow: '#b066ff' },
   },
   fiddler: {
     // Cream karate gi, indigo pants, black belt, red headband, chestnut ponytail, a maple fiddle and a rosin-glowing bow.
@@ -1294,57 +1302,98 @@ function drawKingpin(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: D
     seg(ctx, J.hip, knee, w1, T(col));
     seg(ctx, knee, foot, w2, T(col));
     dot(ctx, knee, w2 / 2, T(col));
-    seg(ctx, mix(knee, foot, 0.82), foot, w2 * 0.9, T(pal.shoe));
-    seg(ctx, add(foot, fwd, -3), add(foot, fwd, 8), w2 * 0.7, T(pal.shoe));
-    dot(ctx, add(foot, fwd, 8), w2 * 0.35, T(pal.shoe));
-    if (!o.tint) seg(ctx, add(foot, fwd, -1), add(foot, fwd, 5), 1.2, pal.shoeShine);
+    // chunky sneaker: dark upper, pale midsole
+    seg(ctx, mix(knee, foot, 0.84), foot, w2 * 0.9, T(pal.shoe));
+    seg(ctx, add(foot, fwd, -3), add(foot, fwd, 8), w2 * 0.75, T(pal.shoe));
+    dot(ctx, add(foot, fwd, 8), w2 * 0.38, T(pal.shoe));
+    if (!o.tint) seg(ctx, { x: foot.x - 3, y: foot.y + w2 * 0.3 }, { x: foot.x + 9, y: foot.y + w2 * 0.3 }, 1.8, pal.sole);
   };
-  const arm = (sh: V, el: V, hd: V, col: string): void => {
-    dot(ctx, add(sh, up, 1), 7, T(col));
-    seg(ctx, sh, el, 11, T(col));
-    seg(ctx, el, hd, 9.5, T(col));
-    seg(ctx, mix(el, hd, 0.78), mix(el, hd, 0.86), 10, T(pal.shirt));
+  const arm = (sh0: V, el: V, hd: V, foreA: number, col: string, front: boolean): void => {
+    // the rig's shoulder sits right under the jaw on this short neck, so hang the sleeve a little lower to keep the beard clear
+    const sh = add(sh0, up, -4);
+    if (front) {
+      // thin dark edge so the near sleeve separates from the torso it overlaps
+      seg(ctx, sh, el, 13.5, T(pal.shirt2));
+      seg(ctx, el, hd, 12, T(pal.shirt2));
+    }
+    dot(ctx, sh, 6.5, T(col));
+    seg(ctx, sh, el, 11.5, T(col));
+    seg(ctx, el, hd, 10, T(col));
+    seg(ctx, mix(el, hd, 0.8), mix(el, hd, 0.9), 10.5, T(pal.shirt2));
     dot(ctx, hd, 5.5, T(pal.skin));
     if (!o.tint) {
-      dot(ctx, add(hd, fwd, 2.2), 1.4, pal.gold);
-      dot(ctx, add(hd, fwd, -1.6), 1.2, pal.gold);
+      // knuckle ink: card suits across the fingers
+      dot(ctx, add(hd, fwd, 2.2), 1.1, pal.ink);
+      dot(ctx, add(hd, fwd, -1.4), 1.0, pal.ink);
+      dot(ctx, { x: hd.x + 0.4, y: hd.y - 2.6 }, 0.9, pal.ink);
+      if (front) {
+        const w = mix(el, hd, 0.94);
+        const fd = dirv(foreA);
+        const pd = { x: fd.y, y: -fd.x };
+        seg(ctx, add(w, pd, -5.2), add(w, pd, 5.2), 1.7, pal.gold);
+      }
     }
   };
 
   // back limbs
-  leg(J.kneeL, J.footL, 15, 13, pal.suit2);
-  arm(J.shL, J.elL, J.hdL, pal.suit2);
+  leg(J.kneeL, J.footL, 15, 13, pal.pants2);
+  arm(J.shL, J.elL, J.hdL, J.foreL, pal.shirt2, false);
 
-  // barrel torso with a heavy gut and broad back
-  torsoQuad(ctx, J, d.hipW, d.chestW, o.tint ?? perpGradient(ctx, J, d.chestW, [[0, pal.suit2], [0.45, pal.suit], [1, pal.suit]]));
-  dot(ctx, add(mix(J.hip, J.neck, 0.35), perp, d.hipW - 3), 13, T(pal.suit));
+  // broad back and heavy gut: tan overshirt hanging open over a black tee
+  torsoQuad(ctx, J, d.hipW, d.chestW, o.tint ?? perpGradient(ctx, J, d.chestW, [[0, pal.shirt2], [0.4, pal.shirt], [1, pal.shirt]]));
   const vTop = J.neck;
-  const vBot = mix(J.hip, J.neck, 0.42);
-  poly([add(vTop, perp, -13), add(vTop, perp, 14), add(vBot, perp, 4)], pal.shirt);
-  seg(ctx, add(vTop, perp, -13), add(vBot, perp, 4), 3.2, T(pal.suit2));
-  seg(ctx, add(vTop, perp, 14), add(vBot, perp, 4), 3.2, T(pal.suit2));
+  const gc = add(mix(J.hip, J.neck, 0.35), perp, d.hipW - 3);
+  poly([add(vTop, perp, -3), add(vTop, perp, 8), add(gc, perp, 6), add(gc, perp, -6)], pal.tee);
+  dot(ctx, gc, 13, T(pal.tee));
+  // open front panels and collar
+  seg(ctx, add(vTop, perp, -3.5), add(gc, perp, -7.5), 3.6, T(pal.shirt2));
+  seg(ctx, add(vTop, perp, 8.5), add(gc, perp, 8), 3.6, T(pal.shirt));
+  const cTop = add(vTop, up, -4.5);
+  poly([add(vTop, perp, -3), add(vTop, perp, -10), add(cTop, perp, -4)], pal.shirt);
+  poly([add(vTop, perp, 8), add(vTop, perp, 14), add(cTop, perp, 9)], pal.shirt);
   if (!o.tint) {
-    seg(ctx, add(vTop, perp, 1), add(mix(vTop, vBot, 0.8), perp, 3.5), 4, pal.tie);
-    const c0 = add(vTop, perp, -6);
-    const c1 = add(vTop, perp, 9);
-    const cm = add(mix(c0, c1, 0.5), up, -11);
-    ctx.strokeStyle = pal.gold;
-    ctx.lineWidth = 1.6;
+    // seersucker stripes and a chest pocket flap on the far panel
+    ctx.strokeStyle = 'rgba(255,255,255,0.14)';
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.moveTo(c0.x, c0.y);
-    ctx.quadraticCurveTo(cm.x, cm.y + 4, c1.x, c1.y);
+    for (const k of [-0.78, -0.5, 0.88]) {
+      const a = add(J.hip, perp, k * d.hipW);
+      const b = add(J.neck, perp, k * d.chestW);
+      ctx.moveTo(a.x, a.y + 2);
+      ctx.lineTo(b.x, b.y);
+    }
     ctx.stroke();
-    dot(ctx, add(mix(c0, c1, 0.5), up, -9.5), 2.4, pal.gold);
-    dot(ctx, add(vBot, perp, 4), 1.3, pal.gold);
-    dot(ctx, add(mix(J.hip, J.neck, 0.35), perp, 4.5), 1.2, pal.gold);
-    seg(ctx, add(mix(vTop, vBot, 0.25), perp, -15), add(mix(vTop, vBot, 0.25), perp, -11), 1.8, pal.tie);
+    const pk = mix(vTop, gc, 0.32);
+    seg(ctx, add(pk, perp, -14), add(pk, perp, -8), 2.2, pal.shirt2);
+    // two gold chains over the tee, the longer one with a pendant
+    const c0 = add(vTop, perp, -1.5);
+    const c1 = add(vTop, perp, 7.5);
+    ctx.strokeStyle = pal.gold;
+    for (const [sag, lw] of [[8, 1.3], [13, 1.8]] as [number, number][]) {
+      const cm = add(mix(c0, c1, 0.5), up, -sag);
+      ctx.lineWidth = lw;
+      ctx.beginPath();
+      ctx.moveTo(c0.x, c0.y);
+      ctx.quadraticCurveTo(cm.x, cm.y + 3, c1.x, c1.y);
+      ctx.stroke();
+    }
+    dot(ctx, add(mix(c0, c1, 0.5), up, -11.5), 2.2, pal.gold);
   }
 
   // front leg
-  leg(J.kneeR, J.footR, 16, 14, pal.suit);
+  leg(J.kneeR, J.footR, 16, 14, pal.pants);
 
-  // bald head on a bull neck: heavy jaw, wraparound shades, gold grill, goatee
+  // bull neck with ink
   seg(ctx, add(J.neck, perp, 1), J.head, 11, T(pal.skin));
+  if (!o.tint) {
+    const n0 = mix(add(J.neck, perp, 1), J.head, 0.35);
+    const n1 = mix(add(J.neck, perp, 1), J.head, 0.7);
+    seg(ctx, add(n0, perp, -3.5), add(n1, perp, -1.5), 1.4, pal.ink);
+    dot(ctx, add(n0, perp, 2.5), 1.3, pal.ink);
+    seg(ctx, add(n1, perp, 1.5), add(n1, perp, 4), 1.1, pal.ink);
+  }
+
+  // head: fitted cap, black rectangular glasses, full beard, stud in the ear
   const ang = p.lean + p.head;
   ctx.save();
   ctx.translate(J.head.x, J.head.y);
@@ -1353,35 +1402,64 @@ function drawKingpin(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: D
   dot(ctx, { x: 0, y: 0 }, r, T(pal.skin));
   dot(ctx, { x: 1.5, y: 3.5 }, r * 0.8, T(pal.skin));
   dot(ctx, { x: -r + 1.5, y: 1 }, 2, T(pal.skinDark));
+  // beard: the whole lower face, climbing the back of the jaw into a sideburn
+  ctx.fillStyle = T(pal.beard);
+  ctx.beginPath();
+  ctx.arc(0, 0, r + 0.6, 0.38, Math.PI + 0.12);
+  ctx.closePath();
+  ctx.fill();
+  dot(ctx, { x: 1.5, y: 4.6 }, r * 0.8, T(pal.beard));
+  // cap crown and brim
+  ctx.fillStyle = T(pal.cap);
+  ctx.beginPath();
+  ctx.arc(0.4, -2.2, r + 0.7, Math.PI + 0.08, -0.08);
+  ctx.closePath();
+  ctx.fill();
+  seg(ctx, { x: -2.5, y: -3.2 }, { x: r + 8, y: -3.9 }, 2.6, T(pal.capBrim));
   if (!o.tint) {
-    ctx.fillStyle = pal.shades;
-    ctx.fillRect(-1, -3.4, r + 2.6, 4.6);
-    seg(ctx, { x: -r + 1, y: -1.6 }, { x: -1, y: -1.2 }, 1.4, pal.shades);
-    dot(ctx, { x: r - 1.2, y: -1.8 }, 0.8, '#ffffff');
-    seg(ctx, { x: 0.5, y: -4.6 }, { x: r - 0.5, y: -4.9 }, 1.2, pal.skinDark);
-    seg(ctx, { x: 4, y: 5 }, { x: 7.8, y: 4.6 }, 1.3, pal.mouth);
-    dot(ctx, { x: 6.4, y: 4.8 }, 0.6, pal.gold);
-    dot(ctx, { x: 5, y: 7.2 }, 1.7, pal.beard);
-    dot(ctx, { x: -1, y: -r + 2.5 }, 1.6, 'rgba(255,255,255,0.5)');
+    seg(ctx, { x: 1, y: -4.4 }, { x: r + 7.5, y: -5.0 }, 0.9, pal.cap);
+    dot(ctx, { x: 0.4, y: -r - 1.6 }, 0.9, pal.capBrim);
+    dot(ctx, { x: 4.6, y: -6.8 }, 1.7, pal.logo);
+    dot(ctx, { x: 6.2, y: -5.6 }, 1.1, pal.logo);
+    // glasses: near lens plus the temple running back to the ear
+    ctx.strokeStyle = pal.glasses;
+    ctx.lineWidth = 1.3;
+    ctx.strokeRect(0.8, -2.1, r - 1.4, 3.3);
+    seg(ctx, { x: 0.8, y: -1.2 }, { x: -r + 2.5, y: -0.4 }, 1.2, pal.glasses);
+    dot(ctx, { x: r - 4.4, y: -0.4 }, 0.85, '#2a1a10');
+    dot(ctx, { x: r - 2.6, y: -1.3 }, 0.6, '#ffffff');
+    dot(ctx, { x: r - 1.2, y: 2.2 }, 0.6, pal.ink);
+    dot(ctx, { x: -r + 2.4, y: 1.4 }, 0.9, '#e8f0ff');
+    seg(ctx, { x: 4.4, y: 5.2 }, { x: 7.2, y: 4.8 }, 1.3, pal.mouth);
   }
   ctx.restore();
 
-  // front arm with the cane
-  arm(J.shR, J.elR, J.hdR, pal.suit);
-  const cd = dirv(J.foreR + p.weapon);
-  const top = add(J.hdR, cd, -4);
-  const tip = add(J.hdR, cd, d.blade);
+  // front arm gripping the handheld mic, cable trailing down behind the fist
+  arm(J.shR, J.elR, J.hdR, J.foreR, pal.shirt, true);
+  const md = dirv(J.foreR + p.weapon);
+  const grip = add(J.hdR, md, -4.5);
+  const headC = add(J.hdR, md, d.blade);
+  if (!o.tint) {
+    const sway = -5 - o.motion * 9;
+    ctx.strokeStyle = pal.mic;
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(grip.x, grip.y);
+    ctx.quadraticCurveTo(grip.x - 2, grip.y + 13, grip.x + sway, grip.y + 22);
+    ctx.stroke();
+  }
+  seg(ctx, grip, add(J.hdR, md, 3.5), 3.4, T(pal.mic));
   if (!o.tint && o.motion > 0.3) {
     ctx.globalCompositeOperation = 'lighter';
-    ctx.globalAlpha = 0.3;
-    seg(ctx, top, tip, 6, pal.glow);
+    ctx.globalAlpha = 0.35;
+    dot(ctx, headC, 6.5, pal.glow);
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
   }
-  seg(ctx, top, tip, 2.6, T(pal.cane));
-  dot(ctx, top, 3, T(pal.gold));
-  dot(ctx, tip, 1.6, T(pal.gold));
-  if (o.blade && o.toScreen) o.blade(o.toScreen(tip), o.toScreen(add(J.hdR, cd, d.blade * 0.5)));
+  dot(ctx, headC, 3.6, T(pal.micHead2));
+  dot(ctx, add(headC, { x: -0.6, y: -0.6 }, 1), 2.6, T(pal.micHead));
+  if (!o.tint) dot(ctx, add(headC, { x: -1, y: -1 }, 1.1), 0.8, '#ffffff');
+  if (o.blade && o.toScreen) o.blade(o.toScreen(headC), o.toScreen(J.hdR));
 }
 
 function drawFiddler(ctx: Ctx, J: Skeleton, p: Pose, d: Dims, pal: Palette, o: DrawOpts): void {

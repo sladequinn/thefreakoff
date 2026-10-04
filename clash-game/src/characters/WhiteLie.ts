@@ -24,7 +24,7 @@ const moves: Record<string, MoveData> = {
   },
   w_combo2: {
     id: 'w_combo2',
-    name: 'Bar for Bar II — Cane Hook',
+    name: 'Bar for Bar II — Mic Hook',
     kind: 'combo',
     pose: 'wl_hook',
     duration: 24,
@@ -289,7 +289,7 @@ export const WHITE_LIE: CharacterDef = {
   moves,
   hurtbox: { offsetX: 0, offsetY: 50, width: 46, height: 100, zDepth: 16 },
   scale: 1.12,
-  blurb: 'Three-hundred-pound rap mogul in a white suit. Slow, armored and devastating: every hit lands like a platinum plaque.',
+  blurb: 'Three-hundred-pound rap mogul in a tan overshirt, fitted cap and gold chains, mic in hand. Slow, armored and devastating: every hit lands like a platinum plaque.',
   ratings: { power: 5, speed: 2, range: 3, defense: 5 },
   winQuotes: [
     'Platinum, baby. Every single time.',
@@ -298,13 +298,13 @@ export const WHITE_LIE: CharacterDef = {
     'Call it a feature. You got featured.',
   ],
   winQuotesVs: {
-    slade: ['All that magic and you still got dropped by a cane.', 'Ninja? I had three of those on payroll.'],
+    slade: ['All that magic and you still got dropped by a mic.', 'Ninja? I had three of those on payroll.'],
     freckles: ['Cheer up, kid. Everybody loses to me.', 'Tears don\'t stream. Hits do.'],
     fiddlejay: ['Fiddle? Fella, this is a rap city.', 'Your whole career just went out of tune.'],
     whitelie: ['Only one of us signed the real contract.'],
   },
   moveList: [
-    { name: 'Bar for Bar', input: 'J, J, J', desc: 'Backhand → cane hook → wall-bouncing belly bump' },
+    { name: 'Bar for Bar', input: 'J, J, J', desc: 'Backhand → mic-fisted hook → wall-bouncing belly bump' },
     { name: 'Sold Out Tour', input: 'Run + J', desc: 'Double-armored shoulder rush that flattens anything' },
     { name: 'Drop the Beat', input: 'Air + J', desc: 'Full-weight elbow drop with hard knockdown' },
     { name: 'Mic Drop', input: 'U', desc: 'Slam the mic for a two-ring shockwave (costs 8% HP)' },

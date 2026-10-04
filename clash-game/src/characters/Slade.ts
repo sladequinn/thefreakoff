@@ -216,7 +216,7 @@ export const SLADE: CharacterDef = {
   ],
   winQuotesVs: {
     freckles: ['Dry your eyes, Freckles. The city was never yours.', 'Your bells rang the whole time. Easy to track.'],
-    whitelie: ['Big suit, bigger target.', 'Platinum dents like anything else.'],
+    whitelie: ['Big shirt, bigger target.', 'Platinum dents like anything else.'],
     fiddlejay: ['Nice tune. Shame about the tempo.', 'Your bow is a stick. Mine is a blade.'],
     slade: ['Only one of us is the original.'],
   },

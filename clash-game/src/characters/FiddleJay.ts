@@ -276,7 +276,7 @@ export const FIDDLE_JAY: CharacterDef = {
   winQuotesVs: {
     slade: ['Shadows can\'t hide from a good ear.', 'Blink all you like, the beat finds you.'],
     freckles: ['I\'ll play you a lullaby. Sleep it off.', 'Sad song, sadder fight.'],
-    whitelie: ['Big man, no rhythm.', 'That cane plays worse than it swings.'],
+    whitelie: ['Big man, no rhythm.', 'That mic hits harder than your bars.'],
     fiddlejay: ['Only one of us practised today.'],
   },
   moveList: [

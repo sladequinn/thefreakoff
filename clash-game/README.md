@@ -6,7 +6,7 @@ A 2.5D arcade beat 'em up and versus fighter built in TypeScript on a plain Canv
 
 - **Slade, the Magick Ninja**: fast arcane zoner with a ninjato, smoke teleports and sigil eruptions.
 - **Freckles, Sad Clowngirl**: a black-and-white harlequin with a belled hood, one black and one white twin-tail, a laced corset, striped stockings and spiked knuckles, fighting with four-hit strings, armored tackles and seismic slams.
-- **White Lie, the Platinum Kingpin**: a three-hundred-pound rap mogul in a white suit with a gold chain and a cane. Slow and heavily armored; backhands, cane hooks, wall-bouncing belly bumps, an elbow drop, the two-ring Mic Drop shockwave and Hostile Takeover, an unblockable command grab that hoists you overhead and slams you.
+- **White Lie, the Platinum Kingpin**: a three-hundred-pound rap mogul in a tan overshirt over a black tee, fitted cap, black glasses, full beard, neck and knuckle ink, gold chains and a wired handheld mic. Slow and heavily armored; backhands, mic-fisted hooks, wall-bouncing belly bumps, an elbow drop, the two-ring Mic Drop shockwave and Hostile Takeover, an unblockable command grab that hoists you overhead and slams you.
 - **Fiddle Jay, the Rosin Fist**: a fiddle virtuoso and karate master. Whips his bow like a blade, chains snap kicks and spinning hook kicks, slides and dive-kicks, plucks a travelling Devil's Trill note and plays the Hellfire Hoedown, a bowed arpeggio that launches everyone around him.
 
 Every fighter has an unlockable alt costume, two spoken catch-phrase taunts and a boss-shadow palette.

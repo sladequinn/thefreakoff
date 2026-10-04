@@ -188,7 +188,7 @@ const STORY: Record<StoryCharId, { pre: Page[][]; boss: string[]; ending: Page[]
     pre: [
       [
         { speaker: 'NEO-KASAI, 2089', arch: null, text: 'At midnight the Iron Syndicate foreclosed on every venue carrying the Platinum label. By one a.m. there were Clownbots on the doors and a repo notice on the marquee.' },
-        { speaker: 'WHITE LIE', arch: 'kingpin', text: "Twenty years building this label and some tin-can consortium thinks it can take my block with a form letter. Nah. Tonight I collect. Cane first." },
+        { speaker: 'WHITE LIE', arch: 'kingpin', text: "Twenty years building this label and some tin-can consortium thinks it can take my block with a form letter. Nah. Tonight I collect. Mic in hand." },
       ],
       [
         { speaker: 'WHITE LIE', arch: 'kingpin', text: "Pier 9. My own shipping lane, and they're using it to bring in bots by the crate. Somebody at the docks forgot whose name is painted on the cranes." },
@@ -210,7 +210,7 @@ const STORY: Record<StoryCharId, { pre: Page[][]; boss: string[]; ending: Page[]
         { speaker: 'FIDDLE JAY', arch: 'fiddler', text: "Evening, Mr. Lie. Funny thing: your label pressed the record that's got every bot in town dancing. I was coming to ask you about it. Guess you saved me the walk." },
       ],
     ],
-    boss: ["FIDDLE JAY: That's my tune they stole, and your name on the sleeve.", 'WHITE LIE: Then let the court hear the case. Cane versus bow. Right now.'],
+    boss: ["FIDDLE JAY: That's my tune they stole, and your name on the sleeve.", 'WHITE LIE: Then let the court hear the case. Mic versus bow. Right now.'],
     ending: [
       { speaker: 'FIDDLE JAY', arch: 'fiddler', text: "Hoo. All right, big man. Nobody who hits that honest is hiding a Syndicate contract. Somebody forged your signature same as they sampled my strings." },
       { speaker: 'WHITE LIE', arch: 'kingpin', text: "Then we got a shared grievance and a vault full of evidence under this shrine. Partner up, fiddler. Fifty-fifty on the settlement." },
@@ -238,7 +238,7 @@ const STORY: Record<StoryCharId, { pre: Page[][]; boss: string[]; ending: Page[]
         { speaker: 'SYNDICATE PA', arch: null, text: 'FOUNDRY BREACH. SHOGUN-X REBUILD COMPLETE. ALL LINES: PROTECT THE MASTER TAPE.' },
       ],
       [
-        { speaker: 'FIDDLE JAY', arch: 'fiddler', text: 'The signal climbs to a mountain shrine, and on the steps sits the biggest white suit I ever saw, swinging a cane like a baton.' },
+        { speaker: 'FIDDLE JAY', arch: 'fiddler', text: 'The signal climbs to a mountain shrine, and on the steps sits the biggest man I ever saw, tan overshirt and a fitted cap, swinging a wired mic like a flail.' },
         { speaker: 'WHITE LIE', arch: 'kingpin', text: "Fiddle Jay. Your bootleg is running through every bot that took my clubs. You here to apologise, or you here to get featured on the pavement?" },
       ],
     ],
