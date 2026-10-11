@@ -88,8 +88,8 @@ export class Renderer {
     this.world.height = PIXEL_HEIGHT;
     this.worldCtx = this.world.getContext('2d', { alpha: false, willReadFrequently: true })!;
     this.sprites = document.createElement('canvas');
-    this.sprites.width = PIXEL_WIDTH;
-    this.sprites.height = PIXEL_HEIGHT;
+    this.sprites.width = CANVAS_WIDTH;
+    this.sprites.height = CANVAS_HEIGHT;
     this.spritesCtx = this.sprites.getContext('2d', { willReadFrequently: true })!;
 
     // lut[bayerIndex * 256 + value] -> quantised channel value
@@ -135,6 +135,8 @@ export class Renderer {
   /** Redirects drawing to the low-res world buffer. Callers keep using 960x540 coordinates. */
   beginWorld(): CanvasRenderingContext2D {
     if (!this.pixelArt) return this.screen;
+    this.spritesCtx.setTransform(1, 0, 0, 1, 0, 0);
+    this.spritesCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
     const ctx = this.worldCtx;
     this.ctx = ctx;
     ctx.setTransform(PIXEL_WIDTH / CANVAS_WIDTH, 0, 0, PIXEL_HEIGHT / CANVAS_HEIGHT, 0, 0);
@@ -148,8 +150,8 @@ export class Renderer {
 
   /**
    * Redirects drawing to a transparent sprite layer. On endSprites() the layer is turned into hard-edged pixel art:
-   * partial alpha becomes an ordered-dither mesh (the way 16-bit hardware faked transparency), every solid pixel
-   * bordering empty space becomes a dark outline, and the result is stamped onto the world buffer.
+   * characters keep a native 960x540 grid above the 480x270 scenery. Multiple passes accumulate;
+   * endWorld palette-reduces the layer once, then composites it before the HUD.
    */
   beginSprites(): CanvasRenderingContext2D {
     if (!this.pixelArt) return this.ctx;
@@ -158,25 +160,14 @@ export class Renderer {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
-    ctx.clearRect(0, 0, PIXEL_WIDTH, PIXEL_HEIGHT);
-    ctx.setTransform(PIXEL_WIDTH / CANVAS_WIDTH, 0, 0, PIXEL_HEIGHT / CANVAS_HEIGHT, 0, 0);
+    // Multiple menu cards share this full-resolution layer; beginWorld clears it once.
     ctx.lineCap = 'round';
     return ctx;
   }
 
   endSprites(): void {
     if (!this.pixelArt) return;
-    const img = this.spritesCtx.getImageData(0, 0, PIXEL_WIDTH, PIXEL_HEIGHT);
-    pixelize(img);
-    this.spritesCtx.putImageData(img, 0, 0);
-    const w = this.worldCtx;
-    w.save();
-    w.setTransform(1, 0, 0, 1, 0, 0);
-    w.globalAlpha = 1;
-    w.globalCompositeOperation = 'source-over';
-    w.drawImage(this.sprites, 0, 0);
-    w.restore();
-    this.ctx = w;
+    this.ctx = this.worldCtx;
   }
 
   /** Runs `paint` inside a sprite pass. */
@@ -211,6 +202,10 @@ export class Renderer {
     s.setTransform(1, 0, 0, 1, 0, 0);
     s.imageSmoothingEnabled = false;
     s.drawImage(this.world, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    const characters = this.spritesCtx.getImageData(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+    pixelize(characters);
+    this.spritesCtx.putImageData(characters, 0, 0);
+    s.drawImage(this.sprites, 0, 0);
     s.restore();
   }
 
